@@ -1,0 +1,12 @@
+  Running command git clone --filter=blob:none --quiet https://github.com/liangyanshuo/InfLoRA.git /tmp/pip-req-build-nox5bngg
+ERROR: git+https://github.com/liangyanshuo/InfLoRA.git (from -r requirements.txt (line 10)) does not appear to be a Python project: neither 'setup.py' nor 'pyproject.toml' found.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 189, in _run_module_as_main
+  File "<frozen runpy>", line 159, in _get_module_details
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 59
+    print(f"\n[Task {task_id}] classes={len(set(y for *_ in train_ds))}  samples={len(train_ds)}")
+                                                      ^^
+SyntaxError: starred assignment target must be in a list or tuple

@@ -1,0 +1,5 @@
+=== pip install start Wed Sep  3 14:24:04 UTC 2025 ===
+Collecting git+https://github.com/liangyanshuo/InfLoRA.git (from -r requirements.txt (line 10))
+  Cloning https://github.com/liangyanshuo/InfLoRA.git to /tmp/pip-req-build-nox5bngg
+  Resolved https://github.com/liangyanshuo/InfLoRA.git to commit e08b00edd54f2f10cf2f9826eae7d44fdcb6354b
+=== experiment start Wed Sep  3 14:24:05 UTC 2025 ===
