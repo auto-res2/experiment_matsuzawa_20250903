@@ -1,1 +1,30 @@
-original
+# config/config.yaml – minimal yet complete configuration used by the
+# refactored continual-learning experiment.
+
+common:
+  # -------------------------------------------------------------------------
+  # Data-loader & optimisation settings
+  # -------------------------------------------------------------------------
+  batch_size: 64
+  num_workers: 2
+
+  optimizer:
+    lr_backbone: 1.0e-3  # learning rate for the classifier backbone (AdamW)
+
+  # -------------------------------------------------------------------------
+  # Frozen diffusion generator (for synthetic replay – LoRA adapters are
+  # attached via `src.train.LoRAInject`).  The pre-trained SD v1.5 model is
+  # used by default.  Adjust the repo if you have a local mirror.
+  # -------------------------------------------------------------------------
+  frozen_generator:
+    hf_repo: "runwayml/stable-diffusion-v1-5"
+    num_inference_steps: 25
+    guidance_scale: 7.5
+
+experiment_1:
+  # -------------------------------------------------------------------------
+  # Baseline settings for the CIFAR-100 20-task incremental benchmark
+  # -------------------------------------------------------------------------
+  classifier: "resnet18"  # backbone (either "resnet18" or a timm ViT variant)
+  epochs: 1               # keep tiny for CI runtime constraints
+  memory_cap_kb: 512      # rehearsal buffer capacity (approx.)
