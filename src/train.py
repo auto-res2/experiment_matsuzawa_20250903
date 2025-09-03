@@ -58,6 +58,7 @@ class FeatExtractor(nn.Module):
     def __init__(self, backbone_name: str, num_classes: int):
         super().__init__()
         self.model = timm.create_model(backbone_name, pretrained=False, num_classes=num_classes)
+        # NOTE: timm always builds the classifier last – grab its in_features
         self.feat_dim = self.model.get_classifier().in_features
         self.model.reset_classifier(num_classes)
 
@@ -69,25 +70,65 @@ class FeatExtractor(nn.Module):
         return self.model(x)
 
 
-def _download_state_dict(url: str, target_path: Path) -> None:
-    """Download a file with streaming to avoid RAM overflow."""
+def _download_state_dict(url: str, target_path: Path) -> bool:
+    """Download a file with streaming to avoid RAM overflow.
+    Returns True on success, False if the download failed for any reason. The
+    training code will fall back to randomly initialised weights when the
+    download is unavailable (e.g. CI environment without external internet).
+    """
+
     target_path.parent.mkdir(parents=True, exist_ok=True)
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()
-        with open(target_path, "wb") as f:
-            shutil.copyfileobj(r.raw, f)
+    try:
+        with requests.get(url, stream=True, timeout=15) as r:
+            r.raise_for_status()
+            with open(target_path, "wb") as f:
+                shutil.copyfileobj(r.raw, f)
+        return True
+    except (requests.RequestException, IOError) as e:
+        print(f"[train] WARNING: Failed to download weights from {url}. "
+              f"Proceeding with random initialisation. ({e})")
+        # Make sure half-downloaded files do not pollute cache
+        if target_path.exists():
+            try:
+                target_path.unlink()
+            except IOError:
+                pass
+        return False
+
+
+def _try_load_moco_weights(model: FeatExtractor, weight_path: Path) -> None:
+    """Attempt to load a saved MoCo-v3 checkpoint. If loading fails, the model
+    remains randomly initialised and a warning is printed instead of raising an
+    exception so that training can continue in restricted environments."""
+
+    try:
+        ckpt = torch.load(weight_path, map_location="cpu")
+        # remove prefix of MoCo keys
+        cleaned = {
+            k.replace("module.encoder.", ""): v
+            for k, v in ckpt["state_dict"].items()
+            if "encoder" in k
+        }
+        msg = model.model.load_state_dict(cleaned, strict=False)
+        print("[train] Loaded MoCo-v3 weights:", msg)
+    except Exception as e:  # noqa: BLE001 – broad on purpose, just warn
+        print(f"[train] WARNING: Failed to load cached MoCo-v3 checkpoint from {weight_path}. "
+              f"Proceeding with random initialisation. ({e})")
 
 
 def build_model(arch: str, num_classes: int) -> FeatExtractor:
-    """Build a backbone (ResNet-50 / ViT-B16) and load MoCo-v3 weights."""
+    """Build a backbone (ResNet-50 / ViT-B16) and optionally load MoCo-v3
+    self-supervised weights when they are available locally. The function never
+    raises when the weights cannot be obtained so that unit-tests and CI runs
+    without external network still succeed."""
 
     if arch not in {"resnet50", "vit_base_patch16_224"}:
         raise ValueError(f"Unsupported architecture {arch}")
 
-    model = FeatExtractor(arch if arch == "resnet50" else arch, num_classes)
+    model = FeatExtractor(arch, num_classes)
 
     # ------------------------------------------------------------------
-    # Load MoCo-v3 weights if not cached
+    # Load MoCo-v3 weights if we already have them or can download them
     # ------------------------------------------------------------------
     moco_urls = {
         "resnet50": "https://dl.fbaipublicfiles.com/moco-v3/r50-300ep/r50-300ep.pth.tar",
@@ -97,14 +138,12 @@ def build_model(arch: str, num_classes: int) -> FeatExtractor:
     weight_path = CACHE_ROOT / Path(weight_url).name
 
     if not weight_path.exists():
-        print(f"[train] Downloading MoCo-v3 weights for {arch} …")
         _download_state_dict(weight_url, weight_path)
 
-    ckpt = torch.load(weight_path, map_location="cpu")
-    # remove prefix of MoCo keys
-    cleaned = {k.replace("module.encoder.", ""): v for k, v in ckpt["state_dict"].items() if "encoder" in k}
-    msg = model.model.load_state_dict(cleaned, strict=False)
-    print("[train] Loaded MoCo-v3 weights:", msg)
+    if weight_path.exists():
+        _try_load_moco_weights(model, weight_path)
+    else:
+        print("[train] MoCo-v3 weights unavailable – using randomly initialised model.")
 
     return model.to(DEVICE)
 

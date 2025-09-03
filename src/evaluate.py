@@ -15,7 +15,7 @@ from scipy.stats import ttest_rel
 # -----------------------------------------------------------------------------
 # Image output directory – mandated by the evaluation environment
 # -----------------------------------------------------------------------------
-IMG_ROOT = Path(".research/iteration2/images")
+IMG_ROOT = Path(".research/iteration3/images")
 IMG_ROOT.mkdir(parents=True, exist_ok=True)
 
 

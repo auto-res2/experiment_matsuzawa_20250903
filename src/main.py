@@ -5,8 +5,9 @@ Executed via  python -m src.main
 from __future__ import annotations
 
 import torch
-from pathlib import Path
 from typing import List, Tuple
+
+from pathlib import Path
 
 from .preprocess import get_waterbirds_dataloaders
 from .train import PCCMTrainer, CKPT_ROOT
@@ -54,7 +55,7 @@ def run_exp1_waterbirds():
 def main():
     print("================  PCCM EXPERIMENT SUITE  ================")
     run_exp1_waterbirds()
-    print("\nAll experiments finished – refer to .research/iteration1/images for plots.")
+    print("\nAll experiments finished – refer to .research/iteration3/images for plots.")
 
 
 if __name__ == "__main__":
