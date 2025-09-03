@@ -41,8 +41,11 @@ models:
     fourier_lambda: 0.5
 
 cdg:
-  base_model: runwayml/stable-diffusion-v1-5
+  # Using the lightweight CI model to avoid multi-gigabyte downloads.
+  base_model: hf-internal-testing/tiny-stable-diffusion-pipe
   lora_rank: 4
   train_epochs: 10
   train_batch: 4
   lr: 0.0001
+
+

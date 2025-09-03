@@ -110,22 +110,68 @@ def download_url(url: str, dst: pathlib.Path, expected_md5: Optional[str] = None
 
 
 class WaterbirdsDataset(Dataset):
+    """Robust loader for the Waterbirds dataset.
+
+    The official archive (https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz)
+    contains a *metadata.csv* file with a `split` column (0=train, 1=val, 2=test).
+    Some mirrors additionally ship pre-filtered *train.csv/val.csv/test.csv* files.
+    This wrapper transparently supports **both** layouts so that downstream code
+    does not have to care which flavour is present on disk.
+    """
+
+    _SPLIT_MAP = {"train": 0, "val": 1, "test": 2}
+
     def __init__(self, root: str, split: str, transform=None):
+        if split not in {"train", "val", "test"}:
+            raise ValueError("split must be one of 'train' | 'val' | 'test'")
+
         self.transform = transform
-        meta_file = os.path.join(
-            root, f"waterbird_complete95_forest2water2/{split}.csv"
-        )
-        if not os.path.exists(meta_file):
-            raise FileNotFoundError(
-                "Waterbirds metadata CSV missing – did extraction succeed?"
-            )
-        import pandas as pd
+        base_dir = os.path.join(root, "waterbird_complete95_forest2water2")
+        if not os.path.isdir(base_dir):
+            raise FileNotFoundError("Waterbirds folder missing – did extraction succeed?")
+
+        # Prefer explicit split CSVs (if present).
+        csv_split_path = os.path.join(base_dir, f"{split}.csv")
+        if os.path.exists(csv_split_path):
+            meta_file = csv_split_path
+            split_df_key = None  # entire file already filtered
+        else:
+            # Fall back to the canonical metadata.csv
+            meta_file = os.path.join(base_dir, "metadata.csv")
+            if not os.path.exists(meta_file):
+                raise FileNotFoundError(
+                    "Waterbirds metadata CSV missing – the dataset archive may be corrupted."
+                )
+            split_df_key = self._SPLIT_MAP[split]
+
+        # ------------------------------------------------------------------
+        import pandas as pd  # local import to keep global deps minimal.
 
         df = pd.read_csv(meta_file)
+        if split_df_key is not None:
+            if "split" not in df.columns:
+                raise KeyError("'split' column not found in metadata – unexpected format.")
+            df = df[df["split"] == split_df_key]
+
+        # Column name inconsistencies exist across versions; handle gracefully.
+        fname_col = (
+            "img_filename"
+            if "img_filename" in df.columns
+            else ("filename" if "filename" in df.columns else None)
+        )
+        if fname_col is None:
+            raise KeyError("Could not locate image filename column in metadata CSV.")
+
+        label_col = "y" if "y" in df.columns else "label"
+        if label_col not in df.columns:
+            raise KeyError("Could not locate label column in metadata CSV.")
+
         self.samples = [
-            (os.path.join(root, row["img_filename"]), int(row["y"]))
-            for _, row in df.iterrows()
+            (os.path.join(root, fname), int(label))
+            for fname, label in zip(df[fname_col], df[label_col])
         ]
+        if not self.samples:
+            raise RuntimeError(f"No samples found for split='{split}'.")
 
     def __len__(self):
         return len(self.samples)
