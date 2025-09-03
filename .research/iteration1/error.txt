@@ -1,0 +1,47 @@
+  0%|          | 0.00/169M [00:00<?, ?B/s]  0%|          | 98.3k/169M [00:00<04:12, 668kB/s]  0%|          | 459k/169M [00:00<01:20, 2.10MB/s]  1%|          | 1.84M/169M [00:00<00:24, 6.85MB/s]  4%|▍         | 6.52M/169M [00:00<00:07, 21.4MB/s]  8%|▊         | 13.0M/169M [00:00<00:04, 34.9MB/s] 12%|█▏        | 19.5M/169M [00:00<00:03, 43.0MB/s] 15%|█▌        | 26.0M/169M [00:00<00:02, 48.2MB/s] 19%|█▉        | 32.0M/169M [00:00<00:02, 52.0MB/s] 22%|██▏       | 37.3M/169M [00:00<00:02, 52.1MB/s] 25%|██▌       | 42.7M/169M [00:01<00:02, 52.6MB/s] 29%|██▊       | 48.3M/169M [00:01<00:02, 53.5MB/s] 32%|███▏      | 53.7M/169M [00:01<00:02, 53.6MB/s] 35%|███▌      | 59.2M/169M [00:01<00:02, 54.1MB/s] 38%|███▊      | 64.7M/169M [00:01<00:01, 54.1MB/s] 41%|████▏     | 70.1M/169M [00:01<00:01, 54.1MB/s] 45%|████▍     | 75.5M/169M [00:01<00:01, 54.1MB/s] 48%|████▊     | 81.0M/169M [00:01<00:01, 54.1MB/s] 51%|█████     | 86.4M/169M [00:01<00:01, 54.0MB/s] 54%|█████▍    | 92.0M/169M [00:01<00:01, 53.9MB/s] 58%|█████▊    | 97.6M/169M [00:02<00:01, 54.6MB/s] 61%|██████    | 103M/169M [00:02<00:01, 54.5MB/s]  64%|██████▍   | 109M/169M [00:02<00:01, 54.1MB/s] 67%|██████▋   | 114M/169M [00:02<00:01, 54.3MB/s] 71%|███████   | 120M/169M [00:02<00:00, 54.3MB/s] 74%|███████▍  | 125M/169M [00:02<00:00, 54.1MB/s] 77%|███████▋  | 131M/169M [00:02<00:00, 54.6MB/s] 81%|████████  | 136M/169M [00:02<00:00, 53.1MB/s] 84%|████████▎ | 141M/169M [00:02<00:00, 53.4MB/s] 87%|████████▋ | 147M/169M [00:03<00:00, 53.6MB/s] 90%|█████████ | 152M/169M [00:03<00:00, 53.7MB/s] 93%|█████████▎| 158M/169M [00:03<00:00, 54.4MB/s] 97%|█████████▋| 163M/169M [00:03<00:00, 54.3MB/s]100%|█████████▉| 169M/169M [00:03<00:00, 54.2MB/s]100%|██████████| 169M/169M [00:03<00:00, 49.5MB/s]
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:180: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  self.scaler = GradScaler()
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:192: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast():
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 83, in <module>
+    main()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 79, in main
+    run_edge_experiment()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 54, in run_edge_experiment
+    trainer.train_task(loader)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 210, in train_task
+    self._train_on_loader(loader, cur=True)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 194, in _train_on_loader
+    loss, toks = self.model.forward_current(x, y)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 110, in forward_current
+    z   = self._encode_img(x)
+          ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 106, in _encode_img
+    adapted = self.adapter(feat).squeeze(-1)            # (B,128)
+              ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 244, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/torch/nn/modules/conv.py", line 371, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/torch/nn/modules/conv.py", line 366, in _conv_forward
+    return F.conv1d(
+           ^^^^^^^^^
+RuntimeError: Expected 2D (unbatched) or 3D (batched) input to conv1d, but got input of size: [64, 1, 960, 1]
