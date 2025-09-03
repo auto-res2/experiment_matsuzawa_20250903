@@ -33,4 +33,4 @@ optim:
 batch: 128
 
 # All figures are written here so the CI system can collect them easily.
-plots: .research/iteration16/images
+plots: .research/iteration17/images
