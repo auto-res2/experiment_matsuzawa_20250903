@@ -1,0 +1,19 @@
+0Byte [00:00, ?Byte/s]0Byte [00:01, ?Byte/s]1769472Byte [00:01, 17511658.36Byte/s]16777216Byte [00:01, 73894114.02Byte/s]32907264Byte [00:01, 107725686.73Byte/s]42311680Byte [00:02, 77446398.32Byte/s] 50323456Byte [00:02, 64585714.39Byte/s]64372736Byte [00:02, 83345761.46Byte/s]73465856Byte [00:02, 65808304.65Byte/s]83877888Byte [00:02, 60143327.57Byte/s]97542144Byte [00:02, 75789496.99Byte/s]106430464Byte [00:03, 65095634.89Byte/s]117440512Byte [00:03, 61544737.27Byte/s]131915776Byte [00:03, 77881276.95Byte/s]141082624Byte [00:03, 61698306.09Byte/s]150986752Byte [00:03, 60144618.23Byte/s]162930688Byte [00:03, 71688957.79Byte/s]171401216Byte [00:04, 64204755.99Byte/s]184541184Byte [00:04, 62106532.02Byte/s]199507968Byte [00:04, 78990394.97Byte/s]208855040Byte [00:04, 69811424.05Byte/s]218103808Byte [00:04, 62792021.76Byte/s]233971712Byte [00:04, 81978737.25Byte/s]243720192Byte [00:05, 64619363.26Byte/s]251740160Byte [00:05, 56412535.93Byte/s]267026432Byte [00:05, 74436657.48Byte/s]276357120Byte [00:05, 63028940.21Byte/s]285204480Byte [00:05, 53865259.25Byte/s]300302336Byte [00:05, 71384800.87Byte/s]309444608Byte [00:06, 62096667.62Byte/s]318758912Byte [00:06, 60566021.95Byte/s]334077952Byte [00:06, 78892651.18Byte/s]343654400Byte [00:06, 69296754.26Byte/s]352321536Byte [00:06, 57441520.90Byte/s]364077056Byte [00:06, 68866226.89Byte/s]372432896Byte [00:07, 65056264.39Byte/s]383115264Byte [00:07, 73845496.47Byte/s]391536640Byte [00:07, 66786245.57Byte/s]402423808Byte [00:07, 76344059.17Byte/s]410918912Byte [00:07, 65227237.88Byte/s]419422208Byte [00:07, 60987302.90Byte/s]431620096Byte [00:07, 74356639.37Byte/s]439959552Byte [00:08, 57934421.67Byte/s]450674688Byte [00:08, 67941258.45Byte/s]458702848Byte [00:08, 62625841.43Byte/s]469753856Byte [00:08, 56106583.22Byte/s]482263040Byte [00:08, 69611373.68Byte/s]489291776Byte [00:08, 56012108.49Byte/s]
+  0%|          | 0.00/97.8M [00:00<?, ?B/s]  3%|▎         | 2.62M/97.8M [00:00<00:03, 27.5MB/s] 22%|██▏       | 21.8M/97.8M [00:00<00:00, 129MB/s]  44%|████▎     | 42.8M/97.8M [00:00<00:00, 170MB/s] 68%|██████▊   | 66.6M/97.8M [00:00<00:00, 202MB/s] 92%|█████████▏| 90.0M/97.8M [00:00<00:00, 217MB/s]100%|██████████| 97.8M/97.8M [00:00<00:00, 192MB/s]
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:169: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  self.scaler = torch.cuda.amp.GradScaler(enabled=cfg["hardware"].get("amp", True))
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:190: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=self.cfg["hardware"].get("amp", True)):
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 37, in <module>
+    metrics = trainer.fit()
+              ^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 191, in fit
+    stats = self.alg.update(batch)
+            ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 92, in update
+    x, y = batch
+    ^^^^
+ValueError: too many values to unpack (expected 2)
