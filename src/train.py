@@ -68,13 +68,26 @@ def full_train(model: torch.nn.Module,
     data = data.to(device)
     model = model.to(device)
 
-    opt_cls = getattr(torch.optim, cfg["common"]["optimiser"]["name"])
-    optimiser = opt_cls(model.parameters(),
-                        lr=cfg.get("lr", cfg["common"]["lr_grid"][0]),
-                        eps=cfg["common"]["optimiser"]["eps"],
-                        weight_decay=cfg["common"]["optimiser"]["weight_decay"])
+    # ------------------------------------------------------------------
+    # Optimiser – make sure hyper-parameters are correct types
+    # ------------------------------------------------------------------
+    opt_conf = cfg["common"]["optimiser"]
+    opt_cls = getattr(torch.optim, opt_conf["name"])
 
-    scaler = GradScaler(enabled=cfg["common"].get("fp16", False))
+    lr_value = float(cfg.get("lr", cfg["common"]["lr_grid"][0]))
+    eps_value = float(opt_conf.get("eps", 1e-8))
+    wd_value = float(opt_conf.get("weight_decay", 0.0))
+
+    optimiser = opt_cls(model.parameters(), lr=lr_value, eps=eps_value, weight_decay=wd_value)
+
+    # ------------------------------------------------------------------
+    # AMP scaler – instantiate *only* when fp16 is requested
+    # ------------------------------------------------------------------
+    scaler: GradScaler | None
+    if cfg["common"].get("fp16", False):
+        scaler = GradScaler(enabled=True)
+    else:
+        scaler = None
 
     loss_hist, acc_hist = [], []
     best_val, best_state, patience = 0.0, None, 0
@@ -111,16 +124,18 @@ def full_train(model: torch.nn.Module,
     run_dir.mkdir(parents=True, exist_ok=True)
     from .evaluate import save_lineplot
 
+    img_root = pathlib.Path(".research/iteration5/images")
+
     xs = list(range(0, len(loss_hist) * 10, 10))
     save_lineplot(xs, {"loss": loss_hist},
                   "Epoch", "Loss",
                   f"Training loss – {run_tag}",
-                  f".research/iteration4/images/training_loss_{run_tag}.pdf")
+                  str(img_root / f"training_loss_{run_tag}.pdf"))
 
     save_lineplot(xs, {"accuracy": acc_hist},
                   "Epoch", "Accuracy",
                   f"Accuracy – {run_tag}",
-                  f".research/iteration4/images/accuracy_{run_tag}.pdf")
+                  str(img_root / f"accuracy_{run_tag}.pdf"))
 
     elapsed = (time.time() - start_time) / 60
     print(f"Run {run_tag} finished in {elapsed:.1f} min – best acc {best_val:.3f}")
