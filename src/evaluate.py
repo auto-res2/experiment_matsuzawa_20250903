@@ -13,11 +13,12 @@ import matplotlib.pyplot as plt
 # -----------------------------------------------------------------------------
 
 def evaluate_accuracy(model: torch.nn.Module, loader, device: str) -> float:
-    """Top-1 accuracy on a dataloader (no grad, no AMP)."""
+    """Top-1 accuracy on a dataloader.  Accepts (x, y) or (x, y, metadata)."""
     model.eval()
     num, correct = 0, 0
     with torch.no_grad():
-        for x, y in loader:
+        for batch in loader:
+            x, y = batch[0], batch[1]
             x, y = x.to(device), y.to(device)
             pred = model(x).argmax(1)
             correct += (pred == y).sum().item()
@@ -29,7 +30,7 @@ def evaluate_accuracy(model: torch.nn.Module, loader, device: str) -> float:
 #                                 plotting
 # -----------------------------------------------------------------------------
 
-IMAGES_DIR = Path(".research/iteration6/images")
+IMAGES_DIR = Path(".research/iteration7/images")
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
 

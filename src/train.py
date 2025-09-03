@@ -5,9 +5,9 @@ All heavy logic that is required for model construction and optimisation
 is collected here so that other modules can simply import it.
 """
 from __future__ import annotations
-import time, random, hashlib, json, os
+import time, random, hashlib, json
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import torch
 import torch.nn as nn
@@ -89,7 +89,8 @@ class ERM(AlgorithmBase):
     """Empirical-risk minimisation baseline."""
 
     def update(self, batch):
-        x, y = batch
+        # A WILDS dataset sample is (x, y, metadata).  Handle both 2- or 3-tuple cases.
+        x, y = batch[0], batch[1]
         x, y = x.to(self.device), y.to(self.device)
         logits = self.model(x)
         loss = F.cross_entropy(logits, y)
@@ -99,19 +100,55 @@ class ERM(AlgorithmBase):
         return {"loss": loss.item()}
 
 
+class SimpleIRM(AlgorithmBase):
+    """Light-weight IRM implementation that works with any DataLoader tuple.
+
+    It follows the toy IRM objective: empirical risk + λ‖∇_w R(Φ·w)‖² where Φ
+    are logits and w is a learnable scalar.  This keeps the dependency list
+    minimal and avoids the heavy wilds.algorithms training loop, while still
+    demonstrating IRM behaviour for the demo experiment.
+    """
+
+    def __init__(self, model, optim, cfg, device, irm_lambda: float = 1.0):
+        super().__init__(model, optim, cfg, device)
+        self.irm_lambda = irm_lambda
+        # dummy scaling parameter w as in Arjovsky et al.
+        self.w = torch.tensor(1.0, requires_grad=True, device=device)
+        self.w_opt = torch.optim.SGD([self.w], lr=1e-3)
+
+    def update(self, batch):
+        x, y = batch[0], batch[1]
+        x, y = x.to(self.device), y.to(self.device)
+        logits = self.model(x) * self.w
+        loss = F.cross_entropy(logits, y)
+        grad_w = torch.autograd.grad(loss, [self.w], create_graph=True)[0]
+        penalty = torch.square(grad_w)
+        total_loss = loss + self.irm_lambda * penalty
+        # update network parameters
+        self.optim.zero_grad()
+        total_loss.backward(retain_graph=True)
+        self.optim.step()
+        # update the dummy scalar separately
+        self.w_opt.step()
+        self.w_opt.zero_grad()
+        return {"loss": loss.item(), "irm_penalty": penalty.item()}
+
+
 # Optional additional methods (IRM / GroupDRO) rely on WILDS.  We expose a
 # graceful fallback so that the refactored project can be executed even if the
 # user does not have the full WILDS stack compiled.
+
 
 def get_algorithm(name: str, model: nn.Module, optim: torch.optim.Optimizer, cfg: dict, device: str):
     name = name.lower()
     if name == "erm":
         return ERM(model, optim, cfg, device)
+    if name == "irm":
+        # Use the light-weight internal IRM implementation to avoid signature
+        # mismatch with wilds.algorithms.  This keeps the demo self-contained.
+        return SimpleIRM(model, optim, cfg, device, irm_lambda=1.0)
     try:
-        from wilds.algorithms import IRM, GroupDRO  # heavy import guarded
-
-        if name == "irm":
-            return IRM(model, optim, irm_lambda=1.0)
+        from wilds.algorithms import GroupDRO  # heavy import guarded
         if name == "groupdro":
             return GroupDRO(model, optim)
     except Exception as e:
@@ -187,8 +224,9 @@ class Trainer:
         for epoch in range(max_epochs):
             self.model.train()
             for batch in self.loaders["train"]:
+                # AMP context – gradient scaling is handled inside algorithm.update (if needed)
                 with torch.cuda.amp.autocast(enabled=self.cfg["hardware"].get("amp", True)):
-                    stats = self.alg.update(batch)
+                    _ = self.alg.update(batch)
 
             # ---------------- evaluation ----------------
             val_acc = evaluate_accuracy(self.model, self.loaders["val"], self.device)
