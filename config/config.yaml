@@ -1,0 +1,32 @@
+exp_id: exp1_waterbirds_rn50
+datasets:
+  - name: waterbirds
+    url: https://huggingface.co/datasets/grodino/waterbirds
+    root: data
+    split: ""
+model:
+  backbone: resnet50
+  pretrained: true
+  patch_dropout: 0.0
+  stochastic_depth: 0.1
+autocf:
+  enabled: true
+  lambda_cc: 1.0
+  k_diverse: 4
+  mask_refresh: 2
+  diffusion_ckpt: stabilityai/stable-diffusion-2-inpainting
+  guidance_scale: 7.5
+  ddim_steps: 20
+  spectral_swap_p: 0.3
+train:
+  epochs: 50
+  batch_size: 64
+  accum_steps: 2
+  lr: 0.0003
+  weight_decay: 0.05
+  warmup_epochs: 5
+  seed: 0
+  amp: true
+  fast_dev_run: false
+runtime:
+  save_dir: outputs
