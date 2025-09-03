@@ -32,7 +32,13 @@ class PhiMLP(nn.Module):
 
 
 class AdaSmoothLayer(nn.Module):
-    """One message-passing layer equipped with the AdaSmooth gate."""
+    """One message-passing layer equipped with the AdaSmooth gate.
+
+    NOTE  –  A residual connection *x* is blended with the propagated message
+    *msg*.  When the feature dimensions do **not** match (e.g. first layer –
+    1 433 → 128 on Cora) we insert a lightweight linear projection so that the
+    element-wise interpolation is well-defined.
+    """
 
     def __init__(self, in_dim: int, out_dim: int, conv_kind: str, phi_hidden: int):
         super().__init__()
@@ -42,6 +48,15 @@ class AdaSmoothLayer(nn.Module):
             self.conv = SAGEConv(in_dim, out_dim)
         else:
             raise ValueError(f"Unknown conv kind: {conv_kind}")
+
+        # Projection for the residual path if feature dims differ
+        self.res_proj: nn.Module
+        if in_dim == out_dim:
+            self.res_proj = nn.Identity()
+        else:
+            # bias=False -> pure linear mapping, keeps param count minimal
+            self.res_proj = nn.Linear(in_dim, out_dim, bias=False)
+
         self.phi = PhiMLP(in_feats=6, hidden=phi_hidden)
         self.cached_g: torch.Tensor | None = None  # filled during fwd
 
@@ -54,16 +69,25 @@ class AdaSmoothLayer(nn.Module):
         grad_norm: torch.Tensor,
         tau: float,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+        # message passing term
         msg = self.conv(x, edge_index)
+        # residual term (projected if needed)
+        x_res = self.res_proj(x)
+
+        # ------------------------------------------------------------------
+        # Compute gating value g ∈ (0,1)  (detached statistics)
+        # ------------------------------------------------------------------
         with torch.no_grad():
-            # simple statistical vector composed of raw + log-scaled versions
             stats = torch.stack(
                 [deg, feat_var, grad_norm, deg.log1p(), feat_var.log1p(), grad_norm.log1p()], dim=-1
             )
         logits = self.phi(stats)
         g = torch.sigmoid(logits / tau)  # (N,)
         self.cached_g = g.detach().cpu()
-        out = g.unsqueeze(-1) * msg + (1 - g).unsqueeze(-1) * x
+
+        # Blend message & residual
+        g_unsq = g.unsqueeze(-1)  # broadcast once for efficiency
+        out = g_unsq * msg + (1 - g_unsq) * x_res
         return out, g
 
 
@@ -259,7 +283,11 @@ class Trainer:
             if use_ada:
                 with torch.no_grad():
                     for p in model.parameters():
-                        if p.grad is not None and p.grad.ndim == 2 and p.size(0) == self.data.num_nodes:
+                        if (
+                            p.grad is not None
+                            and p.grad.ndim == 2
+                            and p.size(0) == self.data.num_nodes
+                        ):
                             self.data.grad_norm.copy_(p.grad.norm(p=2, dim=1))
                             break
             optimiser.step()
@@ -281,7 +309,9 @@ class Trainer:
             if patience >= max_patience:
                 break
             if epoch == 1 or epoch % 20 == 0:
-                print(f"[{self.run_name}] epoch {epoch:03d}  loss={loss.item():.4f}  valF1={val_f1:.3f}")
+                print(
+                    f"[{self.run_name}] epoch {epoch:03d}  loss={loss.item():.4f}  valF1={val_f1:.3f}"
+                )
 
         toc = time.time() - tic
         model.load_state_dict(best_state)
@@ -290,6 +320,7 @@ class Trainer:
 
         # save curves --------------------------------------------------------
         from .evaluate import save_training_curves  # local import to avoid circular
+
         save_training_curves(losses, val_scores, self.run_name)
 
         return {

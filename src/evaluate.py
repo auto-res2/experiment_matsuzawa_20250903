@@ -8,8 +8,9 @@ core *train.py* stays focused.
 import pathlib
 from typing import List
 import matplotlib
+
 matplotlib.use("Agg")  # headless backend
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # noqa: E402
 import seaborn as sns  # noqa: F401 – required for seaborn styling side-effects
 
 # All experiment figures must be saved under this directory (see instructions)
@@ -19,7 +20,7 @@ FIG_DIR = (
     .parent
     .parent
     / ".research"
-    / "iteration4"
+    / "iteration5"  # ← updated as per specification
     / "images"
 )
 FIG_DIR.mkdir(parents=True, exist_ok=True)
