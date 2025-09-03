@@ -23,7 +23,7 @@ with open(CONFIG_PATH) as f:
 
 # create runtime directories --------------------------------------------------
 DATA_DIR = ROOT / "data"; DATA_DIR.mkdir(exist_ok=True)
-FIG_DIR = ROOT / ".research" / "iteration1" / "images"; FIG_DIR.mkdir(parents=True, exist_ok=True)
+FIG_DIR = ROOT / ".research" / "iteration2" / "images"; FIG_DIR.mkdir(parents=True, exist_ok=True)
 CKPT_DIR = ROOT / "checkpoints"; CKPT_DIR.mkdir(exist_ok=True)
 
 # seeds ----------------------------------------------------------------------
@@ -45,6 +45,19 @@ pp.ensure_all_datasets(CFG.__dict__)
 #                        ───  EXPERIMENT 1  –  BENCHMARK ───                   #
 ################################################################################
 
+def _num_classes(ds):
+    """Utility: attempt to infer the number of classes represented in a dataset
+    (supports both SplitDataset and torch.utils.data.Subset)."""
+    base = getattr(ds, "dataset", ds)  # unwrap Subset if needed
+    cls_ids = getattr(base, "cls_ids", None)
+    if cls_ids is not None:
+        return len(cls_ids)
+    # Fallback – iterate once (last resort, should be small for our demo)
+    seen = set()
+    for _, y in ds:
+        seen.add(int(y))
+    return len(seen)
+
 def run_experiment_1(seed: int) -> None:
     print("\n================ EXPERIMENT 1 – Standard C-L Benchmarks ================")
     t0 = time.perf_counter()
@@ -56,7 +69,8 @@ def run_experiment_1(seed: int) -> None:
 
     acc_list = []
     for task_id, (train_ds, val_ds, test_ds) in enumerate(tasks, 1):
-        print(f"\n[Task {task_id}] classes={len(set(y for *_ in train_ds))}  samples={len(train_ds)}")
+        n_cls = _num_classes(train_ds)
+        print(f"\n[Task {task_id}] classes={n_cls}  samples={len(train_ds)}")
         train_loader = torch.utils.data.DataLoader(
             train_ds, batch_size=CFG.opt["batch"], shuffle=True, num_workers=2
         )

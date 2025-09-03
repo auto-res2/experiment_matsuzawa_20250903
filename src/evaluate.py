@@ -16,7 +16,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Central directory for all figures required by the instructions
 ROOT = Path(__file__).resolve().parent.parent
-FIG_DIR = ROOT / ".research" / "iteration1" / "images"
+FIG_DIR = ROOT / ".research" / "iteration2" / "images"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 ################################################################################

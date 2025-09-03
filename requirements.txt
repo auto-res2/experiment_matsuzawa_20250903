@@ -5,7 +5,3 @@ pyyaml
 matplotlib
 tqdm
 seaborn
-fvcore
-bitsandbytes
-git+https://github.com/liangyanshuo/InfLoRA.git
-git+https://github.com/rosinality/vq-vae-2-pytorch.git

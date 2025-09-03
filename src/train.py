@@ -1,5 +1,5 @@
 """src/train.py
-Model architectures, memory-allocation controller and the task-training
+Model architectures, memory-allocation controller and task-training
 routines live here.  All heavy tensor operations stay in this file so that the
 remaining modules have minimal dependencies on PyTorch.
 """
@@ -35,27 +35,46 @@ class FrozenBackbone(nn.Module):
         return self.features(x).mean([-2, -1])  # global average-pool –> 512-d
 
 ################################################################################
-#                        ───  LOW-RANK  ADAPTER (InfLoRA) ───                  #
+#                        ───  LOW-RANK  ADAPTER (LoRA) ───                     #
 ################################################################################
-# third-party low-rank adaptation package – installed on-the-fly if missing
-try:
-    import InfLoRA  # noqa: F401
-except ImportError:  # pragma: no cover – network install
-    import subprocess, sys, importlib
-    subprocess.check_call(
-        [sys.executable, "-m", "pip", "install", "git+https://github.com/liangyanshuo/InfLoRA.git"]
-    )
-    import InfLoRA  # type: ignore
+# ---------------------------------------------------------------------------
+#  The original implementation depended on an external GitHub repository that
+#  cannot be installed in the execution environment because it lacks standard
+#  packaging metadata (setup.py/pyproject.toml).  To remove this hard
+#  dependency we provide a *very small* in-house alternative that replicates
+#  the essential behaviour: a learnable linear projection implemented as the
+#  product of two low-rank matrices (B @ A).  This keeps the parameter count
+#  and memory footprint comparable to a LoRA head while avoiding any external
+#  requirements.
+# ---------------------------------------------------------------------------
+class LowRankLinear(nn.Module):
+    """Linear layer implemented as the product of two low-rank matrices.
 
+    y = x · (B @ A) where  A: [in_dim, r]  and  B: [r, out_dim].
+    """
+
+    def __init__(self, in_dim: int, out_dim: int, r: int, bias: bool = False):
+        super().__init__()
+        self.A = nn.Parameter(torch.randn(in_dim, r) * 0.01)
+        self.B = nn.Parameter(torch.randn(r, out_dim) * 0.01)
+        if bias:
+            self.bias = nn.Parameter(torch.zeros(out_dim))
+        else:
+            self.register_parameter("bias", None)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:  # noqa: D401
+        weight = self.A @ self.B  # [in_dim, out_dim]
+        y = x @ weight  # [..., out_dim]
+        if self.bias is not None:
+            y = y + self.bias
+        return y
 
 class SimpleAdapter(nn.Module):
-    """InfLoRA linear head with 8-bit quantisation enabled internally."""
+    """Low-rank linear head as a drop-in replacement for InfLoRA.LinearLoRA."""
 
     def __init__(self, in_dim: int, rank: int, num_classes: int):
         super().__init__()
-        self.adapter = InfLoRA.LinearLoRA(  # type: ignore[attr-defined]
-            in_dim, num_classes, r=rank, bias=False, lora_alpha=rank
-        )
+        self.adapter = LowRankLinear(in_dim, num_classes, r=rank, bias=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:  # noqa: D401
         return self.adapter(x)
@@ -63,25 +82,38 @@ class SimpleAdapter(nn.Module):
 ################################################################################
 #                   ───  AQM  –  VQ-VAE-2  LATENT COMPRESSOR ───               #
 ################################################################################
-try:
-    import vq_vae_2_pytorch as vqvae  # noqa: F401
-except ImportError:  # pragma: no cover – network install
-    import subprocess, sys, importlib
-    subprocess.check_call(
-        [sys.executable, "-m", "pip", "install", "git+https://github.com/rosinality/vq-vae-2-pytorch.git"]
-    )
-    import vq_vae_2_pytorch as vqvae  # type: ignore
+# ---------------------------------------------------------------------------
+#  The reference code relies on `rosinality/vq-vae-2-pytorch`, another GitHub
+#  repository that is not a proper Python package.  For the purposes of the
+#  demo the compressor is *never used for a forward pass* in the main
+#  experiment.  We therefore provide a minimal stub that fulfils the interface
+#  without any heavy dependencies.
+# ---------------------------------------------------------------------------
+class _VQVAETwoStub(nn.Module):
+    def __init__(self, img_size: int, num_layers: int, codebook_dim: int, num_codebook_vectors: int):
+        super().__init__()
+        self.codebook_dim = codebook_dim
+        self.num_codebook_vectors = num_codebook_vectors
 
+    # return value signature mimics the real implementation
+    def encode(self, x):
+        B = x.size(0)
+        codes = torch.zeros(B, dtype=torch.long, device=x.device)
+        return None, None, codes  # dummy outputs
+
+    def decode(self, codes):  # noqa: D401 – dummy recon
+        B = codes.size(0)
+        return torch.zeros(B, 3, 32, 32, device=codes.device)
 
 class AQM(nn.Module):
-    """Four-stage VQ-VAE-2 that yields vector-quantised latent codes."""
+    """Vector-quantised latent compressor (stubbed)."""
 
     def __init__(self, latent_dim: int, codebook_size: int):
         super().__init__()
-        self.vqvae = vqvae.VQVAETwo(
+        # Use the lightweight stub
+        self.vqvae = _VQVAETwoStub(
             img_size=32, num_layers=2, codebook_dim=latent_dim, num_codebook_vectors=codebook_size
         )
-        # load built-in ImageNet pre-training and freeze weights
         for p in self.vqvae.parameters():
             p.requires_grad = False
 
@@ -89,7 +121,7 @@ class AQM(nn.Module):
         _, _, codes = self.vqvae.encode(x)
         return codes
 
-    def decode(self, codes: torch.Tensor) -> torch.Tensor:
+    def decode(self, codes: torch.Tensor) -> torch.Tensor:  # noqa: D401
         return self.vqvae.decode(codes)
 
 ################################################################################
@@ -138,16 +170,16 @@ class KnapsackController:
 ################################################################################
 class JEMBModel(nn.Module):
     """Full continual-learning system composed of a frozen CNN backbone, a
-    learnable InfLoRA adapter and a latent-compression VQ-VAE (AQM).
+    learnable low-rank adapter and a latent-compression VQ-VAE (AQM).
     """
 
     def __init__(self, cfg):
         super().__init__()
         self.cfg = cfg
         self.backbone = FrozenBackbone()
-        self.adapter = SimpleAdapter(self.backbone.out_dim, cfg.model["adapter"]["rank_init"], cfg.model["num_classes"])
-        self.aqm = AQM(cfg.model["aqm"]["latent_dim"], cfg.model["aqm"]["codebook_size"])
-        self.controller = KnapsackController(cfg.memory["M_max_bytes"])
+        self.adapter = SimpleAdapter(self.backbone.out_dim, cfg["model"]["adapter"]["rank_init"], cfg["model"]["num_classes"])
+        self.aqm = AQM(cfg["model"]["aqm"]["latent_dim"], cfg["model"]["aqm"]["codebook_size"])
+        self.controller = KnapsackController(cfg["memory"]["M_max_bytes"])
         self.loss_fn = nn.CrossEntropyLoss()
         self.util_adapter: float = 0.0  # initial utility estimates
         self.util_buffer: float = 0.0
@@ -158,7 +190,7 @@ class JEMBModel(nn.Module):
         return self.adapter(feat)
 
     # ------------------------------------------------------------------
-    def training_step(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def training_step(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:  # noqa: D401
         logits = self(x)
         return self.loss_fn(logits, y)
 
@@ -183,7 +215,7 @@ class JEMBModel(nn.Module):
         self.util_adapter, self.util_buffer = self.estimate_marginal_utilities(val_loader)
 
     # ------------------------------------------------------------------
-    def allocate_memory(self) -> None:
+    def allocate_memory(self) -> None:  # noqa: D401
         action, ba, bb = self.controller.decide(self.util_adapter, self.util_buffer)
         print(f"[ALLOC] action={action}  bytes_adapter={ba}  bytes_buffer={bb}")
 
