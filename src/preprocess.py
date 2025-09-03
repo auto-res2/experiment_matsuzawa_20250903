@@ -1,7 +1,7 @@
+from __future__ import annotations
 """
 preprocess.py – data loading & synthetic dataset generation
 """
-from __future__ import annotations
 import random
 import pathlib
 from typing import Any
@@ -44,6 +44,7 @@ def build_synthetic_cc(
     chain_len: int,
     noise_nodes: int,
     seed: int,
+    **_: Any,  # ignore any extra keys (e.g. "name") coming from config
 ) -> Data:
     """Generate the synthetic benchmark used in Experiment-1."""
 

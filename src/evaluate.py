@@ -1,9 +1,9 @@
+from __future__ import annotations
 """
 evaluate.py – evaluation metrics & visualisation helpers
-All plots are saved into .research/iteration18/images to comply with the
+All plots are saved into .research/iteration19/images to comply with the
 project specification.
 """
-from __future__ import annotations
 import pathlib
 from typing import Dict, List
 
@@ -20,9 +20,8 @@ sns.set(style="whitegrid")
 #  Global output directory for all figures
 # ---------------------------------------------------------------------------
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
-IMAGES_DIR = PROJECT_ROOT / ".research" / "iteration18" / "images"
+IMAGES_DIR = PROJECT_ROOT / ".research" / "iteration19" / "images"  # ← updated path
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
-
 
 ###############################################################################
 #  Metrics                                                                    #
@@ -58,11 +57,9 @@ def eff_rank(h: torch.Tensor, eps: float = 1e-6) -> float:
 def spearman(x: torch.Tensor, y: torch.Tensor) -> float:
     return spearmanr(x.cpu().numpy(), y.cpu().numpy())[0]
 
-
 ###############################################################################
 #  Plotting helpers                                                           #
 ###############################################################################
-
 
 def _annotate(ax):
     for line in ax.lines:
