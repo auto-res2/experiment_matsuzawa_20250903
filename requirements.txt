@@ -2,20 +2,26 @@
 # Pre-built PyG wheels for PyTorch 2.2 (CPU); avoids source compilation
 --find-links https://data.pyg.org/whl/torch-2.2.0+cpu.html
 
-# Core deep-learning stack
+# ---------------------------------------------------------------------------
+#  Core deep-learning stack
+# ---------------------------------------------------------------------------
 torch==2.2.0
 torch_geometric==2.5.3
 torch_scatter==2.1.2
 torch_sparse==0.6.18
 
-# Scientific & visualisation stack
-numpy
+# ---------------------------------------------------------------------------
+#  Scientific & visualisation stack – *pin NumPy below 2* to avoid ABI issues
+# ---------------------------------------------------------------------------
+numpy<2
 scipy
 networkx
 matplotlib
 seaborn
 
-# Benchmark / utility libraries
+# ---------------------------------------------------------------------------
+#  Benchmark / utility libraries
+# ---------------------------------------------------------------------------
 ogb
 optuna
 tqdm
