@@ -1,17 +1,11 @@
-
-"""
-evaluate.py – metrics & visualisation utilities
-Only light-weight helpers live here so that downstream notebooks can import the
-module without dragging heavy dependencies like torch.
-"""
 from pathlib import Path
 from typing import Dict
 
 import matplotlib.pyplot as plt
 
 # Where camera-ready figures must go -----------------------------------------
-# (updated to iteration9 as per repository policy)
-FIG_DIR = Path(".research/iteration9/images")
+# (updated to iteration10 as per repository policy)
+FIG_DIR = Path(".research/iteration10/images")
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 ###############################################################################
