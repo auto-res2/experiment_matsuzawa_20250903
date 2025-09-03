@@ -6,5 +6,82 @@
     "oversmoothing regularization GNN",
     "GNN skip connections",
     "deep GNN layer normalization"
+  ],
+  "research_study_list": [
+    {
+      "title": "A Non-Asymptotic Analysis of Oversmoothing in Graph Neural Networks"
+    },
+    {
+      "title": "Demystifying Oversmoothing in Attention-Based Graph Neural Networks"
+    },
+    {
+      "title": "Revisiting Over-smoothing and Over-squashing Using Ollivier-Ricci Curvature"
+    },
+    {
+      "title": "Graph Neural Networks Do Not Always Oversmooth"
+    },
+    {
+      "title": "PairNorm: Tackling Oversmoothing in GNNs"
+    },
+    {
+      "title": "Towards Deeper Graph Neural Networks with Differentiable Group Normalization"
+    },
+    {
+      "title": "A Non-Asymptotic Analysis of Oversmoothing in Graph Neural Networks"
+    },
+    {
+      "title": "PairNorm: Tackling Oversmoothing in GNNs"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "PairNorm: Tackling Oversmoothing in GNNs"
+    },
+    {
+      "title": "A Non-Asymptotic Analysis of Oversmoothing in Graph Neural Networks"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "ContraNorm: A Contrastive Learning Perspective on Oversmoothing and Beyond"
+    },
+    {
+      "title": "Old can be Gold: Better Gradient Flow can Make Vanilla-GCNs Great Again"
+    },
+    {
+      "title": "Optimization of Graph Neural Networks: Implicit Acceleration by Skip Connections and More Depth"
+    },
+    {
+      "title": "Deep Graph Neural Networks via Posteriori-Sampling-based Node-Adaptative Residual Module"
+    },
+    {
+      "title": "DRew: Dynamically Rewired Message Passing with Delay"
+    },
+    {
+      "title": "Improving Breadth-Wise Backpropagation in Graph Neural Networks Helps Learning Long-Range Dependencies."
+    },
+    {
+      "title": "GraphNorm: A Principled Approach to Accelerating Graph Neural Network Training"
+    },
+    {
+      "title": "PairNorm: Tackling Oversmoothing in GNNs"
+    },
+    {
+      "title": "Towards Deeper Graph Neural Networks with Differentiable Group Normalization"
+    },
+    {
+      "title": "GRANOLA: Adaptive Normalization for Graph Neural Networks"
+    },
+    {
+      "title": "Lipschitz normalization for self-attention layers with application to graph neural networks"
+    }
   ]
 }
