@@ -1,11 +1,13 @@
+from __future__ import annotations
 """
 evaluate.py – training/evaluation orchestration + plotting helpers
 """
-from __future__ import annotations
-import json, random, time
+import json
+import random
+import time
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 import torch
@@ -24,9 +26,10 @@ from .preprocess import build_task_stream
 # ---------------------------------------------------------------------
 #  Directories (created on import)
 # ---------------------------------------------------------------------
-ROOT      = Path(__file__).resolve().parent.parent
-RUNS_DIR  = ROOT / "runs"
-IMG_DIR   = ROOT / ".research/iteration10/images"
+ROOT = Path(__file__).resolve().parent.parent
+RUNS_DIR = ROOT / "runs"
+# --------- UPDATED TO ITERATION 11 AS REQUIRED -----------------------
+IMG_DIR = ROOT / ".research/iteration11/images"
 RUNS_DIR.mkdir(parents=True, exist_ok=True)
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -35,9 +38,9 @@ IMG_DIR.mkdir(parents=True, exist_ok=True)
 # ---------------------------------------------------------------------
 @dataclass
 class Log:
-    acc:    List[float] = field(default_factory=list)
-    bytesA: List[int]   = field(default_factory=list)
-    bytesB: List[int]   = field(default_factory=list)
+    acc: List[float] = field(default_factory=list)
+    bytesA: List[int] = field(default_factory=list)
+    bytesB: List[int] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------
@@ -55,19 +58,19 @@ def run_method(
     random.seed(seed)
     np.random.seed(seed)
 
-    model  = ModelCls(num_cls=cfg_train["classes_per_task"], cap_bytes=cfg_train["budget_bytes"]).to(DEVICE)
-    opt    = torch.optim.SGD(
+    model = ModelCls(num_cls=cfg_train["classes_per_task"], cap_bytes=cfg_train["budget_bytes"]).to(DEVICE)
+    opt = torch.optim.SGD(
         model.parameters(),
         lr=cfg_train["lr"],
         momentum=cfg_train["momentum"],
         weight_decay=cfg_train["weight_decay"],
     )
 
-    log          = Log()
+    log: Log = Log()
     test_loaders = []
 
     for tid, (tr, va, te) in enumerate(stream, 1):
-        trL = DataLoader(tr, batch_size=cfg_train["batch_size"], shuffle=True,  num_workers=2)
+        trL = DataLoader(tr, batch_size=cfg_train["batch_size"], shuffle=True, num_workers=2)
         vaL = DataLoader(va, batch_size=cfg_train["batch_size"], shuffle=False, num_workers=2)
         teL = DataLoader(te, batch_size=cfg_train["batch_size"], shuffle=False, num_workers=2)
         test_loaders.append(teL)
@@ -85,9 +88,9 @@ def run_method(
 
     summary = {
         "method": name,
-        "A_T":    log.acc[-1],
+        "A_T": log.acc[-1],
         "bytes_adapter": log.bytesA[-1],
-        "bytes_buffer":  log.bytesB[-1],
+        "bytes_buffer": log.bytesB[-1],
     }
     return summary, log
 
@@ -116,6 +119,7 @@ def plot_curve(logs: Dict[str, Log]):
 # ---------------------------------------------------------------------
 
 def run_experiment(cfg: dict):
+    """Top-level experiment driver invoked from src.main."""
     from .train import run_unit_tests  # local import to avoid circularity
 
     print("\n" + cfg["experiment"]["description"] + "\n")
@@ -133,24 +137,24 @@ def run_experiment(cfg: dict):
     )
 
     logs: Dict[str, Log] = {}
-    results              = []
+    results: List[dict] = []
 
     name2cls = {
-        "jemb":    JEMBModel,
+        "jemb": JEMBModel,
         "inflora": InfLoRA,
-        "aqm_er":  AQM_ER,
+        "aqm_er": AQM_ER,
     }
 
     for m in cfg["experiment"]["methods"]:
         res, lg = run_method(m, name2cls[m], stream, cfg["training"], seed=cfg["experiment"]["seed"])
-        logs[m]  = lg
+        logs[m] = lg
         results.append(res)
 
     # --------------- persist raw metrics ------------------------------
     out = {
         "description": cfg["experiment"]["description"],
         "per_task": {k: lg.__dict__ for k, lg in logs.items()},
-        "summary":   results,
+        "summary": results,
         "wall_clock_s": round(time.time() - start, 2),
     }
     (RUNS_DIR / "run_ci.json").write_text(json.dumps(out, indent=2))
