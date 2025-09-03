@@ -1,26 +1,29 @@
-device: "cuda"
+device: auto  # "auto" chooses CUDA if available else CPU
 seeds: [1, 2, 3]
-budgets:
-  small: 262144
-  medium: 524288
-  large: 1048576
+budgets_B: [262144, 524288, 1048576]  # 0.25 / 0.5 / 1 MB
 
+# ---------------------------------------------------------------------------
+#  Dataset specifications used by all experiments
+# ---------------------------------------------------------------------------
 datasets:
   CIFAR100:
-    url: "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
+    url: https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz
+    train_size: 50000
+    img_sz: 32
     tasks: 10
     classes_per_task: 10
-    img_size: 32
   TinyIN:
-    url: "https://zenodo.org/records/10720917/files/tiny-imagenet-200.zip?download=1"
+    url: http://cs231n.stanford.edu/tiny-imagenet-200.zip
+    train_size: 100000
+    img_sz: 64
     tasks: 10
     classes_per_task: 20
-    img_size: 64
   ImageNet100:
-    url: "https://huggingface.co/datasets/lostboiii6/ImageNet100/resolve/main/ImageNet100.zip"
+    url: https://github.com/ellisbrown/IN100/archive/refs/heads/main.zip
+    train_size: 120000
+    img_sz: 112
     tasks: 10
     classes_per_task: 10
-    img_size: 112
 
 optim:
   lr: 0.05
@@ -28,5 +31,6 @@ optim:
   weight_decay: 0.0005
 
 batch: 128
-vqgan_ckpt: "vqgan_imagenet_f16_16384"
-plots: ".research/iteration6/images"
+
+# All figures are written here so the CI system can collect them easily.
+plots: .research/iteration11/images

@@ -1,81 +1,89 @@
-"""
-train.py – model construction, buffers and training utilities (*CI-stubbed*).
-This minimalist version only exposes the two public functions that the rest of
-this lightweight repository needs during automated evaluation on the CPU-only
-CI runner:
-
-1. train_stream      – returns deterministic dummy metrics so that statistics
-                       in evaluate.py can be computed without performing the
-                       (heavy) continual-learning training loop.
-2. sanity_single_task – quick integrity check that is *skipped* in the stub
-                       but kept so that evaluate.py can import and call it.
-
-Both functions purposefully avoid any expensive computation, network / dataset
-access or GPU allocation.  When executed on a CUDA host they emit a warning to
-make it clear that **real training is *not* happening here**.
+"""src/train.py
+Utility functions related to network construction and quick sanity training
+runs used by the experimental scripts.
 """
 from __future__ import annotations
 
-import random
-import warnings
-from typing import Tuple
+import statistics as st
+from pathlib import Path
+from typing import Dict
 
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
+from torchvision import datasets, models, transforms
 
-__all__ = ["train_stream", "sanity_single_task"]
+from .preprocess import DATA  # shared data directory
 
-# ---------------------------------------------------------------------------
-# Public API – lightweight stubs
-# ---------------------------------------------------------------------------
+__all__ = [
+    "build_resnet18",
+    "sanity_check",
+]
 
-def train_stream(
-    method: str,
-    budget: int,
-    seed: int,
-    device: torch.device | str | None = None,
-) -> Tuple[float, float, None]:
-    """Return *placeholder* metrics.
 
-    The real continual-learning code base is removed to keep the public example
-    repository fast and dependency-free.  Instead we generate deterministic
-    pseudo-random numbers so that downstream plotting / statistics do not
-    break.  **Do not** rely on these numbers for any scientific claim.
+def build_resnet18(num_classes: int) -> nn.Module:
+    """Return a ResNet-18 with the first pooling layer removed so it can be
+    trained on small (≤128×128) inputs without heavy down-sampling."""
+    net = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+    # Make it suitable for small images (CIFAR/Tiny-IN etc.)
+    net.conv1.stride = (1, 1)
+    net.maxpool = nn.Identity()
+    net.fc = nn.Linear(net.fc.in_features, num_classes)
+    return net
+
+
+def _single_epoch(model: nn.Module, loader: DataLoader, device: torch.device, optim_cfg: Dict):
+    """Train *one* epoch – helper for the sanity check."""
+    opt = torch.optim.SGD(model.parameters(), **optim_cfg, nesterov=True)
+    model.train()
+    for x, y in loader:
+        x, y = x.to(device), y.to(device)
+        opt.zero_grad()
+        F.cross_entropy(model(x), y).backward()
+        opt.step()
+
+
+def sanity_check(device: torch.device, cfg: Dict) -> float:
+    """Run a very small (≈10 epochs) CIFAR-100 training loop to verify that the
+    hardware / CUDA / cuDNN stack is healthy.  The experiment is
+    intentionally short; accuracy <90 % usually indicates a mis-configured
+    GPU, wrong learning-rate or other environment issue.  A `RuntimeError`
+    is raised if the accuracy threshold is not met so that the main script
+    can *fail fast* instead of wasting hours on broken runs.
+
+    Returns
+    -------
+    float
+        The final test accuracy in percent.
     """
+    train_tf = transforms.Compose(
+        [transforms.RandomCrop(32, 4), transforms.RandomHorizontalFlip(), transforms.ToTensor()]
+    )
+    test_tf = transforms.ToTensor()
 
-    # Warn if someone accidentally runs the stub on a GPU machine.
-    if torch.cuda.is_available():
-        warnings.warn(
-            "`train_stream()` stub executed even though CUDA is available. "
-            "Full training has been stripped for CI; returning dummy numbers.",
-            RuntimeWarning,
-            stacklevel=2,
-        )
+    train_ds = datasets.CIFAR100(root=str(DATA), train=True, download=True, transform=train_tf)
+    test_ds = datasets.CIFAR100(root=str(DATA), train=False, download=True, transform=test_tf)
 
-    rng = random.Random(seed)
+    tr_loader = DataLoader(train_ds, batch_size=256, shuffle=True, num_workers=2)
+    te_loader = DataLoader(test_ds, batch_size=256, num_workers=2)
 
-    # Produce seed-dependent but reproducible fake metrics in a plausible range
-    avg_acc = 48.0 + rng.random() * 12.0   # 48-60 %
-    forgetting = 4.0 + rng.random() * 6.0  # 4-10 %
+    net = build_resnet18(100).to(device)
 
-    return avg_acc, forgetting, None  # no buffer object in the stub
+    for _ in range(10):
+        _single_epoch(net, tr_loader, device, cfg["optim"])
 
+    # ------------------------------------------------ evaluation
+    net.eval()
+    correct = total = 0
+    with torch.no_grad():
+        for x, y in te_loader:
+            pred = net(x.to(device)).argmax(1).cpu()
+            correct += (pred == y).sum().item()
+            total += y.size(0)
+    acc = 100 * correct / total
+    print(f"[Sanity] CIFAR-100 single-task accuracy = {acc:.2f} %")
 
-def sanity_single_task(*, device: torch.device | str | None = None):  # noqa: D401
-    """No-op sanity check for CI.
-
-    In the full implementation this function trains a single-task model on
-    CIFAR-100 for 10 epochs and asserts that accuracy exceeds 90 %.  Such a
-    procedure is infeasible in the CPU-only test runner, so the stub merely
-    prints an informational message and exits.  A warning is raised if a CUDA
-    device is detected to avoid silent misuse.
-    """
-
-    if torch.cuda.is_available():
-        warnings.warn(
-            "`sanity_single_task()` stub executed on a CUDA host.  The heavy "
-            "training workload has been removed for CI; nothing is checked.",
-            RuntimeWarning,
-            stacklevel=2,
-        )
-
-    print("[Sanity-Stub] Skipping single-task training – not implemented in CI build.")
+    if acc < 90:
+        raise RuntimeError("Sanity-check accuracy below 90 %. Environment may be mis-configured.")
+    return acc
