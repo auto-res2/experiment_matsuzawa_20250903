@@ -252,6 +252,17 @@ class AQM_ER(nn.Module):
             loss.backward()
             opt.step()
 
+    @torch.no_grad()
+    def eval_loader(self, loader):
+        """Evaluation utility to match JEMB/InfLoRA API."""
+        self.eval()
+        good = tot = 0
+        for x, y in loader:
+            x, y = x.to(DEVICE), y.to(DEVICE)
+            good += (self(x).argmax(1) == y).sum().item()
+            tot  += y.size(0)
+        return 100 * good / tot if tot else 0.0
+
     def realloc(self, val_loader):
         space = self.cap - self.ledger.B - self.ledger.A
         add   = space // (2 if not self.use_dummy else DummyCompressor.BYTES_PER_SAMPLE)
