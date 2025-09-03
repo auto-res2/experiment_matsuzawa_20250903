@@ -38,7 +38,7 @@ def _md5(path: pathlib.Path) -> str:
 
 def _download_once(url: str, dst: pathlib.Path):
     """Internal helper that performs a single download attempt."""
-    if "drive.google.com" in url:
+    if "drive.google.com" in url or "uc?export=download" in url:
         try:
             import gdown
         except ImportError as exc:
@@ -126,18 +126,18 @@ class WaterbirdsDataset(Dataset):
             raise ValueError("split must be one of 'train' | 'val' | 'test'")
 
         self.transform = transform
-        base_dir = os.path.join(root, "waterbird_complete95_forest2water2")
-        if not os.path.isdir(base_dir):
+        self.base_dir = os.path.join(root, "waterbird_complete95_forest2water2")
+        if not os.path.isdir(self.base_dir):
             raise FileNotFoundError("Waterbirds folder missing – did extraction succeed?")
 
         # Prefer explicit split CSVs (if present).
-        csv_split_path = os.path.join(base_dir, f"{split}.csv")
+        csv_split_path = os.path.join(self.base_dir, f"{split}.csv")
         if os.path.exists(csv_split_path):
             meta_file = csv_split_path
             split_df_key = None  # entire file already filtered
         else:
             # Fall back to the canonical metadata.csv
-            meta_file = os.path.join(base_dir, "metadata.csv")
+            meta_file = os.path.join(self.base_dir, "metadata.csv")
             if not os.path.exists(meta_file):
                 raise FileNotFoundError(
                     "Waterbirds metadata CSV missing – the dataset archive may be corrupted."
@@ -166,10 +166,25 @@ class WaterbirdsDataset(Dataset):
         if label_col not in df.columns:
             raise KeyError("Could not locate label column in metadata CSV.")
 
-        self.samples = [
-            (os.path.join(root, fname), int(label))
-            for fname, label in zip(df[fname_col], df[label_col])
-        ]
+        self.samples = []
+        for fname, label in zip(df[fname_col], df[label_col]):
+            # The filename paths vary across dataset versions. Try a couple of
+            # reasonable candidates until an existing file is found. This makes
+            # the loader robust to upstream changes without requiring manual
+            # user intervention.
+            candidates = [
+                os.path.join(self.base_dir, fname),
+                os.path.join(self.base_dir, "CUB_200_2011", "images", fname),
+                os.path.join(self.base_dir, "images", fname),
+            ]
+            img_path: Optional[str] = next((p for p in candidates if os.path.exists(p)), None)
+            if img_path is None:
+                # Give a clear error message instead of failing later in __getitem__.
+                raise FileNotFoundError(
+                    f"None of the candidate paths exist for sample '{fname}'. Tried: {candidates}"
+                )
+            self.samples.append((img_path, int(label)))
+
         if not self.samples:
             raise RuntimeError(f"No samples found for split='{split}'.")
 
