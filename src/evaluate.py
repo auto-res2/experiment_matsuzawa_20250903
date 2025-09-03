@@ -1,190 +1,25 @@
+"""src/evaluate.py – evaluation utilities (plots, metrics, etc.)"""
 from __future__ import annotations
-"""
-evaluate.py – training/evaluation orchestration + plotting helpers
-"""
-import json
-import random
-import time
-from pathlib import Path
-from dataclasses import dataclass, field
-from typing import Dict, List
-
-import numpy as np
-import torch
-from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
-import seaborn as sns  # noqa: F401 (kept for styling consistency)
+from pathlib import Path
+from typing import Dict
 
-from .train import (
-    DEVICE,
-    JEMBModel,
-    InfLoRA,
-    AQM_ER,
-)
-from .preprocess import build_task_stream
+from .train import TaskLog
 
-# ---------------------------------------------------------------------
-#  Directories (created on import)
-# ---------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parent.parent
-RUNS_DIR = ROOT / "runs"
-# --------- UPDATED TO ITERATION 12 AS REQUIRED -----------------------
-IMG_DIR = ROOT / ".research/iteration12/images"
-RUNS_DIR.mkdir(parents=True, exist_ok=True)
-IMG_DIR.mkdir(parents=True, exist_ok=True)
-
-# ---------------------------------------------------------------------
-#  Light log container
-# ---------------------------------------------------------------------
-@dataclass
-class Log:
-    acc: List[float] = field(default_factory=list)
-    bytesA: List[int] = field(default_factory=list)
-    bytesB: List[int] = field(default_factory=list)
+# hard-coded figure directory requested by the specification
+FIG_DIR = Path('.research/iteration14/images')
+FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# ---------------------------------------------------------------------
-#  Core training-and-evaluation routine for *one* method
-# ---------------------------------------------------------------------
-
-def run_method(
-    name: str,
-    ModelCls,
-    stream,
-    cfg_train: dict,
-    seed: int = 0,
-):
-    """Train one continual-learning method on the given task stream."""
-
-    torch.manual_seed(seed)
-    random.seed(seed)
-    np.random.seed(seed)
-
-    # ------------------------------------------------------------------
-    # The original implementation mistakenly instantiated the classifier
-    # heads with only *classes_per_task* output neurons.  As soon as the
-    # data loader encountered a label outside this narrow range, CUDA
-    # asserted that the target label be < n_classes, leading to the
-    # device-side assert seen in the crash log.  We fix this by sizing
-    # the heads for the *total* number of dataset classes (100 for
-    # CIFAR-100).  The constant is inferred either from the training
-    # subsection (optional key ``total_classes``) or falls back to 100.
-    # ------------------------------------------------------------------
-    total_classes = cfg_train.get("total_classes", 100)
-
-    model = ModelCls(
-        num_cls=total_classes,
-        cap_bytes=cfg_train["budget_bytes"],
-    ).to(DEVICE)
-
-    opt = torch.optim.SGD(
-        model.parameters(),
-        lr=cfg_train["lr"],
-        momentum=cfg_train["momentum"],
-        weight_decay=cfg_train["weight_decay"],
-    )
-
-    log: Log = Log()
-    test_loaders = []
-
-    for tid, (tr, va, te) in enumerate(stream, 1):
-        trL = DataLoader(tr, batch_size=cfg_train["batch_size"], shuffle=True, num_workers=2)
-        vaL = DataLoader(va, batch_size=cfg_train["batch_size"], shuffle=False, num_workers=2)
-        teL = DataLoader(te, batch_size=cfg_train["batch_size"], shuffle=False, num_workers=2)
-        test_loaders.append(teL)
-
-        for _ in range(cfg_train["epochs_per_task"]):
-            model.train_epoch(trL, opt)
-            model.realloc(vaL)
-
-        # ------ evaluation on accumulated tasks -----------------------
-        accs = [model.eval_loader(l) for l in test_loaders]
-        log.acc.append(sum(accs) / len(accs))
-        log.bytesA.append(model.ledger.A)
-        log.bytesB.append(model.ledger.B)
-        print(f"{name:8s} task {tid:02d}  avg-acc={log.acc[-1]:5.2f}  A={model.ledger.A}  B={model.ledger.B}")
-
-    summary = {
-        "method": name,
-        "A_T": log.acc[-1],
-        "bytes_adapter": log.bytesA[-1],
-        "bytes_buffer": log.bytesB[-1],
-    }
-    return summary, log
-
-
-# ---------------------------------------------------------------------
-#  Plot helper (publication quality)
-# ---------------------------------------------------------------------
-
-def plot_curve(logs: Dict[str, Log]):
+def plot_curves(logs: Dict[str, TaskLog]):
+    """Plot per-task average accuracy curves and save under the required path."""
     plt.figure(figsize=(6, 3))
     for name, l in logs.items():
         plt.plot(l.acc, label=name)
-        for i, v in enumerate(l.acc):
-            plt.text(i, v + 0.3, f"{v:.1f}", fontsize=6)
-    plt.xlabel("Task")
-    plt.ylabel("Average Accuracy (%)")
+    plt.xlabel('Task')
+    plt.ylabel('Average accuracy (%)')
+    plt.grid()
     plt.legend()
-    plt.grid(True)
-    fname = IMG_DIR / "accuracy_curve_ci.pdf"
-    plt.savefig(fname, bbox_inches="tight")
-    print("[fig] saved →", fname)
-
-
-# ---------------------------------------------------------------------
-#  High-level experiment wrapper used by main.py
-# ---------------------------------------------------------------------
-
-def run_experiment(cfg: dict):
-    """Top-level experiment driver invoked from src.main."""
-    from .train import run_unit_tests  # local import to avoid circularity
-
-    print("\n" + cfg["experiment"]["description"] + "\n")
-    run_unit_tests()
-    start = time.time()
-
-    # ---------- build task stream -------------------------------------
-    stream = build_task_stream(
-        data_dir=Path(cfg["dataset"]["data_root"]),
-        mean=cfg["dataset"]["mean"],
-        std=cfg["dataset"]["std"],
-        num_tasks=cfg["dataset"]["num_tasks"],
-        classes_per_task=cfg["dataset"]["classes_per_task"],
-        seed=cfg["experiment"]["seed"],
-    )
-
-    logs: Dict[str, Log] = {}
-    results: List[dict] = []
-
-    name2cls = {
-        "jemb": JEMBModel,
-        "inflora": InfLoRA,
-        "aqm_er": AQM_ER,
-    }
-
-    # ------------------------------------------------------------------
-    # Inject the *total number of classes* into the training subsection
-    # so that `run_method` can retrieve it without needing the full
-    # dataset config.  This keeps the public API unchanged.
-    # ------------------------------------------------------------------
-    cfg["training"]["total_classes"] = cfg["dataset"]["num_tasks"] * cfg["dataset"]["classes_per_task"]
-
-    for m in cfg["experiment"]["methods"]:
-        res, lg = run_method(m, name2cls[m], stream, cfg["training"], seed=cfg["experiment"]["seed"])
-        logs[m] = lg
-        results.append(res)
-
-    # --------------- persist raw metrics ------------------------------
-    out = {
-        "description": cfg["experiment"]["description"],
-        "per_task": {k: lg.__dict__ for k, lg in logs.items()},
-        "summary": results,
-        "wall_clock_s": round(time.time() - start, 2),
-    }
-    (RUNS_DIR / "run_ci.json").write_text(json.dumps(out, indent=2))
-    print("\n[results]", json.dumps(results, indent=2))
-    print("[saved] runs/run_ci.json")
-
-    # plot -------------------------------------------------------------
-    plot_curve(logs)
+    fname = FIG_DIR / 'training_accuracy.pdf'
+    plt.savefig(fname, bbox_inches='tight')
+    print('[fig] saved', fname)

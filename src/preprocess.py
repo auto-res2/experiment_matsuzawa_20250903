@@ -1,74 +1,68 @@
-"""
-preprocess.py – data downloading, preprocessing & task-stream builder
-"""
+"""src/preprocess.py – data download / transforms / stream builder"""
 from __future__ import annotations
 import random, tarfile, urllib.request
 from pathlib import Path
 from typing import List, Tuple
 
 import torch
+from torch.utils.data import random_split
 import torchvision
 import torchvision.transforms as T
-from torch.utils.data import random_split
-
-# CIFAR-100 constants ---------------------------------------------------
-CIFAR_URL = "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
 
 
-def _download_cifar_if_missing(data_dir: Path):
-    tgt = data_dir / "cifar-100-python"
-    if tgt.exists():
+# ────────────────────────────────────────────────────────────────────────
+# Build data stream for Split-CIFAR100                                   
+# ────────────────────────────────────────────────────────────────────────
+
+
+def _ensure_cifar_download(url: str, data_dir: Path):
+    cifar_dir = data_dir / 'cifar-100-python'
+    if cifar_dir.exists():
         return
+    print('[download] CIFAR-100 …')
+    tmp = data_dir / 'cifar100.tgz'
+    urllib.request.urlretrieve(url, tmp)
+    tarfile.open(tmp).extractall(data_dir)
+
+
+def _subset(ds, cls_ids):
+    idx = [i for i, (_, y) in enumerate(ds) if y in cls_ids]
+    return torch.utils.data.Subset(ds, idx)
+
+
+def build_stream(cfg) -> List[Tuple[torch.utils.data.Dataset, ...]]:
+    """Return list[(train,val,test)] for every task defined in the cfg."""
+
+    # directories ------------------------------------------------------
+    root = Path(__file__).resolve().parent.parent  # project root
+    data_dir = root / 'data'
     data_dir.mkdir(parents=True, exist_ok=True)
-    tgz = data_dir / "cifar100.tgz"
-    if not tgz.exists():
-        print("[DL] CIFAR-100 …")
-        urllib.request.urlretrieve(CIFAR_URL, tgz)
-    with tarfile.open(tgz) as tar:
-        tar.extractall(data_dir)
 
+    # dataset download -------------------------------------------------
+    _ensure_cifar_download(cfg['dataset']['url'], data_dir)
 
-def _build_transforms(mean: List[float], std: List[float]):
+    mean, std = cfg['dataset']['mean'], cfg['dataset']['std']
     train_tf = T.Compose([
         T.RandAugment(num_ops=2, magnitude=9),
         T.ToTensor(),
         T.Normalize(mean, std),
     ])
-    val_tf = T.Compose([
-        T.ToTensor(),
-        T.Normalize(mean, std),
-    ])
-    return train_tf, val_tf
+    val_tf = T.Compose([T.ToTensor(), T.Normalize(mean, std)])
 
+    full_train = torchvision.datasets.CIFAR100(data_dir, train=True, download=False, transform=train_tf)
+    full_test = torchvision.datasets.CIFAR100(data_dir, train=False, download=False, transform=val_tf)
 
-def build_task_stream(
-    data_dir: Path,
-    mean: List[float],
-    std: List[float],
-    num_tasks: int,
-    classes_per_task: int,
-    seed: int = 0,
-):
-    """Returns list[(train, val, test)] for Split-CIFAR100."""
-    _download_cifar_if_missing(data_dir)
-
-    train_tf, val_tf = _build_transforms(mean, std)
-    full_train = torchvision.datasets.CIFAR100(data_dir, train=True,  download=False, transform=train_tf)
-    full_test  = torchvision.datasets.CIFAR100(data_dir, train=False, download=False, transform=val_tf)
-
-    cls: List[int] = list(range(100))
-    random.Random(seed).shuffle(cls)
-    tasks = [cls[i : i + classes_per_task] for i in range(0, num_tasks * classes_per_task, classes_per_task)]
-
-    def _subset(ds, cls_ids):
-        idx = [i for i, (_, y) in enumerate(ds) if y in cls_ids]
-        return torch.utils.data.Subset(ds, idx)
+    # fixed 20 × 5 split ------------------------------------------------
+    classes = list(range(100))
+    random.Random(cfg['dataset']['seed_order']).shuffle(classes)
+    step = cfg['dataset']['classes_per_task']
+    tasks = [classes[i:i + step] for i in range(0, 100, step)]
 
     stream = []
-    for t in tasks:
-        tr = _subset(full_train, t)
-        te = _subset(full_test,  t)
-        v  = int(0.05 * len(tr))
-        tr, va = random_split(tr, [len(tr) - v, v], generator=torch.Generator().manual_seed(seed))
+    for cls in tasks:
+        tr = _subset(full_train, cls)
+        te = _subset(full_test, cls)
+        v = int(0.05 * len(tr))
+        tr, va = random_split(tr, [len(tr) - v, v], generator=torch.Generator().manual_seed(0))
         stream.append((tr, va, te))
     return stream

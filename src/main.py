@@ -1,79 +1,103 @@
+"""src/main.py – orchestrates Experiment-1 using the refactored modules"""
 from __future__ import annotations
-"""
-main.py – top-level entry point  (run with  python -m src.main )
-"""
-import importlib
-import subprocess
-import sys
+import sys, subprocess, importlib, json, time
 from pathlib import Path
+from typing import Dict
+
 import yaml
 
-# ---------------------------------------------------------------------
-# 0. Reproducibility guard & on-the-fly wheel installer
-# ---------------------------------------------------------------------
-# Strict reproducibility would require a fixed Python minor version.
-# However, the execution environment may differ, so we emit a warning
-# instead of aborting when the version is not exactly 3.10.*.
-REQ_PY = (3, 10)
-if sys.version_info[:2] != REQ_PY:
-    print(
-        f"[warn] Expected Python {REQ_PY[0]}.{REQ_PY[1]}.* for strict reproducibility, "
-        f"but running on {sys.version_info.major}.{sys.version_info.minor}. Proceeding anyway."
-    )
+# ----------------------------------------------------------------------
+# 1.  Load configuration                                                 
+# ----------------------------------------------------------------------
+ROOT = Path(__file__).resolve().parent  # /project/src
+CFG_PATH = ROOT.parent / 'config' / 'config.yaml'
+CFG: Dict = yaml.safe_load(CFG_PATH.read_text())
 
-# Lightweight dependency check – install only if a module is *missing*.
-# This prevents unnecessary re-installation of huge wheels that are
-# typically already present in the execution image (e.g. torch / CUDA).
-_PINNED = {
-    "torch": "torch==2.1.2+cu122",
-    "torchvision": "torchvision==0.16.2+cu122",
-    "tqdm": "tqdm==4.66.2",
-    "numpy": "numpy==1.26.4",
-    "fvcore": "fvcore==0.1.5.post20221221",
-    "torchmetrics": "torchmetrics==1.3.2",
-    "matplotlib": "matplotlib==3.8.4",
-    "seaborn": "seaborn==0.13.2",
-    "bitsandbytes": "bitsandbytes==0.43.1",
-    "PyYAML": "PyYAML==6.0.1",
-}
+# ----------------------------------------------------------------------
+# 2.  Environment guard & wheel bootstrap (unchanged logic)              
+# ----------------------------------------------------------------------
+REQ_MAJOR, REQ_MINOR = 3, 10
+if sys.version_info[:2] != (REQ_MAJOR, REQ_MINOR):
+    raise RuntimeError(f"Python {REQ_MAJOR}.{REQ_MINOR}.x required, found {sys.version}")
 
-for module, wheel in _PINNED.items():
+for mod, wheel in CFG['environment']['pinned_wheels'].items():
     try:
-        importlib.import_module(module)
+        importlib.import_module(mod)
     except ImportError:
-        print(f"[setup] installing {wheel} …", flush=True)
-        subprocess.check_call(
-            [
-                sys.executable,
-                "-m",
-                "pip",
-                "install",
-                wheel,
-                "--extra-index-url",
-                "https://download.pytorch.org/whl/cu122",
-            ]
-        )
+        print(f"[setup] installing pinned wheel {wheel}")
+        subprocess.check_call([
+            sys.executable,
+            '-m',
+            'pip',
+            'install',
+            wheel,
+            '--extra-index-url',
+            'https://download.pytorch.org/whl/cu122',
+        ])
 
-# ---------------------------------------------------------------------
-# 1.  Load YAML configuration
-# ---------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parent.parent
-CFG_PATH = ROOT / "config" / "config.yaml"
-with CFG_PATH.open() as fh:
-    cfg = yaml.safe_load(fh)
+# now heavy imports are safe -------------------------------------------
+import torch  # noqa: E402  pylint: disable=wrong-import-position
 
-# Inject default data path if not provided in the YAML -----------------
-cfg["dataset"].setdefault("data_root", str(ROOT / "data"))
+from .train import (
+    JEMB,
+    Reservoir,
+    InfLoRA,
+    run_method,
+    run_unit_tests,
+)
+from .evaluate import plot_curves
 
-# ---------------------------------------------------------------------
-# 2.  Run experiment (delegated to evaluate.py)
-# ---------------------------------------------------------------------
-from .evaluate import run_experiment
+RUNS_DIR = ROOT.parent / 'runs'
+RUNS_DIR.mkdir(parents=True, exist_ok=True)
+
+DESCRIPTION = (
+    """
+Experiment-1  –  Correct-Task End-to-End Benchmark\n"
+    "Dataset : Split-CIFAR100 (20 × 5 classes)\n"
+    "Budget  : 1 MB (joint adapter + buffer)    Seed : 42\n"
+    "Models  : JEMB, Reservoir, InfLoRA\n"
+    "Metrics : per-task average accuracy, bytes_adapter, bytes_buffer\n"""
+)
 
 
 def main():
-    run_experiment(cfg)
+    print('\n' + DESCRIPTION + '\n')
+    run_unit_tests()
+    start = time.time()
+
+    logs = {}
+    results = []
+
+    for name, ctor in [
+        ('JEMB', lambda led: JEMB(led)),
+        ('Reservoir', lambda led: Reservoir(led)),
+        ('InfLoRA', lambda led: InfLoRA(led)),
+    ]:
+        res, lg = run_method(name, ctor, CFG, seed=42)
+        results.append(res)
+        logs[name] = lg
+
+    # -------------------- sanity gates --------------------------------
+    if results[0]['A_T'] < 30:
+        raise RuntimeError('ci_final_acc() gate failed – JEMB accuracy below 30 %')
+    if max(logs['JEMB'].B) == 0 or len(set(logs['JEMB'].B)) < 2:
+        raise RuntimeError('controller_allocates_buffer() failed – buffer never used')
+    if not 45 <= results[1]['A_T'] <= 65:
+        raise RuntimeError('reservoir_in_range() failed – baseline sanity')
+
+    # -------------------- persist & plots ------------------------------
+    out = {
+        'description': DESCRIPTION,
+        'per_task': {k: {'acc': v.acc, 'bytesA': v.A, 'bytesB': v.B} for k, v in logs.items()},
+        'summary': results,
+        'wall_clock_s': round(time.time() - start, 2),
+    }
+    (RUNS_DIR / 'run_ci.json').write_text(json.dumps(out, indent=2))
+    print('\n[results]\n', json.dumps(results, indent=2))
+    print('[saved] runs/run_ci.json')
+
+    plot_curves(logs)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
