@@ -83,7 +83,7 @@ def run_experiment(cfg):
 
 def cli():
     p = argparse.ArgumentParser(description="AutoCF-Diff experimental runner")
-    p.add_argument("--config", type=str, default="../config/config.yaml", help="Path to YAML config file")
+    p.add_argument("--config", type=str, default="config/config.yaml", help="Path to YAML config file")
     p.add_argument("--fast_dev_run", action="store_true", help="1 batch / 1 epoch smoke test")
     args = p.parse_args()
 

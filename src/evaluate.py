@@ -55,10 +55,10 @@ def evaluate_model(model, loader: DataLoader) -> Dict[str, float]:
 # -----------------------------------------------------------------------------
 
 def save_bar(values: Dict[str, float], title: str, fname: Path):
-    """Save a bar plot to .research/iteration3/images/ <fname>.  Directory is
+    """Save a bar plot to .research/iteration4/images/<fname>. Directory is
     created if needed.
     """
-    out_dir = Path(".research/iteration3/images")
+    out_dir = Path(".research/iteration4/images")
     out_dir.mkdir(parents=True, exist_ok=True)
     fname = out_dir / fname.name
 
