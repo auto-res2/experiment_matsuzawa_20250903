@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 7, in <module>
+    from src.evaluate import experiment1
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/evaluate.py", line 14, in <module>
+    from .train import train_stream, sanity_single_task
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 29, in <module>
+    from taming.models.vqgan import VQModel
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/taming/models/vqgan.py", line 5, in <module>
+    from taming.main import instantiate_from_config
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/taming/main.py", line 12, in <module>
+    from pytorch_lightning.utilities.distributed import rank_zero_only
+ModuleNotFoundError: No module named 'pytorch_lightning.utilities.distributed'
