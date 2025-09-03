@@ -23,7 +23,7 @@ with open(CONFIG_PATH, "r") as f:
     CFG = yaml.safe_load(f)
 
 # Ensure output directories exist -------------------------------------------
-IMG_DIR = pathlib.Path(__file__).resolve().parent.parent / ".research" / "iteration1" / "images"
+IMG_DIR = pathlib.Path(__file__).resolve().parent.parent / ".research" / "iteration2" / "images"
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
 DATA_ROOT = CFG["data_root"]

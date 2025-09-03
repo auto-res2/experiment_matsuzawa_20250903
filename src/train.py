@@ -49,6 +49,43 @@ import torch_geometric as tg
 import scipy.sparse as sp
 
 
+# ---------- Minimal scatter_mean replacement (to avoid torch_scatter dep) ------
+
+def _scatter_mean(src: torch.Tensor, index: torch.Tensor, dim: int = 0, dim_size: int | None = None):
+    """Light-weight replacement for torch_scatter.scatter_mean (dim=0 only).
+
+    Parameters
+    ----------
+    src : torch.Tensor
+        Values to aggregate.
+    index : torch.Tensor (1-D)
+        Index of the target node for each element in ``src`` along ``dim``.
+    dim : int, default=0
+        Dimension along which to scatter (only 0 supported).
+    dim_size : int | None
+        Size of the output tensor along ``dim``.  If ``None`` it is inferred.
+    """
+    if dim != 0:
+        raise NotImplementedError("_scatter_mean currently supports dim=0 only.")
+
+    if index.numel() == 0:
+        # Degenerate case – return empty tensor shaped (0, *feature_dims)
+        return src.new_zeros((0,) + src.shape[1:])
+
+    if dim_size is None:
+        dim_size = int(index.max()) + 1
+
+    out = src.new_zeros((dim_size,) + src.shape[1:])
+    out.index_add_(0, index, src)
+
+    count = src.new_zeros(dim_size)
+    ones = torch.ones_like(index, dtype=src.dtype)
+    count.index_add_(0, index, ones)
+    count = count.clamp_min(1).view(-1, *([1] * (src.dim() - 1)))
+    out = out / count
+    return out
+
+
 def _normalized_adj(edge_index, num_nodes, device):
     """Return symmetric normalized adjacency (with self-loops) as edge_index."""
     ei, _ = tg_utils.add_self_loops(edge_index, num_nodes=num_nodes)
@@ -88,7 +125,7 @@ class AdaptiveProp(nn.Module):
         k_feats: List[torch.Tensor] = []
         h = x
         for _ in range(self.k_max):
-            h = tg_utils.scatter_mean(h[norm_ei[0]], norm_ei[1], dim=0, dim_size=num_nodes)
+            h = _scatter_mean(h[norm_ei[0]], norm_ei[1], dim=0, dim_size=num_nodes)
             k_feats.append(h)
 
         # Node degrees for gate net
