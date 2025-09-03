@@ -1,77 +1,110 @@
 """
-preprocess.py – all data handling & augmentation logic.
-Only a subset of the original datasets (Waterbirds) is kept to keep the example
-light-weight.  Additional datasets can be added following the same template.
+preprocess.py – data downloading, preprocessing and DataLoader assembly
+All dataset-specific code is concentrated here so that extending the project to
+new datasets is straightforward.
 """
 from __future__ import annotations
-import requests, tarfile, zipfile
+import tarfile, zipfile, subprocess, shutil, tempfile
 from pathlib import Path
-from typing import Tuple, Dict
+from typing import Dict, Callable
 
+import requests
 import torch
 import torchvision.transforms as T
 from torch.utils.data import DataLoader
 
-# WILDS provides Waterbirds & CelebA splits ready-made -----------------------
-from wilds import get_dataset
+###########################################################################
+# ─── CONFIG ───────────────────────────────────────────────────────────────
+###########################################################################
+import yaml
+_CFG_PATH = Path(__file__).resolve().parent.parent / "config" / "config.yaml"
+with open(_CFG_PATH, "r") as _f:
+    cfg = yaml.safe_load(_f)
 
-# -----------------------------------------------------------------------------
 DATA_ROOT = Path("data")
 DATA_ROOT.mkdir(exist_ok=True)
 
-# -----------------------------------------------------------------------------
-#                              transforms
-# -----------------------------------------------------------------------------
+###########################################################################
+# ─── DOWNLOAD HELPERS ─────────────────────────────────────────────────────
+###########################################################################
 
-MEAN = [0.485, 0.456, 0.406]
-STD = [0.229, 0.224, 0.225]
+def _download(url: str, dest: Path, chunk: int = 1 << 20) -> Path:
+    if dest.exists():
+        return dest
+    dest.parent.mkdir(parents=True, exist_ok=True)
+
+    r = requests.get(url, stream=True, timeout=60)
+    if not r.ok:
+        raise RuntimeError(f"Failed fetching {url}")
+
+    with open(dest, "wb") as f:
+        for chunk_bytes in r.iter_content(chunk):
+            if chunk_bytes:
+                f.write(chunk_bytes)
+    return dest
+
+###########################################################################
+# ─── TRANSFORMS ───────────────────────────────────────────────────────────
+###########################################################################
+_MEAN, _STD = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
+
+TFM_TRAIN = T.Compose([
+    T.Resize(256),
+    T.RandomResizedCrop(224),
+    T.RandAugment(2, 9),
+    T.RandomHorizontalFlip(),
+    T.ToTensor(),
+    T.Normalize(_MEAN, _STD),
+])
+
+TFM_EVAL = T.Compose([
+    T.Resize(256),
+    T.CenterCrop(224),
+    T.ToTensor(),
+    T.Normalize(_MEAN, _STD),
+])
+
+###########################################################################
+# ─── DATASET REGISTRY ─────────────────────────────────────────────────────
+###########################################################################
+
+try:
+    from wilds import get_dataset
+except ImportError:  # pragma: no cover
+    get_dataset = None
 
 
-def _tfm_train():
-    return T.Compose(
-        [
-            T.Resize(256),
-            T.RandomResizedCrop(224),
-            T.RandomHorizontalFlip(),
-            T.RandAugment(num_ops=2, magnitude=9),
-            T.ToTensor(),
-            T.Normalize(mean=MEAN, std=STD),
-        ]
-    )
+def _wilds_loader(name: str):
+    if get_dataset is None:
+        raise RuntimeError("`wilds` package missing – required for dataset loading")
+    ds = get_dataset(name, root_dir=str(DATA_ROOT / name), download=True)
+    return ds
 
+# Only Waterbirds & CelebA are wired in this public snippet -----------------
+_LOADERS: Dict[str, Callable] = {
+    "waterbirds": lambda: _wilds_loader("waterbirds"),
+    "celeba":     lambda: _wilds_loader("celebA"),
+}
 
-def _tfm_test():
-    return T.Compose(
-        [T.Resize(256), T.CenterCrop(224), T.ToTensor(), T.Normalize(mean=MEAN, std=STD)]
-    )
+###########################################################################
+# ─── PUBLIC API ───────────────────────────────────────────────────────────
+###########################################################################
 
+def get_loaders(ds_name: str, batch: int, workers: int):
+    """Return train/val/test DataLoaders, number of classes and group flag."""
+    if ds_name not in _LOADERS:
+        raise NotImplementedError(f"Dataset {ds_name} not implemented – aborting as per fail-fast policy.")
 
-# -----------------------------------------------------------------------------
-#                           dataset specific loaders
-# -----------------------------------------------------------------------------
+    dataset = _LOADERS[ds_name]()
+    tr = dataset.get_subset("train", transform=TFM_TRAIN)
+    va = dataset.get_subset("val",   transform=TFM_EVAL)
+    te = dataset.get_subset("test",  transform=TFM_EVAL)
 
-def _waterbirds(batch_size: int, num_workers: int):
-    dataset = get_dataset("waterbirds", root_dir=str(DATA_ROOT / "waterbirds"), download=True)
-    dl_train = dataset.get_subset("train", transform=_tfm_train())
-    dl_val = dataset.get_subset("val", transform=_tfm_test())
-    dl_test = dataset.get_subset("test", transform=_tfm_test())
-
-    loaders = {
-        "train": DataLoader(dl_train, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True),
-        "val": DataLoader(dl_val, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True),
-        "test": DataLoader(dl_test, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True),
+    dls = {
+        "train": DataLoader(tr, batch_size=batch, shuffle=True,  num_workers=workers, pin_memory=True),
+        "val":   DataLoader(va, batch_size=batch, shuffle=False, num_workers=workers, pin_memory=True),
+        "test":  DataLoader(te, batch_size=batch, shuffle=False, num_workers=workers, pin_memory=True),
     }
-    return loaders, dataset.n_classes
-
-
-LOADER_REGISTRY = {"waterbirds": _waterbirds}
-
-
-# -----------------------------------------------------------------------------
-#                              public API
-# -----------------------------------------------------------------------------
-
-def get_dataloaders(dataset_name: str, batch_size: int, num_workers: int):
-    if dataset_name not in LOADER_REGISTRY:
-        raise RuntimeError(f"Dataset '{dataset_name}' is not implemented in preprocess.py")
-    return LOADER_REGISTRY[dataset_name](batch_size, num_workers)
+    n_cls = dataset.n_classes
+    has_groups = hasattr(dataset, "_group_array")
+    return dls, n_cls, has_groups

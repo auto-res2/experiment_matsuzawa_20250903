@@ -1,52 +1,38 @@
 """
-evaluate.py – validation/test utilities & plotting helpers.
+evaluate.py – metrics & visualisation utilities
+Only light-weight helpers live here so that downstream notebooks can import the
+module without dragging heavy dependencies like torch.
 """
-from __future__ import annotations
 from pathlib import Path
 from typing import Dict
 
-import torch
 import matplotlib.pyplot as plt
 
-# -----------------------------------------------------------------------------
-#                           scalar accuracy helper
-# -----------------------------------------------------------------------------
+# Where camera-ready figures must go -----------------------------------------
+FIG_DIR = Path(".research/iteration8/images")
+FIG_DIR.mkdir(parents=True, exist_ok=True)
 
-def evaluate_accuracy(model: torch.nn.Module, loader, device: str) -> float:
-    """Top-1 accuracy on a dataloader.  Accepts (x, y) or (x, y, metadata)."""
-    model.eval()
-    num, correct = 0, 0
-    with torch.no_grad():
-        for batch in loader:
-            x, y = batch[0], batch[1]
-            x, y = x.to(device), y.to(device)
-            pred = model(x).argmax(1)
-            correct += (pred == y).sum().item()
-            num += y.size(0)
-    return correct / num if num > 0 else 0.0
+###############################################################################
+# ─── PLOTTING ────────────────────────────────────────────────────────────────
+###############################################################################
 
+def bar_chart(data: Dict[str, float], title: str, file_stem: str) -> Path:
+    """Save a bar chart as PDF and return the resulting path."""
+    labels, vals = list(data.keys()), list(data.values())
 
-# -----------------------------------------------------------------------------
-#                                 plotting
-# -----------------------------------------------------------------------------
+    w = 0.5 * len(labels) + 2
+    plt.figure(figsize=(w, 4))
+    plt.bar(range(len(vals)), vals, color="#4C72B0")
+    plt.xticks(range(len(vals)), labels, rotation=45, ha="right")
 
-IMAGES_DIR = Path(".research/iteration7/images")
-IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+    for i, v in enumerate(vals):
+        plt.text(i, v + 0.01, f"{v:.2f}", ha="center", va="bottom", fontsize=8)
 
-
-def bar_plot(values: Dict[str, float], title: str, fname: str) -> str:
-    """Simple bar plot saved to the mandatory images folder."""
-    labels = list(values.keys())
-    y = list(values.values())
-    plt.figure(figsize=(max(4, 0.45 * len(labels)), 4))
-    plt.bar(range(len(y)), y, color="tab:blue")
-    plt.xticks(range(len(y)), labels, rotation=45, ha="right")
-    for i, v in enumerate(y):
-        plt.text(i, v + 0.005, f"{v:.2f}", ha="center", fontsize=8)
     plt.ylabel("Accuracy")
     plt.title(title)
     plt.tight_layout()
-    path = IMAGES_DIR / f"{fname}.pdf"
-    plt.savefig(path, bbox_inches="tight")
+
+    out_path = FIG_DIR / f"{file_stem}.pdf"
+    plt.savefig(out_path, bbox_inches="tight")
     plt.close()
-    return str(path)
+    return out_path

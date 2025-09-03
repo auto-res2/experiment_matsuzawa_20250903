@@ -1,40 +1,41 @@
 hardware:
-  gpu: NVIDIA_TESLA_T4
+  gpu: T4
   num_workers: 4
   amp: true
   grad_ckpt: true
-random_seeds:
+seeds:
   - 0
   - 1
   - 2
 datasets:
   waterbirds:
+    loader: wilds
     wilds_name: waterbirds
     url: https://huggingface.co/datasets/grodino/waterbirds
   celeba:
+    loader: wilds
     wilds_name: celebA
-    url: https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
+    url: http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
   imagenet9:
-    url: https://github.com/MadryLab/backgrounds_challenge/releases/download/data/backgrounds_challenge_data.tar.gz
+    loader: bgchallenge
+    git: https://github.com/MadryLab/backgrounds_challenge.git
   ninco:
+    loader: tar
     url: https://zenodo.org/record/8013288/files/NINCO.tar.gz
   coco_places:
+    loader: compose
     coco_img: http://images.cocodataset.org/zips/val2017.zip
     coco_ann: http://images.cocodataset.org/annotations/annotations_trainval2017.zip
     places: http://data.csail.mit.edu/places/places365/val_256.tar
 backbones:
   resnet50:
-    source: torchvision
-    weights: IMAGENET1K_V2
     batch: 128
     optim:
       type: SGD
       lr: 0.03
       momentum: 0.9
-      weight_decay: 0.0005
+      wd: 0.0005
   vit_b16:
-    source: timm
-    weights: vit_base_patch16_224.augreg2_in21k_ft_in1k
     batch: 96
     optim:
       type: AdamW
@@ -42,25 +43,23 @@ backbones:
       betas:
         - 0.9
         - 0.99
-      weight_decay: 0.05
+      wd: 0.05
 training:
   epochs: 30
   patience: 5
+methods:
+  - erm
+  - irm
+  - groupdro
+  - gcdro
+  - autoacer
+  - cad
+  - dica
 dica:
   top_p: 0.1
   k: 3
   lambda_consistency: 1.0
   alpha_gcdro: 0.1
   tau_clip: 0.27
-metrics:
-  - AccID
-  - WGAcc
-  - AccOOD
-  - AUROC
-  - FPR95
-  - CorrErr
-  - FGSMErr
-  - FLOPs
-  - TrainHrs
-  - InferMS
-  - PeakMem
+figures:
+  dir: .research/iteration8/images
