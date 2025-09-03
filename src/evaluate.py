@@ -1,7 +1,7 @@
+from __future__ import annotations
 """src/evaluate.py
 Evaluation utilities: metrics and plotting.
 """
-from __future__ import annotations
 import pathlib
 from typing import Dict, Sequence
 
@@ -46,8 +46,12 @@ def plot_lines(
     title: str,
     out_path: pathlib.Path,
 ) -> None:
-    """Draw line plot and save it under .research/iteration29/images/…"""
+    """Draw line plot and save it under .research/iteration33/images/…"""
+    # Ensure every visualisation is stored in the mandated directory.
+    if not out_path.is_absolute():
+        out_path = IMAGE_ROOT / out_path
     ensure_dir(out_path.parent)
+
     plt.figure(figsize=(6, 4))
     for lbl, series in ys.items():
         plt.plot(xs, series, label=lbl)
