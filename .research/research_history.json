@@ -6,5 +6,82 @@
     "OOD robustness image classification",
     "causal representation learning",
     "domain generalization spurious correlation"
+  ],
+  "research_study_list": [
+    {
+      "title": "A Causal Framework for Decomposing Spurious Variations"
+    },
+    {
+      "title": "Self-supervised Debiasing Using Low Rank Regularization"
+    },
+    {
+      "title": "Learning The Difference That Makes A Difference With Counterfactually-Augmented Data"
+    },
+    {
+      "title": "Causal Effect Regularization: Automated Detection and Removal of Spurious Correlations"
+    },
+    {
+      "title": "Counterfactual Invariance to Spurious Correlations in Text Classification"
+    },
+    {
+      "title": "Structuring Representations Using Group Invariants"
+    },
+    {
+      "title": "Convex Representation Learning for Generalized Invariance in Semi-Inner-Product Space"
+    },
+    {
+      "title": "PAC Generalization via Invariant Representations"
+    },
+    {
+      "title": "Environment Diversification with Multi-head Neural Network for Invariant Learning"
+    },
+    {
+      "title": "Unsupervised Learning of Group Invariant and Equivariant Representations"
+    },
+    {
+      "title": "Models Out of Line: A Fourier Lens on Distribution Shift Robustness"
+    },
+    {
+      "title": "YolOOD: Utilizing Object Detection Concepts for Multi-Label Out-of-Distribution Detection"
+    },
+    {
+      "title": "OODRobustBench: a Benchmark and Large-Scale Analysis of Adversarial Robustness under Distribution Shift"
+    },
+    {
+      "title": "On the Adversarial Robustness of Out-of-distribution Generalization Models"
+    },
+    {
+      "title": "Your Out-of-Distribution Detection Method is Not Robust!"
+    },
+    {
+      "title": "Causal Representation Learning Made Identifiable by Grouping of Observational Variables"
+    },
+    {
+      "title": "Causal Representation Learning for Instantaneous and Temporal Effects in Interactive Systems"
+    },
+    {
+      "title": "A Sparsity Principle for Partially Observable Causal Representation Learning"
+    },
+    {
+      "title": "Identifiable Latent Polynomial Causal Models through the Lens of Change"
+    },
+    {
+      "title": "Causal Representation Learning from Multiple Distributions: A General Setting"
+    },
+    {
+      "title": "Understanding Domain Generalization: A Noise Robustness Perspective"
+    },
+    {
+      "title": "Selecting Data Augmentation for Simulating Interventions"
+    },
+    {
+      "title": "Rethinking the Evaluation Protocol of Domain Generalization"
+    },
+    {
+      "title": "Domain Generalization using Causal Matching"
+    },
+    {
+      "title": "Domain Generalization using Causal Matching"
+    }
   ]
 }
