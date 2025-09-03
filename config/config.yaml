@@ -1,3 +1,31 @@
-# Place your edited configuration here.  A default copy will be generated
-# automatically the first time you run `python -m src.main` if this file is
-# missing.  See that generated file for field descriptions.
+dataset:
+  name: cifar100
+  url: https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz
+  mean: [0.5071, 0.4867, 0.4408]
+  std:  [0.2675, 0.2565, 0.2761]
+  num_tasks: 20
+  classes_per_task: 5
+
+model:
+  budget_bytes: 1048576  # 1 MB
+
+training:
+  epochs_per_task: 5
+  batch_size: 128
+  lr: 0.05
+  momentum: 0.9
+  weight_decay: 0.0005
+  classes_per_task: 5  # duplicated for convenience
+  budget_bytes: 1048576
+
+experiment:
+  seed: 0
+  methods: [jemb, inflora, aqm_er]
+  description: |
+    Experiment 1 – GREEN-CI continual-learning benchmark on Split-CIFAR100
+    Budget: 1 MB (model + buffer)   Seed: 0   Tasks: 20 × 5 classes
+    Compared methods:
+      • JEMB-dynamic (ours)
+      • InfLoRA-only  (no buffer)
+      • AQM+ER        (buffer only)
+    Metrics per task: average accuracy over seen tasks, bytes_adapter, bytes_buffer

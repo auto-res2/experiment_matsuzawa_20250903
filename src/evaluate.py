@@ -1,99 +1,161 @@
-"""src/evaluate.py – evaluation helpers, metrics and unit tests"""
+"""
+evaluate.py – training/evaluation orchestration + plotting helpers
+"""
 from __future__ import annotations
-import json
-import hashlib
-from dataclasses import dataclass, field
+import json, random, time
 from pathlib import Path
-from typing import List
+from dataclasses import dataclass, field
+from typing import Dict, List, Tuple
 
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
+import seaborn as sns  # noqa: F401 (kept for styling consistency)
 
-# *No heavy modules are imported here to keep evaluation lightweight*
+from .train import (
+    DEVICE,
+    JEMBModel,
+    InfLoRA,
+    AQM_ER,
+)
+from .preprocess import build_task_stream
 
-# -------------------------------------------------------------
-#                     Generic evaluation routine
-# -------------------------------------------------------------
-@torch.no_grad()
-def evaluate(model, loader, device):
-    model.eval()
-    good, tot = 0, 0
-    for x, y in loader:
-        x, y = x.to(device), y.to(device)
-        good += (model(x).argmax(dim=1) == y).sum().item()
-        tot += y.size(0)
-    return 100 * good / max(tot, 1)
+# ---------------------------------------------------------------------
+#  Directories (created on import)
+# ---------------------------------------------------------------------
+ROOT      = Path(__file__).resolve().parent.parent
+RUNS_DIR  = ROOT / "runs"
+IMG_DIR   = ROOT / ".research/iteration10/images"
+RUNS_DIR.mkdir(parents=True, exist_ok=True)
+IMG_DIR.mkdir(parents=True, exist_ok=True)
 
-
-# -------------------------------------------------------------
-#                         Stream-level meter
-# -------------------------------------------------------------
+# ---------------------------------------------------------------------
+#  Light log container
+# ---------------------------------------------------------------------
 @dataclass
-class StreamMeter:
-    """Accumulates accuracy matrix & memory history for a task stream."""
-
-    acc_tasks: List[List[float]] = field(default_factory=list)  # acc[t][k]
-    mem_hist: List[int] = field(default_factory=list)  # total bytes after each task
-
-    # ------------------------------------------------------------------
-    def record_after_task(self, model, test_loaders, device):
-        acc_row = [evaluate(model, l, device) for l in test_loaders]
-        self.acc_tasks.append(acc_row)
-        # adapter + buffer
-        self.mem_hist.append(model.ledger.A + model.ledger.B)
-
-    # ------------------------ derived metrics -------------------------
-    def A_T(self):
-        return float(sum(self.acc_tasks[-1]) / len(self.acc_tasks[-1]))
-
-    def F_max(self):
-        forget = []
-        for k in range(len(self.acc_tasks[0])):
-            best = max(row[k] for row in self.acc_tasks)
-            forget.append(best - self.acc_tasks[-1][k])
-        return float(max(forget))
-
-    def auc_mem(self):
-        xs = np.arange(len(self.mem_hist))
-        return float(np.trapz(self.mem_hist, xs))
+class Log:
+    acc:    List[float] = field(default_factory=list)
+    bytesA: List[int]   = field(default_factory=list)
+    bytesB: List[int]   = field(default_factory=list)
 
 
-# -------------------------------------------------------------
-#                      Lightweight unit tests
-# -------------------------------------------------------------
+# ---------------------------------------------------------------------
+#  Core training-and-evaluation routine for *one* method
+# ---------------------------------------------------------------------
 
-def _test_byte_ledger(ByteLedger):
-    led = ByteLedger(64)  # 64 kB cap
-    led.update(10, 20)
-    led.move("B", 10)
-    assert led.A == 20 and led.B == 10
+def run_method(
+    name: str,
+    ModelCls,
+    stream,
+    cfg_train: dict,
+    seed: int = 0,
+):
+    torch.manual_seed(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+
+    model  = ModelCls(num_cls=cfg_train["classes_per_task"], cap_bytes=cfg_train["budget_bytes"]).to(DEVICE)
+    opt    = torch.optim.SGD(
+        model.parameters(),
+        lr=cfg_train["lr"],
+        momentum=cfg_train["momentum"],
+        weight_decay=cfg_train["weight_decay"],
+    )
+
+    log          = Log()
+    test_loaders = []
+
+    for tid, (tr, va, te) in enumerate(stream, 1):
+        trL = DataLoader(tr, batch_size=cfg_train["batch_size"], shuffle=True,  num_workers=2)
+        vaL = DataLoader(va, batch_size=cfg_train["batch_size"], shuffle=False, num_workers=2)
+        teL = DataLoader(te, batch_size=cfg_train["batch_size"], shuffle=False, num_workers=2)
+        test_loaders.append(teL)
+
+        for _ in range(cfg_train["epochs_per_task"]):
+            model.train_epoch(trL, opt)
+            model.realloc(vaL)
+
+        # ------ evaluation on accumulated tasks -----------------------
+        accs = [model.eval_loader(l) for l in test_loaders]
+        log.acc.append(sum(accs) / len(accs))
+        log.bytesA.append(model.ledger.A)
+        log.bytesB.append(model.ledger.B)
+        print(f"{name:8s} task {tid:02d}  avg-acc={log.acc[-1]:5.2f}  A={model.ledger.A}  B={model.ledger.B}")
+
+    summary = {
+        "method": name,
+        "A_T":    log.acc[-1],
+        "bytes_adapter": log.bytesA[-1],
+        "bytes_buffer":  log.bytesB[-1],
+    }
+    return summary, log
 
 
-def _test_adapter_roundtrip(LoRAAdapter):
-    ad = LoRAAdapter(4, 3, 2)
-    w_before = (ad.weight_A @ ad.weight_B).clone()
-    ad.prune(1)
-    ad.grow(1)
-    w_after = ad.weight_A @ ad.weight_B
-    assert torch.allclose(w_before, w_after, atol=1e-4)
+# ---------------------------------------------------------------------
+#  Plot helper (publication quality)
+# ---------------------------------------------------------------------
+
+def plot_curve(logs: Dict[str, Log]):
+    plt.figure(figsize=(6, 3))
+    for name, l in logs.items():
+        plt.plot(l.acc, label=name)
+        for i, v in enumerate(l.acc):
+            plt.text(i, v + 0.3, f"{v:.1f}", fontsize=6)
+    plt.xlabel("Task")
+    plt.ylabel("Average Accuracy (%)")
+    plt.legend()
+    plt.grid(True)
+    fname = IMG_DIR / "accuracy_curve_ci.pdf"
+    plt.savefig(fname, bbox_inches="tight")
+    print("[fig] saved →", fname)
 
 
-def _test_vq_roundtrip(device):
-    from vq_vae_2_pytorch import VQVAETwo
+# ---------------------------------------------------------------------
+#  High-level experiment wrapper used by main.py
+# ---------------------------------------------------------------------
 
-    vq = VQVAETwo(img_size=32, num_layers=2, codebook_dim=64).to(device)
-    x = torch.randn(1, 3, 32, 32, device=device)
-    _, _, lat = vq.encode(x)[2]
-    recon = vq.decode(lat)
-    mse = (x - recon).pow(2).mean().item()
-    assert mse < 1e-2
+def run_experiment(cfg: dict):
+    from .train import run_unit_tests  # local import to avoid circularity
 
+    print("\n" + cfg["experiment"]["description"] + "\n")
+    run_unit_tests()
+    start = time.time()
 
-def run_unit_tests(ByteLedger, LoRAAdapter, device):
-    """Run a quick battery of sanity checks (fail-fast)."""
+    # ---------- build task stream -------------------------------------
+    stream = build_task_stream(
+        data_dir=Path(cfg["dataset"]["data_root"]),
+        mean=cfg["dataset"]["mean"],
+        std=cfg["dataset"]["std"],
+        num_tasks=cfg["dataset"]["num_tasks"],
+        classes_per_task=cfg["dataset"]["classes_per_task"],
+        seed=cfg["experiment"]["seed"],
+    )
 
-    _test_byte_ledger(ByteLedger)
-    _test_adapter_roundtrip(LoRAAdapter)
-    _test_vq_roundtrip(device)
-    print("[tests] all sanity-checks passed")
+    logs: Dict[str, Log] = {}
+    results              = []
+
+    name2cls = {
+        "jemb":    JEMBModel,
+        "inflora": InfLoRA,
+        "aqm_er":  AQM_ER,
+    }
+
+    for m in cfg["experiment"]["methods"]:
+        res, lg = run_method(m, name2cls[m], stream, cfg["training"], seed=cfg["experiment"]["seed"])
+        logs[m]  = lg
+        results.append(res)
+
+    # --------------- persist raw metrics ------------------------------
+    out = {
+        "description": cfg["experiment"]["description"],
+        "per_task": {k: lg.__dict__ for k, lg in logs.items()},
+        "summary":   results,
+        "wall_clock_s": round(time.time() - start, 2),
+    }
+    (RUNS_DIR / "run_ci.json").write_text(json.dumps(out, indent=2))
+    print("\n[results]", json.dumps(results, indent=2))
+    print("[saved] runs/run_ci.json")
+
+    # plot -------------------------------------------------------------
+    plot_curve(logs)

@@ -1,93 +1,74 @@
-"""src/preprocess.py – data acquisition and stream construction"""
+"""
+preprocess.py – data downloading, preprocessing & task-stream builder
+"""
 from __future__ import annotations
-import random
-import tarfile
-import urllib.request
+import random, tarfile, urllib.request
 from pathlib import Path
 from typing import List, Tuple
 
 import torch
-from torch.utils.data import Dataset, random_split
 import torchvision
 import torchvision.transforms as T
+from torch.utils.data import random_split
 
-# -------------------------------------------------------------
-#                     Project-wide paths
-# -------------------------------------------------------------
-ROOT = Path(__file__).resolve().parent.parent  # project root
-DATA = ROOT / "data"
-DATA.mkdir(parents=True, exist_ok=True)
+# CIFAR-100 constants ---------------------------------------------------
+CIFAR_URL = "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
 
-# -------------------------------------------------------------
-#                     Helper: safe download
-# -------------------------------------------------------------
 
-def _download(url: str, dest: Path):
-    """Download URL → dest if *dest* does not exist."""
-    if dest.exists():
+def _download_cifar_if_missing(data_dir: Path):
+    tgt = data_dir / "cifar-100-python"
+    if tgt.exists():
         return
-    print(f"[DL] {url.split('/')[-1]} → {dest}")
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        urllib.request.urlretrieve(url, dest)
-    except Exception as exc:
-        raise RuntimeError(f"Failed to download {url}: {exc}") from exc
+    data_dir.mkdir(parents=True, exist_ok=True)
+    tgz = data_dir / "cifar100.tgz"
+    if not tgz.exists():
+        print("[DL] CIFAR-100 …")
+        urllib.request.urlretrieve(CIFAR_URL, tgz)
+    with tarfile.open(tgz) as tar:
+        tar.extractall(data_dir)
 
 
-# -------------------------------------------------------------
-#                     CIFAR-100 continual stream
-# -------------------------------------------------------------
-class _Split(Dataset):
-    """Subset of *base* containing only classes in *cls_ids* (labels re-indexed)."""
-
-    def __init__(self, base: Dataset, cls_ids: List[int]):
-        self.base = base
-        self.map = {c: i for i, c in enumerate(sorted(cls_ids))}
-        self.idxs = [i for i, (_, y) in enumerate(base) if y in self.map]
-
-    # -------------------- standard dataset API -------------------------
-    def __len__(self):
-        return len(self.idxs)
-
-    def __getitem__(self, idx):
-        x, y = self.base[self.idxs[idx]]
-        return x, self.map[y]
+def _build_transforms(mean: List[float], std: List[float]):
+    train_tf = T.Compose([
+        T.RandAugment(num_ops=2, magnitude=9),
+        T.ToTensor(),
+        T.Normalize(mean, std),
+    ])
+    val_tf = T.Compose([
+        T.ToTensor(),
+        T.Normalize(mean, std),
+    ])
+    return train_tf, val_tf
 
 
-# ----------------------------------------------------------------------
-#                            public API
-# ----------------------------------------------------------------------
+def build_task_stream(
+    data_dir: Path,
+    mean: List[float],
+    std: List[float],
+    num_tasks: int,
+    classes_per_task: int,
+    seed: int = 0,
+):
+    """Returns list[(train, val, test)] for Split-CIFAR100."""
+    _download_cifar_if_missing(data_dir)
 
-def cifar_stream(cfg, seed: int) -> List[Tuple[Dataset, Dataset, Dataset]]:
-    """Return list of (train, val, test) per task – 20 tasks × 5 classes."""
+    train_tf, val_tf = _build_transforms(mean, std)
+    full_train = torchvision.datasets.CIFAR100(data_dir, train=True,  download=False, transform=train_tf)
+    full_test  = torchvision.datasets.CIFAR100(data_dir, train=False, download=False, transform=val_tf)
 
-    # --- make sure raw data is available ----------------------------------
-    cifar_dir = DATA / "cifar-100-python"
-    if not cifar_dir.exists():
-        tgz = DATA / "cifar100.tar.gz"
-        _download(cfg.data.cifar100["url"], tgz)
-        tarfile.open(tgz).extractall(DATA)
+    cls: List[int] = list(range(100))
+    random.Random(seed).shuffle(cls)
+    tasks = [cls[i : i + classes_per_task] for i in range(0, num_tasks * classes_per_task, classes_per_task)]
 
-    # ---------------------- torchvision datasets -------------------------
-    tr = T.Compose(
-        [T.ToTensor(), T.Normalize(cfg.data.cifar100["mean"], cfg.data.cifar100["std"])]
-    )
-    train_set = torchvision.datasets.CIFAR100(DATA, train=True, transform=tr, download=False)
-    test_set = torchvision.datasets.CIFAR100(DATA, train=False, transform=tr, download=False)
+    def _subset(ds, cls_ids):
+        idx = [i for i, (_, y) in enumerate(ds) if y in cls_ids]
+        return torch.utils.data.Subset(ds, idx)
 
-    cls_ids = list(range(100))
-    random.Random(seed).shuffle(cls_ids)
-    tasks = [cls_ids[i : i + cfg.model.num_classes_per_task] for i in range(0, 100, cfg.model.num_classes_per_task)]
-
-    out = []
+    stream = []
     for t in tasks:
-        tr_ds = _Split(train_set, t)
-        te_ds = _Split(test_set, t)
-        val_size = int(0.05 * len(tr_ds))
-        tr_ds, val_ds = random_split(
-            tr_ds,
-            [len(tr_ds) - val_size, val_size],
-            generator=torch.Generator().manual_seed(seed),
-        )
-        out.append((tr_ds, val_ds, te_ds))
-    return out
+        tr = _subset(full_train, t)
+        te = _subset(full_test,  t)
+        v  = int(0.05 * len(tr))
+        tr, va = random_split(tr, [len(tr) - v, v], generator=torch.Generator().manual_seed(seed))
+        stream.append((tr, va, te))
+    return stream
