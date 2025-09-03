@@ -1,0 +1,8 @@
+  Running command git clone --filter=blob:none --quiet https://github.com/rosinality/vq-vae-2-pytorch.git /tmp/pip-install-ryj13ebz/vq-vae-2-pytorch_6310acf260e04d7291f7f52eb5303ad1
+ERROR: vq_vae_2_pytorch@ git+https://github.com/rosinality/vq-vae-2-pytorch.git from git+https://github.com/rosinality/vq-vae-2-pytorch.git (from -r requirements.txt (line 11)) does not appear to be a Python project: neither 'setup.py' nor 'pyproject.toml' found.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 13, in <module>
+    import matplotlib.pyplot as plt
+ModuleNotFoundError: No module named 'matplotlib'

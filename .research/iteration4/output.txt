@@ -1,0 +1,5 @@
+=== pip install start Wed Sep  3 14:58:19 UTC 2025 ===
+Collecting vq_vae_2_pytorch@ git+https://github.com/rosinality/vq-vae-2-pytorch.git (from -r requirements.txt (line 11))
+  Cloning https://github.com/rosinality/vq-vae-2-pytorch.git to /tmp/pip-install-ryj13ebz/vq-vae-2-pytorch_6310acf260e04d7291f7f52eb5303ad1
+  Resolved https://github.com/rosinality/vq-vae-2-pytorch.git to commit ef5f67c46f93624163776caec9e0d95063910eca
+=== experiment start Wed Sep  3 14:58:20 UTC 2025 ===
