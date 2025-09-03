@@ -1,0 +1,5 @@
+=== pip install start Wed Sep  3 07:45:00 UTC 2025 ===
+Collecting domainbed@ git+https://github.com/facebookresearch/DomainBed.git@master (from -r requirements.txt (line 17))
+  Cloning https://github.com/facebookresearch/DomainBed.git (to revision master) to /tmp/pip-install-7niyigtk/domainbed_aea844557ba946d7a4ff78160fcfb6f0
+  Did not find branch or tag 'master', assuming revision or ref.
+=== experiment start Wed Sep  3 07:45:01 UTC 2025 ===

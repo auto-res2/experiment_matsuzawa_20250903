@@ -1,0 +1,23 @@
+  Running command git clone --filter=blob:none --quiet https://github.com/facebookresearch/DomainBed.git /tmp/pip-install-7niyigtk/domainbed_aea844557ba946d7a4ff78160fcfb6f0
+  Running command git checkout -q master
+  error: pathspec 'master' did not match any file(s) known to git
+  error: subprocess-exited-with-error
+  
+  × git checkout -q master did not run successfully.
+  │ exit code: 1
+  ╰─> See above for output.
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+error: subprocess-exited-with-error
+
+× git checkout -q master did not run successfully.
+│ exit code: 1
+╰─> See above for output.
+
+note: This error originates from a subprocess, and is likely not a problem with pip.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 12, in <module>
+    import numpy as np
+ModuleNotFoundError: No module named 'numpy'
