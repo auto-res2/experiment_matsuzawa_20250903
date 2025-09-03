@@ -4,6 +4,7 @@ introduced, only structural improvements and small safety guards.
 """
 from __future__ import annotations
 
+import json  # <-- added (needed for scores.json dump)
 import math
 import pathlib
 import random
@@ -34,9 +35,9 @@ class LoRAInject:
         self.alpha = alpha
         self.handles: List[torch.utils.hooks.RemovableHandle] = []
 
-    # .........................................................................
+    # .................................................................
     # public helpers
-    # .........................................................................
+    # .................................................................
 
     def inject(self, model: nn.Module) -> None:
         for _name, module in model.named_modules():
@@ -59,9 +60,9 @@ class LoRAInject:
             h.remove()
         self.handles.clear()
 
-    # .........................................................................
+    # .................................................................
     # internal implementation details
-    # .........................................................................
+    # .................................................................
 
     def _patch_linear(self, parent: nn.Module, attr: str) -> None:
         orig: nn.Linear = getattr(parent, attr)
@@ -97,7 +98,13 @@ class FrozenGenerator:
         self.pipe = StableDiffusionPipeline.from_pretrained(
             repo, torch_dtype=torch.float16, safety_checker=None
         ).to(device)
-        self.pipe.enable_model_cpu_offload()
+
+        # offload to CPU if accelerate is available; otherwise skip gracefully
+        try:
+            self.pipe.enable_model_cpu_offload()
+        except ImportError:
+            print("[FrozenGenerator] accelerate not available – proceeding without CPU offload.")
+
         self.device = device
         self.lora: LoRAInject | None = None
         self.cfg = cfg
@@ -197,7 +204,7 @@ class Trainer:
         self.device = device
         self.gen = FrozenGenerator(cfg, device)  # frozen diffusion generator
 
-    # .........................................................................
+    # .................................................................
     def _build_model(self, num_classes: int):
         name = self.cfg["experiment_1"]["classifier"]
         if name == "resnet18":
@@ -208,7 +215,7 @@ class Trainer:
             raise ValueError(f"Unknown backbone {name}")
         return model.to(self.device)
 
-    # .........................................................................
+    # .................................................................
     def train_stream(self, tasks: List[torch.utils.data.Dataset], testset,
                      *, method: str, seed: int, out_dir: pathlib.Path) -> None:
         import numpy as np  # local import to keep global namespace clean

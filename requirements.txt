@@ -9,3 +9,4 @@ requests
 datasets
 numpy
 Pillow
+accelerate>=0.17.0

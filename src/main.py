@@ -43,7 +43,8 @@ def main():
         tasks, testset = split_cifar100()
 
         trainer = Trainer(cfg, device="cuda" if torch.cuda.is_available() else "cpu")
-        out_dir = PROJECT_ROOT / ".research" / "iteration1" / "images"
+        # All images should be saved under .research/iteration2/images
+        out_dir = PROJECT_ROOT / ".research" / "iteration2" / "images"
         trainer.train_stream(tasks, testset, method="lora_diffmem", seed=42, out_dir=out_dir)
     except Exception as e:  # pylint: disable=broad-except
         print("\n*** FATAL: experiment aborted ***")

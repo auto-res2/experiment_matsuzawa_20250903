@@ -19,19 +19,23 @@ from torchvision import transforms as T
 DATA_DIR = pathlib.Path("data").absolute()
 DATA_DIR.mkdir(exist_ok=True)
 
+# Mean/std need three channels for RGB datasets (e.g. CIFAR, Tiny-ImageNet)
+_RGB_MEAN = (0.5, 0.5, 0.5)
+_RGB_STD = (0.5, 0.5, 0.5)
+
 TRANSFORMS = {
     "train": T.Compose(
         [
             T.RandomCrop(32, padding=4),
             T.RandomHorizontalFlip(),
             T.ToTensor(),
-            T.Normalize((0.5,), (0.5,)),
+            T.Normalize(_RGB_MEAN, _RGB_STD),
         ]
     ),
     "test": T.Compose(
         [
             T.ToTensor(),
-            T.Normalize((0.5,), (0.5,)),
+            T.Normalize(_RGB_MEAN, _RGB_STD),
         ]
     ),
 }
