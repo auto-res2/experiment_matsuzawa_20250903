@@ -13,9 +13,9 @@ import seaborn as sns
 sns.set(style="whitegrid")
 
 # ---------------------------------------------------------------------------
-# CONSTANTS – all research images MUST go to .research/iteration4/images
+# CONSTANTS – all research images MUST go to .research/iteration5/images
 # ---------------------------------------------------------------------------
-IMG_DIR = Path(__file__).resolve().parent.parent / ".research" / "iteration4" / "images"
+IMG_DIR = Path(__file__).resolve().parent.parent / ".research" / "iteration5" / "images"
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------------------

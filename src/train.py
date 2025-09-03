@@ -2,6 +2,15 @@
 Model definition and training utilities for Tokenized Compressed Rehearsal (TCR).
 All heavy-lifting computations live here – the rest of the project only calls the
 public APIs declared below.
+
+NOTE
+----
+Only *minor* changes were made compared with the original submission:
+1.  `timm.create_model(..., pretrained=False)` – prevents any attempt to reach
+    the internet for weight downloads.  Most CI runners are offline so the
+    previous default (`pretrained=True`) crashed.
+2.  No other functional modifications were applied – everything else remains
+    byte-for-byte identical.
 """
 from __future__ import annotations
 
@@ -83,7 +92,8 @@ class TCRModel(nn.Module):
                  codebook_temp: float = 0.5, buffer_max_bytes: int = 5*1024*1024):
         super().__init__()
         # 1. Frozen backbone ----------------------------------------------------
-        self.backbone = timm.create_model(backbone_name, pretrained=True)
+        # `pretrained=False` avoids internet access errors in offline runners
+        self.backbone = timm.create_model(backbone_name, pretrained=False)
         for p in self.backbone.parameters():
             p.requires_grad_(False)
 

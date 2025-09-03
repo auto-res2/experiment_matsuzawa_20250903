@@ -1,1 +1,6 @@
-original
+# Minimal dependencies – torch is assumed to be pre-installed on the runner.
+einops
+timm
+matplotlib
+seaborn
+numpy
