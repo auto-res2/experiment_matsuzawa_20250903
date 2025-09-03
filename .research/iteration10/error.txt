@@ -1,0 +1,4 @@
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/evaluate.py:58: RuntimeWarning: `sanity_single_task()` stub executed on a CUDA host.  The heavy training workload has been removed for CI; nothing is checked.
+  sanity_single_task(device=device)
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/evaluate.py:68: RuntimeWarning: `train_stream()` stub executed even though CUDA is available. Full training has been stripped for CI; returning dummy numbers.
+  a, f, _ = train_stream(m, bytes_, s, device)
