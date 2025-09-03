@@ -1,0 +1,28 @@
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py:96: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler = GradScaler()
+cifar100.tar.gz:   0%|          | 0.00/169M [00:00<?, ?B/s]cifar100.tar.gz:   0%|          | 98.3k/169M [00:00<04:03, 693kB/s]cifar100.tar.gz:   1%|          | 918k/169M [00:00<00:45, 3.66MB/s]cifar100.tar.gz:   2%|▏         | 4.13M/169M [00:00<00:11, 14.2MB/s]cifar100.tar.gz:   6%|▌         | 10.2M/169M [00:00<00:05, 30.2MB/s]cifar100.tar.gz:  10%|▉         | 16.1M/169M [00:00<00:03, 39.9MB/s]cifar100.tar.gz:  13%|█▎        | 22.5M/169M [00:00<00:03, 47.1MB/s]cifar100.tar.gz:  17%|█▋        | 28.9M/169M [00:00<00:02, 51.8MB/s]cifar100.tar.gz:  21%|██        | 35.3M/169M [00:00<00:02, 54.9MB/s]cifar100.tar.gz:  24%|██▍       | 41.4M/169M [00:00<00:02, 56.6MB/s]cifar100.tar.gz:  28%|██▊       | 47.8M/169M [00:01<00:02, 58.2MB/s]cifar100.tar.gz:  32%|███▏      | 54.1M/169M [00:01<00:01, 59.2MB/s]cifar100.tar.gz:  36%|███▌      | 60.4M/169M [00:01<00:01, 59.8MB/s]cifar100.tar.gz:  40%|███▉      | 66.8M/169M [00:01<00:01, 60.4MB/s]cifar100.tar.gz:  43%|████▎     | 73.1M/169M [00:01<00:01, 60.7MB/s]cifar100.tar.gz:  47%|████▋     | 79.5M/169M [00:01<00:01, 60.9MB/s]cifar100.tar.gz:  51%|█████     | 86.0M/169M [00:01<00:01, 61.3MB/s]cifar100.tar.gz:  55%|█████▍    | 92.3M/169M [00:01<00:01, 61.3MB/s]cifar100.tar.gz:  58%|█████▊    | 98.6M/169M [00:01<00:01, 61.4MB/s]cifar100.tar.gz:  62%|██████▏   | 105M/169M [00:02<00:01, 61.5MB/s] cifar100.tar.gz:  66%|██████▌   | 111M/169M [00:02<00:00, 61.5MB/s]cifar100.tar.gz:  70%|██████▉   | 118M/169M [00:02<00:00, 61.5MB/s]cifar100.tar.gz:  73%|███████▎  | 124M/169M [00:02<00:00, 61.5MB/s]cifar100.tar.gz:  77%|███████▋  | 130M/169M [00:02<00:00, 61.4MB/s]cifar100.tar.gz:  81%|████████  | 137M/169M [00:02<00:00, 61.6MB/s]cifar100.tar.gz:  85%|████████▍ | 143M/169M [00:02<00:00, 61.5MB/s]cifar100.tar.gz:  89%|████████▊ | 150M/169M [00:02<00:00, 61.7MB/s]cifar100.tar.gz:  92%|█████████▏| 156M/169M [00:02<00:00, 61.6MB/s]cifar100.tar.gz:  96%|█████████▌| 162M/169M [00:02<00:00, 61.6MB/s]cifar100.tar.gz: 100%|█████████▉| 169M/169M [00:03<00:00, 61.8MB/s]cifar100.tar.gz: 100%|██████████| 169M/169M [00:03<00:00, 55.1MB/s]
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py:116: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast():
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 209, in <module>
+    main()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 205, in main
+    experiment_edge(seeds)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 117, in experiment_edge
+    loss, tok = model.forward_current(x, y)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 133, in forward_current
+    z_q, tok = self.quant(z)
+               ^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 69, in forward
+    z_q = (y_hard @ self.codebook).reshape(B, -1)                       # B × D
+           ~~~~~~~^~~~~~~~~~~~~~~
+RuntimeError: The size of tensor a (64) must match the size of tensor b (4) at non-singleton dimension 0
