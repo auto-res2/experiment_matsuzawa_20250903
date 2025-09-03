@@ -1,4 +1,3 @@
-```python
 """src/evaluate.py
 Utilities for computing metrics and model evaluation.
 The original implementation required the heavyweight ``torch_geometric``
@@ -9,6 +8,7 @@ code-base: attempt to import the real class first and fall back to a very
 light-weight stub when the import fails.
 """
 from __future__ import annotations
+
 from typing import Dict
 
 import torch
@@ -87,4 +87,3 @@ def evaluate(model, data: Data) -> Dict[str, float]:
     out["col_diff"] = col_diff(h)
     out["apsd"] = apsd(h)
     return out
-```

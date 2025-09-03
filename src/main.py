@@ -1,4 +1,3 @@
-```python
 """src/main.py
 Entry-point for quick training & evaluation of the DDAF-GNN model.  The script
 purposely uses a very small number of layers/epochs so that it can be executed
@@ -25,8 +24,6 @@ try:
     from torch_geometric.data import Data  # type: ignore
 except Exception:  # pragma: no cover – minimal fallback
 
-    import torch  # local import so that it is only required for the stub
-
     class Data:  # pylint: disable=too-few-public-methods
         """Light-weight stand-in for ``torch_geometric.data.Data`` with proper
         device handling.
@@ -36,14 +33,7 @@ except Exception:  # pragma: no cover – minimal fallback
             self.__dict__.update(kwargs)
 
         def to(self, device: torch.device | str, **kwargs):  # noqa: D401
-            """Move all tensor attributes **in-place** to *device*.
-
-            The previous implementation returned *self* without actually
-            migrating the underlying tensors which led to device-mismatch
-            errors once the model was moved to the GPU.  This corrected
-            version walks through ``__dict__`` and moves every attribute that
-            is a ``torch.Tensor`` to the requested *device*.
-            """
+            """Move all tensor attributes **in-place** to *device*."""
             for k, v in self.__dict__.items():
                 if torch.is_tensor(v):
                     self.__dict__[k] = v.to(device, **kwargs)
@@ -59,12 +49,11 @@ from src import train as tr
 ROOT = Path(__file__).resolve().parent.parent
 # All experiment figures must live in this exact directory according to the
 # platform specification.
-FIG_DIR = ROOT / ".research" / "iteration11" / "images"  # UPDATED PATH
+FIG_DIR = ROOT / ".research" / "iteration12" / "images"  # UPDATED PATH
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 ################################################################################
 #  FALL-BACK SYNTHETIC DATASET (used when internet is unavailable)
 ################################################################################
-
 
 def _make_tiny_graph(n: int = 120, f: int = 16, c: int = 3) -> Data:
     """Generate a small random graph with train/val/test masks."""
@@ -94,12 +83,11 @@ def _make_tiny_graph(n: int = 120, f: int = 16, c: int = 3) -> Data:
 #  CORE LOGIC
 ################################################################################
 
-
-def _get_device() -> torch.device:
+def _get_device() -> torch.device:  # noqa: D401
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def _load_data() -> Data:
+def _load_data() -> Data:  # noqa: D401
     """Try to load the Cora dataset; if this fails, return a synthetic graph."""
 
     try:
@@ -109,7 +97,7 @@ def _load_data() -> Data:
         return _make_tiny_graph()
 
 
-def run(seed: int = 42, epochs: int = 200, layers: int = 4):
+def run(seed: int = 42, epochs: int = 200, layers: int = 4):  # noqa: D401
     pp.set_seed(seed)
     device = _get_device()
 
@@ -167,7 +155,6 @@ def run(seed: int = 42, epochs: int = 200, layers: int = 4):
 #  CLI WRAPPER
 ################################################################################
 
-
 def _build_arg_parser():
     p = argparse.ArgumentParser(description="DDAF-GNN quick experiment runner")
     p.add_argument("--epochs", type=int, default=200, help="Training epochs")
@@ -186,4 +173,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-```
