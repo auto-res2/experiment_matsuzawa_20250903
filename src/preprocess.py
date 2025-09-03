@@ -1,4 +1,4 @@
-"""src/preprocess.py – data downloading / preprocessing utilties"""
+"""src/preprocess.py – data downloading / preprocessing utilities"""
 from __future__ import annotations
 import random, tarfile, shutil
 from pathlib import Path
@@ -49,15 +49,47 @@ def download(url: str, dst: Path, sha256: str | None = None, max_retry: int = 2)
 #                               WATERBIRDS
 # ---------------------------------------------------------------------------
 class WaterbirdsDS(Dataset):
-    """Torch Dataset wrapper around the Waterbirds CSV splits."""
+    """Torch Dataset wrapper around the Waterbirds metadata CSV.
+
+    The original Waterbirds release featured explicit split CSV files
+    (train.csv / val.csv / test.csv).  A February-2025 refresh of the
+    archive replaced them with a single `metadata.csv` that contains a
+    `split` column (0=train, 1=val, 2=test).  To be backward compatible
+    with *both* layouts we first look for the dedicated split CSV; if it
+    is missing we fall back to `metadata.csv`.
+    """
+
+    _SPLIT_MAP = {"train": 0, "val": 1, "test": 2}
 
     def __init__(self, root: Path, split: str, transform):
-        csv_path = root / f"waterbird_complete95_forest2water2/{split}.csv"
-        if not csv_path.exists():
-            raise RuntimeError("[DATA] Waterbirds CSV missing – extraction failed")
-        df = pd.read_csv(csv_path)
+        if split not in self._SPLIT_MAP:
+            raise ValueError(f"Invalid split '{split}' – choose from train/val/test")
+
+        base = root / "waterbird_complete95_forest2water2"
+        if not base.exists():
+            raise RuntimeError("[DATA] Waterbirds folder missing – extraction failed")
+
+        # ------------------------------------------------------------------
+        # 1) Newer layout – single metadata.csv with a `split` column
+        # ------------------------------------------------------------------
+        meta_path = base / "metadata.csv"
+        if meta_path.exists():
+            df = pd.read_csv(meta_path)
+            df = df[df["split"] == self._SPLIT_MAP[split]]
+        else:
+            # ------------------------------------------------------------------
+            # 2) Legacy layout – individual CSV files per split
+            # ------------------------------------------------------------------
+            csv_path = base / f"{split}.csv"
+            if not csv_path.exists():
+                raise RuntimeError("[DATA] Waterbirds CSV missing – extraction failed")
+            df = pd.read_csv(csv_path)
+
+        if "img_filename" not in df.columns or "y" not in df.columns:
+            raise RuntimeError("[DATA] Waterbirds CSV corrupted – required columns missing")
+
         self.samples = [
-            (root / row["img_filename"], int(row["y"])) for _, row in df.iterrows()
+            (base / row["img_filename"], int(row["y"])) for _, row in df.iterrows()
         ]
         self.t = transform
 
@@ -79,17 +111,14 @@ def prepare_waterbirds_datasets(cfg: Dict[str, Any]):
     tar_path = DATA_ROOT / "waterbirds.tar.gz"
     download(wb_cfg["url"], tar_path, wb_cfg["sha256"])
 
-    if not (DATA_ROOT / "waterbird_complete95_forest2water2").exists():
+    extract_dir = DATA_ROOT / "waterbird_complete95_forest2water2"
+    if not extract_dir.exists():
         print("[INFO] extracting Waterbirds …")
         with tarfile.open(tar_path) as t:
             t.extractall(DATA_ROOT)
 
     # Smoke-test – open 100 random images to catch corruption early
-    jpgs = list(
-        (DATA_ROOT / "waterbird_complete95_forest2water2" / "train" / "images").glob(
-            "*.jpg"
-        )
-    )
+    jpgs = list(extract_dir.glob("**/*.jpg"))
     random.shuffle(jpgs)
     for p in jpgs[:100]:
         Image.open(p).convert("RGB")
