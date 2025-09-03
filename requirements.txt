@@ -7,5 +7,6 @@ pandas
 diffusers
 peft
 accelerate
+transformers
 pyyaml
 pillow

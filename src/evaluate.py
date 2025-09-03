@@ -1,4 +1,3 @@
-"""src/evaluate.py – evaluation routines & plotting utilities"""
 from __future__ import annotations
 from pathlib import Path
 from typing import List, Dict, Any
@@ -12,9 +11,16 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-IMG_DIR = Path(".research/iteration7/images")
+# ---------------------------------------------------------------------------
+#   All figures for *this* iteration must be stored under .research/iteration8
+# ---------------------------------------------------------------------------
+IMG_DIR = Path(".research/iteration8/images")
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
+
+# ---------------------------------------------------------------------------
+#                               METRICS
+# ---------------------------------------------------------------------------
 
 def _accuracy(model: torch.nn.Module, loader: DataLoader, device: str) -> float:
     model.eval()
@@ -25,6 +31,20 @@ def _accuracy(model: torch.nn.Module, loader: DataLoader, device: str) -> float:
             ok += (pr.cpu() == yb).sum().item()
             tot += len(yb)
     return ok / tot * 100.0
+
+
+# ---------------------------------------------------------------------------
+#                           WATERBIRDS EVALUATION
+# ---------------------------------------------------------------------------
+
+def _spur_direction_tensor(PCs: Any, spur_idx: List[int], device: str) -> torch.Tensor:
+    """Returns the 1-D spurious direction as a torch tensor on *device*."""
+    if isinstance(PCs, torch.Tensor):
+        vec = PCs[spur_idx[0]].clone()
+    else:
+        # When stored as a NumPy array
+        vec = torch.from_numpy(np.copy(PCs[spur_idx[0]]))
+    return vec.to(device).unsqueeze(0).unsqueeze(-1).unsqueeze(-1)  # 1×C×1×1
 
 
 def evaluate_waterbirds(artefacts: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, Any]:
@@ -38,32 +58,34 @@ def evaluate_waterbirds(artefacts: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[
     seed = artefacts["seed"]
     device = cfg["env"]["device"]
 
-    # Accuracy
+    # ------------------------------------------------------------------
+    # Accuracy on the *entire* test split
+    # ------------------------------------------------------------------
     test_acc = _accuracy(model, DataLoader(ds_test, batch_size=256), device)
 
-    # ∆Prob on 2 000 random test samples
+    # ------------------------------------------------------------------
+    # ∆Prob (counterfactual robustness) on 2 000 random samples
+    # ------------------------------------------------------------------
     rand_ds, _ = random_split(
         ds_test,
         [2000, len(ds_test) - 2000],
         generator=torch.Generator().manual_seed(seed),
     )
     dp: List[float] = []
+    delta = _spur_direction_tensor(PCs, spur_idx, device)  # fixed across the loop
+
     with torch.no_grad():
         for xb, _ in DataLoader(rand_ds, batch_size=64):
-            p_orig = F.softmax(model(xb.to(device)), 1)
-            delta = (
-                torch.from_numpy(PCs[spur_idx[0]].copy())
-                .to(device)
-                .unsqueeze(0)
-                .unsqueeze(-1)
-                .unsqueeze(-1)
-            )
-            xb_cf = cdg.generate(xb.to(device), delta)
+            xb_d = xb.to(device)
+            p_orig = F.softmax(model(xb_d), 1)
+            xb_cf = cdg.generate(xb_d, delta)
             p_cf = F.softmax(model(xb_cf.to(device)), 1)
             dp.extend((p_orig - p_cf).abs().max(1)[0].cpu().tolist())
     dprob = float(np.mean(dp))
 
+    # ------------------------------------------------------------------
     # Plot – bar with accuracy annotation
+    # ------------------------------------------------------------------
     fig_path = IMG_DIR / f"waterbirds_acc_seed{seed}.pdf"
     plt.figure(figsize=(3, 4))
     sns.barplot(x=["GCDI"], y=[test_acc])
@@ -82,6 +104,10 @@ def evaluate_waterbirds(artefacts: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[
     }
 
 
+# ---------------------------------------------------------------------------
+#                           MULTI-SEED AGGREGATION
+# ---------------------------------------------------------------------------
+
 def aggregate_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
     accs = np.array([r["test_accuracy"] for r in results])
     dpbs = np.array([r["delta_prob"] for r in results])
@@ -95,6 +121,10 @@ def aggregate_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
         "delta_prob_std": float(dpbs.std(ddof=1)),
     }
 
+
+# ---------------------------------------------------------------------------
+#                               OVERVIEW PLOT
+# ---------------------------------------------------------------------------
 
 def overview_plot(agg: Dict[str, Any]):
     fig_path = IMG_DIR / "waterbirds_overview.pdf"
