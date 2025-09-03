@@ -53,9 +53,9 @@ def run_exp1_waterbirds():
 # -----------------------------------------------------------------------------
 
 def main():
-    print("================  PCCM EXPERIMENT SUITE  ================")
+    print("================  PCCM EXPERIMENT SUITE  ================" )
     run_exp1_waterbirds()
-    print("\nAll experiments finished – refer to .research/iteration3/images for plots.")
+    print("\nAll experiments finished – refer to .research/iteration4/images for plots.")
 
 
 if __name__ == "__main__":

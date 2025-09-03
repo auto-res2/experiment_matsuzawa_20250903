@@ -173,6 +173,10 @@ _val_tf = T.Compose([
     T.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
 ])
 
+# constants needed for (un)normalisation
+_MEAN_T = torch.as_tensor((0.485, 0.456, 0.406)).view(3, 1, 1)
+_STD_T = torch.as_tensor((0.229, 0.224, 0.225)).view(3, 1, 1)
+
 
 class PCCMTrainer:
     """Prompted Counterfactual Confounding Mitigation trainer."""
@@ -223,6 +227,14 @@ class PCCMTrainer:
         self.best_val_wgacc = -1.0
 
     # ---------------------------------------------------------------------
+    # internal helpers
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def _unnormalize(img: torch.Tensor) -> torch.Tensor:
+        """Map tensor in Normalised space back to [0,1] range for visual models."""
+        return img * _STD_T.to(img.device) + _MEAN_T.to(img.device)
+
+    # ---------------------------------------------------------------------
     # 1) Attribute mining
     # ---------------------------------------------------------------------
     def _mine_spurious_attrs(self, dl: torch.utils.data.DataLoader) -> torch.Tensor:
@@ -231,7 +243,9 @@ class PCCMTrainer:
         for x, y, _ in tqdm(dl, leave=False):
             with torch.no_grad():
                 x = x.to(DEVICE)
-                inputs = self.clip_proc(text=PROMPT_BANK, images=x, return_tensors="pt", padding=True).to(DEVICE)
+                # De-normalise before feeding to CLIP
+                x_vis = self._unnormalize(x).clamp(0, 1)
+                inputs = self.clip_proc(text=PROMPT_BANK, images=x_vis, return_tensors="pt", padding=True).to(DEVICE)
                 outs = self.clip_model(**inputs)
                 sims = outs.logits_per_image  # [B, |A|]
             all_sims.append(sims.float().cpu())
@@ -252,10 +266,13 @@ class PCCMTrainer:
     # 2) Counterfactual synthesis (coarse full-image in-paint for speed)
     # ---------------------------------------------------------------------
     def _gen_counterfactual_batch(self, x: torch.Tensor, attr_idx: torch.Tensor) -> torch.Tensor:
-        neg_prompt = [PROMPT_BANK[i].replace("a photo of ", "remove ") for i in attr_idx]
+        # Convert indices tensor to Python ints and craft negative prompt list
+        neg_prompt = [PROMPT_BANK[int(i)].replace("a photo of ", "remove ") for i in attr_idx.tolist()]
         cf_imgs = []
+        # Denormalise once for PIL conversion
+        x_vis = self._unnormalize(x).clamp(0, 1)
         with torch.autocast("cuda", enabled=AMP_ENABLED):
-            for img in x:
+            for img in x_vis:
                 pil = T.ToPILImage()(img.cpu())
                 mask = Image.new("L", pil.size, color=255)  # white mask ⇒ full image
                 out = self.inp_pipe(prompt="", negative_prompt=neg_prompt, image=pil, mask_image=mask).images[0]
