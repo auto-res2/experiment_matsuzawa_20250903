@@ -1,7 +1,7 @@
 from __future__ import annotations
 """
 evaluate.py – evaluation routines and plotting utilities
-(Fixed): all figures are now stored under `.research/iteration6/images` as
+(Fixed): all figures are now stored under `.research/iteration7/images` as
 requested by the task description.
 """
 import statistics as st
@@ -24,7 +24,7 @@ with open(CFG_PATH, 'r') as _f:
 # -------------------------------------------------------------------------
 # Plot directory (all experiment images MUST go here) ----------------------
 # -------------------------------------------------------------------------
-PLOT_DIR = Path('.research/iteration6/images')
+PLOT_DIR = Path('.research/iteration7/images')  # <── updated as per task spec
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
 # -------------------------------------------------------------------------
