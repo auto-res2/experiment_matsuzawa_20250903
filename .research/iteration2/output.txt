@@ -1,0 +1,21 @@
+=== pip install start Wed Sep  3 07:46:46 UTC 2025 ===
+Collecting segment_anything@ git+https://github.com/facebookresearch/segment-anything.git@main (from -r requirements.txt (line 17))
+  Cloning https://github.com/facebookresearch/segment-anything.git (to revision main) to /tmp/pip-install-w1439isx/segment-anything_2b71b0b3fade44efa91e89df28733e0e
+  Resolved https://github.com/facebookresearch/segment-anything.git to commit dca509fe793f601edb92606367a655c15ac00fdf
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting torch>=2.2.0 (from -r requirements.txt (line 1))
+  Downloading torch-2.8.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (30 kB)
+Collecting torchvision>=0.17.0 (from -r requirements.txt (line 2))
+  Downloading torchvision-0.23.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (6.1 kB)
+Collecting diffusers==0.22.0 (from -r requirements.txt (line 3))
+  Downloading diffusers-0.22.0-py3-none-any.whl.metadata (18 kB)
+Collecting transformers==4.36.0 (from -r requirements.txt (line 4))
+  Downloading transformers-4.36.0-py3-none-any.whl.metadata (126 kB)
+Collecting timm==0.9.12 (from -r requirements.txt (line 5))
+  Downloading timm-0.9.12-py3-none-any.whl.metadata (60 kB)
+=== experiment start Wed Sep  3 07:46:52 UTC 2025 ===
