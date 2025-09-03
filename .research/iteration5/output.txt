@@ -1,0 +1,782 @@
+=== pip install start Wed Sep  3 14:49:50 UTC 2025 ===
+Collecting torch (from -r requirements.txt (line 1))
+  Using cached torch-2.8.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (30 kB)
+Collecting torch_geometric (from -r requirements.txt (line 2))
+  Using cached torch_geometric-2.6.1-py3-none-any.whl.metadata (63 kB)
+Collecting ogb (from -r requirements.txt (line 3))
+  Using cached ogb-1.3.6-py3-none-any.whl.metadata (6.2 kB)
+Collecting numpy (from -r requirements.txt (line 4))
+  Using cached numpy-2.3.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+Collecting scipy (from -r requirements.txt (line 5))
+  Using cached scipy-1.16.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (61 kB)
+Collecting matplotlib (from -r requirements.txt (line 6))
+  Using cached matplotlib-3.10.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (11 kB)
+Collecting seaborn (from -r requirements.txt (line 7))
+  Using cached seaborn-0.13.2-py3-none-any.whl.metadata (5.4 kB)
+Collecting tqdm (from -r requirements.txt (line 8))
+  Using cached tqdm-4.67.1-py3-none-any.whl.metadata (57 kB)
+Collecting pyyaml (from -r requirements.txt (line 9))
+  Using cached PyYAML-6.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.1 kB)
+Collecting filelock (from torch->-r requirements.txt (line 1))
+  Using cached filelock-3.19.1-py3-none-any.whl.metadata (2.1 kB)
+Collecting typing-extensions>=4.10.0 (from torch->-r requirements.txt (line 1))
+  Using cached typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting sympy>=1.13.3 (from torch->-r requirements.txt (line 1))
+  Using cached sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+Collecting networkx (from torch->-r requirements.txt (line 1))
+  Using cached networkx-3.5-py3-none-any.whl.metadata (6.3 kB)
+Collecting jinja2 (from torch->-r requirements.txt (line 1))
+  Using cached jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting fsspec (from torch->-r requirements.txt (line 1))
+  Using cached fsspec-2025.9.0-py3-none-any.whl.metadata (10 kB)
+Collecting nvidia-cuda-nvrtc-cu12==12.8.93 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cuda_nvrtc_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cuda-runtime-cu12==12.8.90 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cuda_runtime_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cuda-cupti-cu12==12.8.90 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cuda_cupti_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cudnn-cu12==9.10.2.21 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cublas-cu12==12.8.4.1 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cublas_cu12-12.8.4.1-py3-none-manylinux_2_27_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cufft-cu12==11.3.3.83 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-curand-cu12==10.3.9.90 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_curand_cu12-10.3.9.90-py3-none-manylinux_2_27_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cusolver-cu12==11.7.3.90 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cusparse-cu12==12.5.8.93 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cusparselt-cu12==0.7.1 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cusparselt_cu12-0.7.1-py3-none-manylinux2014_x86_64.whl.metadata (7.0 kB)
+Collecting nvidia-nccl-cu12==2.27.3 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_nccl_cu12-2.27.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.0 kB)
+Collecting nvidia-nvtx-cu12==12.8.90 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_nvtx_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-nvjitlink-cu12==12.8.93 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cufile-cu12==1.13.1.3 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cufile_cu12-1.13.1.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting triton==3.4.0 (from torch->-r requirements.txt (line 1))
+  Using cached triton-3.4.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (1.7 kB)
+Requirement already satisfied: setuptools>=40.8.0 in /home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages (from triton==3.4.0->torch->-r requirements.txt (line 1)) (65.5.0)
+Collecting aiohttp (from torch_geometric->-r requirements.txt (line 2))
+  Using cached aiohttp-3.12.15-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.7 kB)
+Collecting psutil>=5.8.0 (from torch_geometric->-r requirements.txt (line 2))
+  Using cached psutil-7.0.0-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (22 kB)
+Collecting pyparsing (from torch_geometric->-r requirements.txt (line 2))
+  Using cached pyparsing-3.2.3-py3-none-any.whl.metadata (5.0 kB)
+Collecting requests (from torch_geometric->-r requirements.txt (line 2))
+  Using cached requests-2.32.5-py3-none-any.whl.metadata (4.9 kB)
+Collecting scikit-learn>=0.20.0 (from ogb->-r requirements.txt (line 3))
+  Using cached scikit_learn-1.7.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (11 kB)
+Collecting pandas>=0.24.0 (from ogb->-r requirements.txt (line 3))
+  Using cached pandas-2.3.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (91 kB)
+Collecting six>=1.12.0 (from ogb->-r requirements.txt (line 3))
+  Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting urllib3>=1.24.0 (from ogb->-r requirements.txt (line 3))
+  Using cached urllib3-2.5.0-py3-none-any.whl.metadata (6.5 kB)
+Collecting outdated>=0.2.0 (from ogb->-r requirements.txt (line 3))
+  Using cached outdated-0.2.2-py2.py3-none-any.whl.metadata (4.7 kB)
+Collecting contourpy>=1.0.1 (from matplotlib->-r requirements.txt (line 6))
+  Using cached contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (5.5 kB)
+Collecting cycler>=0.10 (from matplotlib->-r requirements.txt (line 6))
+  Using cached cycler-0.12.1-py3-none-any.whl.metadata (3.8 kB)
+Collecting fonttools>=4.22.0 (from matplotlib->-r requirements.txt (line 6))
+  Using cached fonttools-4.59.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (109 kB)
+Collecting kiwisolver>=1.3.1 (from matplotlib->-r requirements.txt (line 6))
+  Using cached kiwisolver-1.4.9-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.3 kB)
+Collecting packaging>=20.0 (from matplotlib->-r requirements.txt (line 6))
+  Using cached packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting pillow>=8 (from matplotlib->-r requirements.txt (line 6))
+  Using cached pillow-11.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.0 kB)
+Collecting python-dateutil>=2.7 (from matplotlib->-r requirements.txt (line 6))
+  Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting littleutils (from outdated>=0.2.0->ogb->-r requirements.txt (line 3))
+  Using cached littleutils-0.2.4-py3-none-any.whl.metadata (679 bytes)
+Collecting pytz>=2020.1 (from pandas>=0.24.0->ogb->-r requirements.txt (line 3))
+  Using cached pytz-2025.2-py2.py3-none-any.whl.metadata (22 kB)
+Collecting tzdata>=2022.7 (from pandas>=0.24.0->ogb->-r requirements.txt (line 3))
+  Using cached tzdata-2025.2-py2.py3-none-any.whl.metadata (1.4 kB)
+Collecting joblib>=1.2.0 (from scikit-learn>=0.20.0->ogb->-r requirements.txt (line 3))
+  Using cached joblib-1.5.2-py3-none-any.whl.metadata (5.6 kB)
+Collecting threadpoolctl>=3.1.0 (from scikit-learn>=0.20.0->ogb->-r requirements.txt (line 3))
+  Using cached threadpoolctl-3.6.0-py3-none-any.whl.metadata (13 kB)
+Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch->-r requirements.txt (line 1))
+  Using cached mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+Collecting aiohappyeyeballs>=2.5.0 (from aiohttp->torch_geometric->-r requirements.txt (line 2))
+  Using cached aiohappyeyeballs-2.6.1-py3-none-any.whl.metadata (5.9 kB)
+Collecting aiosignal>=1.4.0 (from aiohttp->torch_geometric->-r requirements.txt (line 2))
+  Using cached aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+Collecting attrs>=17.3.0 (from aiohttp->torch_geometric->-r requirements.txt (line 2))
+  Using cached attrs-25.3.0-py3-none-any.whl.metadata (10 kB)
+Collecting frozenlist>=1.1.1 (from aiohttp->torch_geometric->-r requirements.txt (line 2))
+  Using cached frozenlist-1.7.0-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (18 kB)
+Collecting multidict<7.0,>=4.5 (from aiohttp->torch_geometric->-r requirements.txt (line 2))
+  Using cached multidict-6.6.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+Collecting propcache>=0.2.0 (from aiohttp->torch_geometric->-r requirements.txt (line 2))
+  Using cached propcache-0.3.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (12 kB)
+Collecting yarl<2.0,>=1.17.0 (from aiohttp->torch_geometric->-r requirements.txt (line 2))
+  Using cached yarl-1.20.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (73 kB)
+Collecting idna>=2.0 (from yarl<2.0,>=1.17.0->aiohttp->torch_geometric->-r requirements.txt (line 2))
+  Using cached idna-3.10-py3-none-any.whl.metadata (10 kB)
+Collecting MarkupSafe>=2.0 (from jinja2->torch->-r requirements.txt (line 1))
+  Using cached MarkupSafe-3.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.0 kB)
+Collecting charset_normalizer<4,>=2 (from requests->torch_geometric->-r requirements.txt (line 2))
+  Using cached charset_normalizer-3.4.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (36 kB)
+Collecting certifi>=2017.4.17 (from requests->torch_geometric->-r requirements.txt (line 2))
+  Using cached certifi-2025.8.3-py3-none-any.whl.metadata (2.4 kB)
+Using cached torch-2.8.0-cp311-cp311-manylinux_2_28_x86_64.whl (888.1 MB)
+Using cached nvidia_cublas_cu12-12.8.4.1-py3-none-manylinux_2_27_x86_64.whl (594.3 MB)
+Using cached nvidia_cuda_cupti_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (10.2 MB)
+Using cached nvidia_cuda_nvrtc_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (88.0 MB)
+Using cached nvidia_cuda_runtime_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (954 kB)
+Using cached nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_x86_64.whl (706.8 MB)
+Using cached nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (193.1 MB)
+Using cached nvidia_cufile_cu12-1.13.1.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.2 MB)
+Using cached nvidia_curand_cu12-10.3.9.90-py3-none-manylinux_2_27_x86_64.whl (63.6 MB)
+Using cached nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_x86_64.whl (267.5 MB)
+Using cached nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (288.2 MB)
+Using cached nvidia_cusparselt_cu12-0.7.1-py3-none-manylinux2014_x86_64.whl (287.2 MB)
+Using cached nvidia_nccl_cu12-2.27.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (322.4 MB)
+Using cached nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (39.3 MB)
+Using cached nvidia_nvtx_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (89 kB)
+Using cached triton-3.4.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (155.5 MB)
+Using cached torch_geometric-2.6.1-py3-none-any.whl (1.1 MB)
+Using cached ogb-1.3.6-py3-none-any.whl (78 kB)
+Using cached numpy-2.3.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.9 MB)
+Using cached scipy-1.16.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (35.4 MB)
+Using cached matplotlib-3.10.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (8.7 MB)
+Using cached seaborn-0.13.2-py3-none-any.whl (294 kB)
+Using cached tqdm-4.67.1-py3-none-any.whl (78 kB)
+Using cached PyYAML-6.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (762 kB)
+Using cached contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (355 kB)
+Using cached cycler-0.12.1-py3-none-any.whl (8.3 kB)
+Using cached fonttools-4.59.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.0 MB)
+Using cached kiwisolver-1.4.9-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
+Using cached outdated-0.2.2-py2.py3-none-any.whl (7.5 kB)
+Using cached packaging-25.0-py3-none-any.whl (66 kB)
+Using cached pandas-2.3.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (12.4 MB)
+Using cached pillow-11.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.6 MB)
+Using cached psutil-7.0.0-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (277 kB)
+Using cached pyparsing-3.2.3-py3-none-any.whl (111 kB)
+Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Using cached pytz-2025.2-py2.py3-none-any.whl (509 kB)
+Using cached scikit_learn-1.7.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (9.7 MB)
+Using cached joblib-1.5.2-py3-none-any.whl (308 kB)
+Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Using cached sympy-1.14.0-py3-none-any.whl (6.3 MB)
+Using cached mpmath-1.3.0-py3-none-any.whl (536 kB)
+Using cached threadpoolctl-3.6.0-py3-none-any.whl (18 kB)
+Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+Using cached tzdata-2025.2-py2.py3-none-any.whl (347 kB)
+Using cached urllib3-2.5.0-py3-none-any.whl (129 kB)
+Using cached aiohttp-3.12.15-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.7 MB)
+Using cached multidict-6.6.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (246 kB)
+Using cached yarl-1.20.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (348 kB)
+Using cached aiohappyeyeballs-2.6.1-py3-none-any.whl (15 kB)
+Using cached aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+Using cached attrs-25.3.0-py3-none-any.whl (63 kB)
+Using cached frozenlist-1.7.0-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (235 kB)
+Using cached idna-3.10-py3-none-any.whl (70 kB)
+Using cached propcache-0.3.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (213 kB)
+Using cached filelock-3.19.1-py3-none-any.whl (15 kB)
+Using cached fsspec-2025.9.0-py3-none-any.whl (199 kB)
+Using cached jinja2-3.1.6-py3-none-any.whl (134 kB)
+Using cached MarkupSafe-3.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (23 kB)
+Using cached littleutils-0.2.4-py3-none-any.whl (8.1 kB)
+Using cached networkx-3.5-py3-none-any.whl (2.0 MB)
+Using cached requests-2.32.5-py3-none-any.whl (64 kB)
+Using cached charset_normalizer-3.4.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (150 kB)
+Using cached certifi-2025.8.3-py3-none-any.whl (161 kB)
+Installing collected packages: pytz, nvidia-cusparselt-cu12, mpmath, urllib3, tzdata, typing-extensions, triton, tqdm, threadpoolctl, sympy, six, pyyaml, pyparsing, psutil, propcache, pillow, packaging, nvidia-nvtx-cu12, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-curand-cu12, nvidia-cufile-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, numpy, networkx, multidict, MarkupSafe, littleutils, kiwisolver, joblib, idna, fsspec, frozenlist, fonttools, filelock, cycler, charset_normalizer, certifi, attrs, aiohappyeyeballs, yarl, scipy, requests, python-dateutil, nvidia-cusparse-cu12, nvidia-cufft-cu12, nvidia-cudnn-cu12, jinja2, contourpy, aiosignal, scikit-learn, pandas, outdated, nvidia-cusolver-cu12, matplotlib, aiohttp, torch_geometric, torch, seaborn, ogb
+
+Successfully installed MarkupSafe-3.0.2 aiohappyeyeballs-2.6.1 aiohttp-3.12.15 aiosignal-1.4.0 attrs-25.3.0 certifi-2025.8.3 charset_normalizer-3.4.3 contourpy-1.3.3 cycler-0.12.1 filelock-3.19.1 fonttools-4.59.2 frozenlist-1.7.0 fsspec-2025.9.0 idna-3.10 jinja2-3.1.6 joblib-1.5.2 kiwisolver-1.4.9 littleutils-0.2.4 matplotlib-3.10.6 mpmath-1.3.0 multidict-6.6.4 networkx-3.5 numpy-2.3.2 nvidia-cublas-cu12-12.8.4.1 nvidia-cuda-cupti-cu12-12.8.90 nvidia-cuda-nvrtc-cu12-12.8.93 nvidia-cuda-runtime-cu12-12.8.90 nvidia-cudnn-cu12-9.10.2.21 nvidia-cufft-cu12-11.3.3.83 nvidia-cufile-cu12-1.13.1.3 nvidia-curand-cu12-10.3.9.90 nvidia-cusolver-cu12-11.7.3.90 nvidia-cusparse-cu12-12.5.8.93 nvidia-cusparselt-cu12-0.7.1 nvidia-nccl-cu12-2.27.3 nvidia-nvjitlink-cu12-12.8.93 nvidia-nvtx-cu12-12.8.90 ogb-1.3.6 outdated-0.2.2 packaging-25.0 pandas-2.3.2 pillow-11.3.0 propcache-0.3.2 psutil-7.0.0 pyparsing-3.2.3 python-dateutil-2.9.0.post0 pytz-2025.2 pyyaml-6.0.2 requests-2.32.5 scikit-learn-1.7.1 scipy-1.16.1 seaborn-0.13.2 six-1.17.0 sympy-1.14.0 threadpoolctl-3.6.0 torch-2.8.0 torch_geometric-2.6.1 tqdm-4.67.1 triton-3.4.0 typing-extensions-4.15.0 tzdata-2025.2 urllib3-2.5.0 yarl-1.20.1
+=== pip install end Wed Sep  3 14:51:26 UTC 2025 ===
+=== experiment start Wed Sep  3 14:51:26 UTC 2025 ===
+
+================  EXPERIMENT 1  – Depth-vs-Accuracy Stress-Test  ================
+
+----------------  Running: Cora_gcn_2L_vanilla  ----------------
+[Cora_gcn_2L_vanilla] epoch 001  loss=1.9605  valF1=0.126
+[Cora_gcn_2L_vanilla] epoch 020  loss=0.0036  valF1=0.764
+[Cora_gcn_2L_vanilla] epoch 040  loss=0.0063  valF1=0.750
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_vanilla.pdf
+[Cora_gcn_2L_vanilla] epoch 001  loss=1.9455  valF1=0.082
+[Cora_gcn_2L_vanilla] epoch 020  loss=0.0060  valF1=0.768
+[Cora_gcn_2L_vanilla] epoch 040  loss=0.0064  valF1=0.770
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_vanilla.pdf
+[Cora_gcn_2L_vanilla] epoch 001  loss=1.9599  valF1=0.070
+[Cora_gcn_2L_vanilla] epoch 020  loss=0.0031  valF1=0.762
+[Cora_gcn_2L_vanilla] epoch 040  loss=0.0076  valF1=0.754
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_vanilla.pdf
+[Cora_gcn_2L_vanilla] epoch 001  loss=1.9492  valF1=0.176
+[Cora_gcn_2L_vanilla] epoch 020  loss=0.0093  valF1=0.778
+[Cora_gcn_2L_vanilla] epoch 040  loss=0.0049  valF1=0.774
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_vanilla.pdf
+[Cora_gcn_2L_vanilla] epoch 001  loss=1.9397  valF1=0.192
+[Cora_gcn_2L_vanilla] epoch 020  loss=0.0033  valF1=0.758
+[Cora_gcn_2L_vanilla] epoch 040  loss=0.0079  valF1=0.744
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_vanilla.pdf
+[Cora_gcn_2L_vanilla] epoch 001  loss=1.9530  valF1=0.118
+[Cora_gcn_2L_vanilla] epoch 020  loss=0.0035  valF1=0.752
+[Cora_gcn_2L_vanilla] epoch 040  loss=0.0083  valF1=0.756
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_vanilla.pdf
+[Cora_gcn_2L_vanilla] epoch 001  loss=1.9502  valF1=0.228
+[Cora_gcn_2L_vanilla] epoch 020  loss=0.0044  valF1=0.756
+[Cora_gcn_2L_vanilla] epoch 040  loss=0.0062  valF1=0.766
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_vanilla.pdf
+[Cora_gcn_2L_vanilla] epoch 001  loss=1.9467  valF1=0.134
+[Cora_gcn_2L_vanilla] epoch 020  loss=0.0049  valF1=0.758
+[Cora_gcn_2L_vanilla] epoch 040  loss=0.0062  valF1=0.772
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_vanilla.pdf
+[Cora_gcn_2L_vanilla] epoch 001  loss=1.9399  valF1=0.188
+[Cora_gcn_2L_vanilla] epoch 020  loss=0.0032  valF1=0.756
+[Cora_gcn_2L_vanilla] epoch 040  loss=0.0065  valF1=0.756
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_vanilla.pdf
+[Cora_gcn_2L_vanilla] epoch 001  loss=1.9555  valF1=0.170
+[Cora_gcn_2L_vanilla] epoch 020  loss=0.0032  valF1=0.760
+[Cora_gcn_2L_vanilla] epoch 040  loss=0.0080  valF1=0.772
+[Cora_gcn_2L_vanilla] epoch 060  loss=0.0109  valF1=0.752
+[Cora_gcn_2L_vanilla] epoch 080  loss=0.0095  valF1=0.766
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_vanilla.pdf
+Cora_gcn_2L_vanilla – test F1 = 0.7930 ± 0.0033
+
+----------------  Running: Cora_gcn_2L_adasmooth  ----------------
+[Cora_gcn_2L_adasmooth] epoch 001  loss=1.9472  valF1=0.128
+[Cora_gcn_2L_adasmooth] epoch 020  loss=0.0031  valF1=0.758
+[Cora_gcn_2L_adasmooth] epoch 040  loss=0.0147  valF1=0.760
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_adasmooth.pdf
+[Cora_gcn_2L_adasmooth] epoch 001  loss=1.9450  valF1=0.196
+[Cora_gcn_2L_adasmooth] epoch 020  loss=0.0047  valF1=0.770
+[Cora_gcn_2L_adasmooth] epoch 040  loss=0.0180  valF1=0.768
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_adasmooth.pdf
+[Cora_gcn_2L_adasmooth] epoch 001  loss=1.9479  valF1=0.094
+[Cora_gcn_2L_adasmooth] epoch 020  loss=0.0032  valF1=0.744
+[Cora_gcn_2L_adasmooth] epoch 040  loss=0.0149  valF1=0.768
+[Cora_gcn_2L_adasmooth] epoch 060  loss=0.0123  valF1=0.768
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_adasmooth.pdf
+[Cora_gcn_2L_adasmooth] epoch 001  loss=1.9422  valF1=0.108
+[Cora_gcn_2L_adasmooth] epoch 020  loss=0.0064  valF1=0.748
+[Cora_gcn_2L_adasmooth] epoch 040  loss=0.0173  valF1=0.762
+[Cora_gcn_2L_adasmooth] epoch 060  loss=0.0133  valF1=0.768
+[Cora_gcn_2L_adasmooth] epoch 080  loss=0.0112  valF1=0.762
+[Cora_gcn_2L_adasmooth] epoch 100  loss=0.0112  valF1=0.744
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_adasmooth.pdf
+[Cora_gcn_2L_adasmooth] epoch 001  loss=1.9505  valF1=0.118
+[Cora_gcn_2L_adasmooth] epoch 020  loss=0.0040  valF1=0.756
+[Cora_gcn_2L_adasmooth] epoch 040  loss=0.0141  valF1=0.766
+[Cora_gcn_2L_adasmooth] epoch 060  loss=0.0153  valF1=0.758
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_adasmooth.pdf
+[Cora_gcn_2L_adasmooth] epoch 001  loss=1.9468  valF1=0.158
+[Cora_gcn_2L_adasmooth] epoch 020  loss=0.0043  valF1=0.772
+[Cora_gcn_2L_adasmooth] epoch 040  loss=0.0164  valF1=0.736
+[Cora_gcn_2L_adasmooth] epoch 060  loss=0.0119  valF1=0.754
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_adasmooth.pdf
+[Cora_gcn_2L_adasmooth] epoch 001  loss=1.9503  valF1=0.100
+[Cora_gcn_2L_adasmooth] epoch 020  loss=0.0047  valF1=0.748
+[Cora_gcn_2L_adasmooth] epoch 040  loss=0.0162  valF1=0.766
+[Cora_gcn_2L_adasmooth] epoch 060  loss=0.0112  valF1=0.754
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_adasmooth.pdf
+[Cora_gcn_2L_adasmooth] epoch 001  loss=1.9499  valF1=0.186
+[Cora_gcn_2L_adasmooth] epoch 020  loss=0.0034  valF1=0.758
+[Cora_gcn_2L_adasmooth] epoch 040  loss=0.0158  valF1=0.766
+[Cora_gcn_2L_adasmooth] epoch 060  loss=0.0108  valF1=0.772
+[Cora_gcn_2L_adasmooth] epoch 080  loss=0.0104  valF1=0.772
+[Cora_gcn_2L_adasmooth] epoch 100  loss=0.0109  valF1=0.770
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_adasmooth.pdf
+[Cora_gcn_2L_adasmooth] epoch 001  loss=1.9472  valF1=0.144
+[Cora_gcn_2L_adasmooth] epoch 020  loss=0.0046  valF1=0.764
+[Cora_gcn_2L_adasmooth] epoch 040  loss=0.0166  valF1=0.768
+[Cora_gcn_2L_adasmooth] epoch 060  loss=0.0120  valF1=0.762
+[Cora_gcn_2L_adasmooth] epoch 080  loss=0.0115  valF1=0.774
+[Cora_gcn_2L_adasmooth] epoch 100  loss=0.0089  valF1=0.780
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_adasmooth.pdf
+[Cora_gcn_2L_adasmooth] epoch 001  loss=1.9444  valF1=0.132
+[Cora_gcn_2L_adasmooth] epoch 020  loss=0.0036  valF1=0.756
+[Cora_gcn_2L_adasmooth] epoch 040  loss=0.0143  valF1=0.758
+[Cora_gcn_2L_adasmooth] epoch 060  loss=0.0100  valF1=0.736
+Figure saved – iteration5/images/training_loss_Cora_gcn_2L_adasmooth.pdf
+Cora_gcn_2L_adasmooth – test F1 = 0.7914 ± 0.0083
+
+----------------  Running: Cora_gcn_8L_vanilla  ----------------
+[Cora_gcn_8L_vanilla] epoch 001  loss=1.9478  valF1=0.158
+[Cora_gcn_8L_vanilla] epoch 020  loss=1.2243  valF1=0.270
+[Cora_gcn_8L_vanilla] epoch 040  loss=0.3925  valF1=0.654
+[Cora_gcn_8L_vanilla] epoch 060  loss=0.1196  valF1=0.690
+[Cora_gcn_8L_vanilla] epoch 080  loss=0.0617  valF1=0.672
+[Cora_gcn_8L_vanilla] epoch 100  loss=0.0228  valF1=0.756
+[Cora_gcn_8L_vanilla] epoch 120  loss=0.0278  valF1=0.742
+[Cora_gcn_8L_vanilla] epoch 140  loss=0.0038  valF1=0.728
+[Cora_gcn_8L_vanilla] epoch 160  loss=0.3878  valF1=0.706
+[Cora_gcn_8L_vanilla] epoch 180  loss=0.0716  valF1=0.694
+[Cora_gcn_8L_vanilla] epoch 200  loss=0.0229  valF1=0.758
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_vanilla.pdf
+[Cora_gcn_8L_vanilla] epoch 001  loss=1.9459  valF1=0.098
+[Cora_gcn_8L_vanilla] epoch 020  loss=1.3159  valF1=0.336
+[Cora_gcn_8L_vanilla] epoch 040  loss=0.5989  valF1=0.500
+[Cora_gcn_8L_vanilla] epoch 060  loss=0.3587  valF1=0.502
+[Cora_gcn_8L_vanilla] epoch 080  loss=0.2912  valF1=0.552
+[Cora_gcn_8L_vanilla] epoch 100  loss=0.2092  valF1=0.594
+[Cora_gcn_8L_vanilla] epoch 120  loss=0.0901  valF1=0.620
+[Cora_gcn_8L_vanilla] epoch 140  loss=0.0731  valF1=0.598
+[Cora_gcn_8L_vanilla] epoch 160  loss=0.2673  valF1=0.626
+[Cora_gcn_8L_vanilla] epoch 180  loss=0.1450  valF1=0.658
+[Cora_gcn_8L_vanilla] epoch 200  loss=0.0478  valF1=0.680
+[Cora_gcn_8L_vanilla] epoch 220  loss=0.0936  valF1=0.672
+[Cora_gcn_8L_vanilla] epoch 240  loss=0.0268  valF1=0.638
+[Cora_gcn_8L_vanilla] epoch 260  loss=0.1415  valF1=0.668
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_vanilla.pdf
+[Cora_gcn_8L_vanilla] epoch 001  loss=1.9471  valF1=0.154
+[Cora_gcn_8L_vanilla] epoch 020  loss=1.2902  valF1=0.404
+[Cora_gcn_8L_vanilla] epoch 040  loss=0.8369  valF1=0.582
+[Cora_gcn_8L_vanilla] epoch 060  loss=0.3322  valF1=0.674
+[Cora_gcn_8L_vanilla] epoch 080  loss=0.1836  valF1=0.658
+[Cora_gcn_8L_vanilla] epoch 100  loss=0.1090  valF1=0.706
+[Cora_gcn_8L_vanilla] epoch 120  loss=0.0341  valF1=0.734
+[Cora_gcn_8L_vanilla] epoch 140  loss=0.0552  valF1=0.748
+[Cora_gcn_8L_vanilla] epoch 160  loss=0.0142  valF1=0.720
+[Cora_gcn_8L_vanilla] epoch 180  loss=0.0439  valF1=0.736
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_vanilla.pdf
+[Cora_gcn_8L_vanilla] epoch 001  loss=1.9465  valF1=0.150
+[Cora_gcn_8L_vanilla] epoch 020  loss=0.8125  valF1=0.446
+[Cora_gcn_8L_vanilla] epoch 040  loss=0.2162  valF1=0.692
+[Cora_gcn_8L_vanilla] epoch 060  loss=0.1167  valF1=0.726
+[Cora_gcn_8L_vanilla] epoch 080  loss=0.0551  valF1=0.736
+[Cora_gcn_8L_vanilla] epoch 100  loss=0.5109  valF1=0.726
+[Cora_gcn_8L_vanilla] epoch 120  loss=0.0187  valF1=0.720
+[Cora_gcn_8L_vanilla] epoch 140  loss=0.3931  valF1=0.676
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_vanilla.pdf
+[Cora_gcn_8L_vanilla] epoch 001  loss=1.9470  valF1=0.152
+[Cora_gcn_8L_vanilla] epoch 020  loss=1.4635  valF1=0.312
+[Cora_gcn_8L_vanilla] epoch 040  loss=0.9868  valF1=0.462
+[Cora_gcn_8L_vanilla] epoch 060  loss=0.3971  valF1=0.600
+[Cora_gcn_8L_vanilla] epoch 080  loss=0.1901  valF1=0.694
+[Cora_gcn_8L_vanilla] epoch 100  loss=0.6375  valF1=0.614
+[Cora_gcn_8L_vanilla] epoch 120  loss=0.1106  valF1=0.688
+[Cora_gcn_8L_vanilla] epoch 140  loss=0.1207  valF1=0.692
+[Cora_gcn_8L_vanilla] epoch 160  loss=0.1085  valF1=0.696
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_vanilla.pdf
+[Cora_gcn_8L_vanilla] epoch 001  loss=1.9481  valF1=0.114
+[Cora_gcn_8L_vanilla] epoch 020  loss=1.4384  valF1=0.276
+[Cora_gcn_8L_vanilla] epoch 040  loss=0.8546  valF1=0.444
+[Cora_gcn_8L_vanilla] epoch 060  loss=0.4190  valF1=0.514
+[Cora_gcn_8L_vanilla] epoch 080  loss=0.2879  valF1=0.548
+[Cora_gcn_8L_vanilla] epoch 100  loss=0.1696  valF1=0.618
+[Cora_gcn_8L_vanilla] epoch 120  loss=0.0749  valF1=0.594
+[Cora_gcn_8L_vanilla] epoch 140  loss=0.0203  valF1=0.640
+[Cora_gcn_8L_vanilla] epoch 160  loss=0.0672  valF1=0.664
+[Cora_gcn_8L_vanilla] epoch 180  loss=0.0630  valF1=0.638
+[Cora_gcn_8L_vanilla] epoch 200  loss=0.0295  valF1=0.700
+[Cora_gcn_8L_vanilla] epoch 220  loss=0.0164  valF1=0.698
+[Cora_gcn_8L_vanilla] epoch 240  loss=0.0363  valF1=0.674
+[Cora_gcn_8L_vanilla] epoch 260  loss=0.0923  valF1=0.698
+[Cora_gcn_8L_vanilla] epoch 280  loss=0.0116  valF1=0.678
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_vanilla.pdf
+[Cora_gcn_8L_vanilla] epoch 001  loss=1.9475  valF1=0.158
+[Cora_gcn_8L_vanilla] epoch 020  loss=1.2871  valF1=0.492
+[Cora_gcn_8L_vanilla] epoch 040  loss=1.1887  valF1=0.430
+[Cora_gcn_8L_vanilla] epoch 060  loss=0.5319  valF1=0.614
+[Cora_gcn_8L_vanilla] epoch 080  loss=0.2539  valF1=0.680
+[Cora_gcn_8L_vanilla] epoch 100  loss=0.1966  valF1=0.692
+[Cora_gcn_8L_vanilla] epoch 120  loss=0.2524  valF1=0.668
+[Cora_gcn_8L_vanilla] epoch 140  loss=0.3099  valF1=0.704
+[Cora_gcn_8L_vanilla] epoch 160  loss=0.0967  valF1=0.688
+[Cora_gcn_8L_vanilla] epoch 180  loss=0.0423  valF1=0.738
+[Cora_gcn_8L_vanilla] epoch 200  loss=0.0767  valF1=0.698
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_vanilla.pdf
+[Cora_gcn_8L_vanilla] epoch 001  loss=1.9449  valF1=0.128
+[Cora_gcn_8L_vanilla] epoch 020  loss=0.9591  valF1=0.392
+[Cora_gcn_8L_vanilla] epoch 040  loss=0.2065  valF1=0.638
+[Cora_gcn_8L_vanilla] epoch 060  loss=0.0844  valF1=0.674
+[Cora_gcn_8L_vanilla] epoch 080  loss=0.0414  valF1=0.754
+[Cora_gcn_8L_vanilla] epoch 100  loss=0.0174  valF1=0.740
+[Cora_gcn_8L_vanilla] epoch 120  loss=0.0046  valF1=0.732
+[Cora_gcn_8L_vanilla] epoch 140  loss=0.0255  valF1=0.770
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_vanilla.pdf
+[Cora_gcn_8L_vanilla] epoch 001  loss=1.9450  valF1=0.150
+[Cora_gcn_8L_vanilla] epoch 020  loss=0.5278  valF1=0.622
+[Cora_gcn_8L_vanilla] epoch 040  loss=0.0556  valF1=0.734
+[Cora_gcn_8L_vanilla] epoch 060  loss=0.3423  valF1=0.758
+[Cora_gcn_8L_vanilla] epoch 080  loss=0.0261  valF1=0.760
+[Cora_gcn_8L_vanilla] epoch 100  loss=0.0030  valF1=0.754
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_vanilla.pdf
+[Cora_gcn_8L_vanilla] epoch 001  loss=1.9460  valF1=0.118
+[Cora_gcn_8L_vanilla] epoch 020  loss=0.5628  valF1=0.636
+[Cora_gcn_8L_vanilla] epoch 040  loss=0.0809  valF1=0.716
+[Cora_gcn_8L_vanilla] epoch 060  loss=0.0872  valF1=0.694
+[Cora_gcn_8L_vanilla] epoch 080  loss=0.0167  valF1=0.720
+[Cora_gcn_8L_vanilla] epoch 100  loss=0.0098  valF1=0.750
+[Cora_gcn_8L_vanilla] epoch 120  loss=0.0183  valF1=0.738
+[Cora_gcn_8L_vanilla] epoch 140  loss=0.0273  valF1=0.728
+[Cora_gcn_8L_vanilla] epoch 160  loss=0.0272  valF1=0.756
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_vanilla.pdf
+Cora_gcn_8L_vanilla – test F1 = 0.7469 ± 0.0147
+
+----------------  Running: Cora_gcn_8L_adasmooth  ----------------
+[Cora_gcn_8L_adasmooth] epoch 001  loss=1.9456  valF1=0.104
+[Cora_gcn_8L_adasmooth] epoch 020  loss=0.5850  valF1=0.544
+[Cora_gcn_8L_adasmooth] epoch 040  loss=0.1143  valF1=0.768
+[Cora_gcn_8L_adasmooth] epoch 060  loss=0.0261  valF1=0.740
+[Cora_gcn_8L_adasmooth] epoch 080  loss=0.0819  valF1=0.732
+[Cora_gcn_8L_adasmooth] epoch 100  loss=0.0523  valF1=0.698
+[Cora_gcn_8L_adasmooth] epoch 120  loss=0.0112  valF1=0.770
+[Cora_gcn_8L_adasmooth] epoch 140  loss=0.0162  valF1=0.746
+[Cora_gcn_8L_adasmooth] epoch 160  loss=0.0964  valF1=0.758
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_adasmooth.pdf
+[Cora_gcn_8L_adasmooth] epoch 001  loss=1.9458  valF1=0.096
+[Cora_gcn_8L_adasmooth] epoch 020  loss=0.4644  valF1=0.630
+[Cora_gcn_8L_adasmooth] epoch 040  loss=0.0703  valF1=0.700
+[Cora_gcn_8L_adasmooth] epoch 060  loss=0.0100  valF1=0.758
+[Cora_gcn_8L_adasmooth] epoch 080  loss=0.0072  valF1=0.734
+[Cora_gcn_8L_adasmooth] epoch 100  loss=0.0098  valF1=0.748
+[Cora_gcn_8L_adasmooth] epoch 120  loss=0.0108  valF1=0.766
+[Cora_gcn_8L_adasmooth] epoch 140  loss=0.0323  valF1=0.748
+[Cora_gcn_8L_adasmooth] epoch 160  loss=0.0830  valF1=0.750
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_adasmooth.pdf
+[Cora_gcn_8L_adasmooth] epoch 001  loss=1.9455  valF1=0.086
+[Cora_gcn_8L_adasmooth] epoch 020  loss=1.3959  valF1=0.350
+[Cora_gcn_8L_adasmooth] epoch 040  loss=0.2957  valF1=0.676
+[Cora_gcn_8L_adasmooth] epoch 060  loss=0.0556  valF1=0.708
+[Cora_gcn_8L_adasmooth] epoch 080  loss=0.0499  valF1=0.686
+[Cora_gcn_8L_adasmooth] epoch 100  loss=0.0346  valF1=0.690
+[Cora_gcn_8L_adasmooth] epoch 120  loss=0.0333  valF1=0.680
+[Cora_gcn_8L_adasmooth] epoch 140  loss=0.0780  valF1=0.706
+[Cora_gcn_8L_adasmooth] epoch 160  loss=0.0356  valF1=0.704
+[Cora_gcn_8L_adasmooth] epoch 180  loss=0.0190  valF1=0.734
+[Cora_gcn_8L_adasmooth] epoch 200  loss=0.0029  valF1=0.740
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_adasmooth.pdf
+[Cora_gcn_8L_adasmooth] epoch 001  loss=1.9463  valF1=0.136
+[Cora_gcn_8L_adasmooth] epoch 020  loss=0.9477  valF1=0.398
+[Cora_gcn_8L_adasmooth] epoch 040  loss=0.2044  valF1=0.678
+[Cora_gcn_8L_adasmooth] epoch 060  loss=0.0140  valF1=0.754
+[Cora_gcn_8L_adasmooth] epoch 080  loss=0.0020  valF1=0.764
+[Cora_gcn_8L_adasmooth] epoch 100  loss=0.0418  valF1=0.704
+[Cora_gcn_8L_adasmooth] epoch 120  loss=0.0086  valF1=0.788
+[Cora_gcn_8L_adasmooth] epoch 140  loss=0.0233  valF1=0.702
+[Cora_gcn_8L_adasmooth] epoch 160  loss=0.0334  valF1=0.712
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_adasmooth.pdf
+[Cora_gcn_8L_adasmooth] epoch 001  loss=1.9452  valF1=0.212
+[Cora_gcn_8L_adasmooth] epoch 020  loss=0.3942  valF1=0.596
+[Cora_gcn_8L_adasmooth] epoch 040  loss=0.1100  valF1=0.692
+[Cora_gcn_8L_adasmooth] epoch 060  loss=0.0263  valF1=0.714
+[Cora_gcn_8L_adasmooth] epoch 080  loss=0.0282  valF1=0.708
+[Cora_gcn_8L_adasmooth] epoch 100  loss=0.0446  valF1=0.700
+[Cora_gcn_8L_adasmooth] epoch 120  loss=0.0327  valF1=0.706
+[Cora_gcn_8L_adasmooth] epoch 140  loss=0.0143  valF1=0.704
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_adasmooth.pdf
+[Cora_gcn_8L_adasmooth] epoch 001  loss=1.9456  valF1=0.114
+[Cora_gcn_8L_adasmooth] epoch 020  loss=1.0962  valF1=0.584
+[Cora_gcn_8L_adasmooth] epoch 040  loss=0.0992  valF1=0.712
+[Cora_gcn_8L_adasmooth] epoch 060  loss=0.0626  valF1=0.706
+[Cora_gcn_8L_adasmooth] epoch 080  loss=0.1322  valF1=0.740
+[Cora_gcn_8L_adasmooth] epoch 100  loss=0.0436  valF1=0.738
+[Cora_gcn_8L_adasmooth] epoch 120  loss=0.1541  valF1=0.740
+[Cora_gcn_8L_adasmooth] epoch 140  loss=0.0050  valF1=0.732
+[Cora_gcn_8L_adasmooth] epoch 160  loss=0.0085  valF1=0.724
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_adasmooth.pdf
+[Cora_gcn_8L_adasmooth] epoch 001  loss=1.9457  valF1=0.100
+[Cora_gcn_8L_adasmooth] epoch 020  loss=0.5578  valF1=0.506
+[Cora_gcn_8L_adasmooth] epoch 040  loss=0.1828  valF1=0.670
+[Cora_gcn_8L_adasmooth] epoch 060  loss=0.1423  valF1=0.716
+[Cora_gcn_8L_adasmooth] epoch 080  loss=0.0207  valF1=0.726
+[Cora_gcn_8L_adasmooth] epoch 100  loss=0.0484  valF1=0.724
+[Cora_gcn_8L_adasmooth] epoch 120  loss=0.0386  valF1=0.716
+[Cora_gcn_8L_adasmooth] epoch 140  loss=0.0056  valF1=0.696
+[Cora_gcn_8L_adasmooth] epoch 160  loss=0.0114  valF1=0.730
+[Cora_gcn_8L_adasmooth] epoch 180  loss=0.0657  valF1=0.710
+[Cora_gcn_8L_adasmooth] epoch 200  loss=0.0133  valF1=0.746
+[Cora_gcn_8L_adasmooth] epoch 220  loss=0.0525  valF1=0.746
+[Cora_gcn_8L_adasmooth] epoch 240  loss=0.0170  valF1=0.752
+[Cora_gcn_8L_adasmooth] epoch 260  loss=0.0147  valF1=0.742
+[Cora_gcn_8L_adasmooth] epoch 280  loss=0.0521  valF1=0.724
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_adasmooth.pdf
+[Cora_gcn_8L_adasmooth] epoch 001  loss=1.9458  valF1=0.128
+[Cora_gcn_8L_adasmooth] epoch 020  loss=1.1546  valF1=0.404
+[Cora_gcn_8L_adasmooth] epoch 040  loss=0.1651  valF1=0.662
+[Cora_gcn_8L_adasmooth] epoch 060  loss=0.1815  valF1=0.722
+[Cora_gcn_8L_adasmooth] epoch 080  loss=0.0404  valF1=0.670
+[Cora_gcn_8L_adasmooth] epoch 100  loss=0.0097  valF1=0.716
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_adasmooth.pdf
+[Cora_gcn_8L_adasmooth] epoch 001  loss=1.9467  valF1=0.096
+[Cora_gcn_8L_adasmooth] epoch 020  loss=1.1664  valF1=0.368
+[Cora_gcn_8L_adasmooth] epoch 040  loss=0.2144  valF1=0.670
+[Cora_gcn_8L_adasmooth] epoch 060  loss=0.0697  valF1=0.728
+[Cora_gcn_8L_adasmooth] epoch 080  loss=0.0523  valF1=0.726
+[Cora_gcn_8L_adasmooth] epoch 100  loss=0.0628  valF1=0.664
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_adasmooth.pdf
+[Cora_gcn_8L_adasmooth] epoch 001  loss=1.9465  valF1=0.128
+[Cora_gcn_8L_adasmooth] epoch 020  loss=0.8717  valF1=0.496
+[Cora_gcn_8L_adasmooth] epoch 040  loss=0.2998  valF1=0.604
+[Cora_gcn_8L_adasmooth] epoch 060  loss=0.0917  valF1=0.672
+[Cora_gcn_8L_adasmooth] epoch 080  loss=0.0619  valF1=0.702
+[Cora_gcn_8L_adasmooth] epoch 100  loss=0.0236  valF1=0.718
+[Cora_gcn_8L_adasmooth] epoch 120  loss=0.0073  valF1=0.712
+[Cora_gcn_8L_adasmooth] epoch 140  loss=0.0510  valF1=0.754
+[Cora_gcn_8L_adasmooth] epoch 160  loss=0.0445  valF1=0.750
+[Cora_gcn_8L_adasmooth] epoch 180  loss=0.0319  valF1=0.702
+Figure saved – iteration5/images/training_loss_Cora_gcn_8L_adasmooth.pdf
+Cora_gcn_8L_adasmooth – test F1 = 0.7042 ± 0.0385
+
+----------------  Running: Cora_gcn_32L_vanilla  ----------------
+[Cora_gcn_32L_vanilla] epoch 001  loss=1.9459  valF1=0.166
+[Cora_gcn_32L_vanilla] epoch 020  loss=1.9344  valF1=0.140
+[Cora_gcn_32L_vanilla] epoch 040  loss=1.9453  valF1=0.134
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_vanilla.pdf
+[Cora_gcn_32L_vanilla] epoch 001  loss=1.9459  valF1=0.170
+[Cora_gcn_32L_vanilla] epoch 020  loss=1.9431  valF1=0.170
+[Cora_gcn_32L_vanilla] epoch 040  loss=1.9404  valF1=0.092
+[Cora_gcn_32L_vanilla] epoch 060  loss=1.9248  valF1=0.132
+[Cora_gcn_32L_vanilla] epoch 080  loss=1.9013  valF1=0.164
+[Cora_gcn_32L_vanilla] epoch 100  loss=1.9043  valF1=0.180
+[Cora_gcn_32L_vanilla] epoch 120  loss=1.8591  valF1=0.182
+[Cora_gcn_32L_vanilla] epoch 140  loss=1.8254  valF1=0.126
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_vanilla.pdf
+[Cora_gcn_32L_vanilla] epoch 001  loss=1.9459  valF1=0.120
+[Cora_gcn_32L_vanilla] epoch 020  loss=1.9364  valF1=0.160
+[Cora_gcn_32L_vanilla] epoch 040  loss=1.9337  valF1=0.154
+[Cora_gcn_32L_vanilla] epoch 060  loss=1.9183  valF1=0.156
+[Cora_gcn_32L_vanilla] epoch 080  loss=1.9180  valF1=0.152
+[Cora_gcn_32L_vanilla] epoch 100  loss=1.8558  valF1=0.186
+[Cora_gcn_32L_vanilla] epoch 120  loss=1.8196  valF1=0.180
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_vanilla.pdf
+[Cora_gcn_32L_vanilla] epoch 001  loss=1.9459  valF1=0.154
+[Cora_gcn_32L_vanilla] epoch 020  loss=1.9393  valF1=0.174
+[Cora_gcn_32L_vanilla] epoch 040  loss=1.9301  valF1=0.128
+[Cora_gcn_32L_vanilla] epoch 060  loss=1.9225  valF1=0.218
+[Cora_gcn_32L_vanilla] epoch 080  loss=1.8989  valF1=0.176
+[Cora_gcn_32L_vanilla] epoch 100  loss=1.8641  valF1=0.146
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_vanilla.pdf
+[Cora_gcn_32L_vanilla] epoch 001  loss=1.9459  valF1=0.124
+[Cora_gcn_32L_vanilla] epoch 020  loss=1.9348  valF1=0.210
+[Cora_gcn_32L_vanilla] epoch 040  loss=1.9238  valF1=0.182
+[Cora_gcn_32L_vanilla] epoch 060  loss=1.9167  valF1=0.178
+[Cora_gcn_32L_vanilla] epoch 080  loss=1.9005  valF1=0.168
+[Cora_gcn_32L_vanilla] epoch 100  loss=1.9025  valF1=0.152
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_vanilla.pdf
+[Cora_gcn_32L_vanilla] epoch 001  loss=1.9459  valF1=0.088
+[Cora_gcn_32L_vanilla] epoch 020  loss=1.9243  valF1=0.178
+[Cora_gcn_32L_vanilla] epoch 040  loss=1.9354  valF1=0.194
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_vanilla.pdf
+[Cora_gcn_32L_vanilla] epoch 001  loss=1.9459  valF1=0.140
+[Cora_gcn_32L_vanilla] epoch 020  loss=1.9378  valF1=0.134
+[Cora_gcn_32L_vanilla] epoch 040  loss=1.9204  valF1=0.200
+[Cora_gcn_32L_vanilla] epoch 060  loss=1.9168  valF1=0.146
+[Cora_gcn_32L_vanilla] epoch 080  loss=1.9115  valF1=0.144
+[Cora_gcn_32L_vanilla] epoch 100  loss=1.9033  valF1=0.166
+[Cora_gcn_32L_vanilla] epoch 120  loss=1.8887  valF1=0.156
+[Cora_gcn_32L_vanilla] epoch 140  loss=1.8139  valF1=0.126
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_vanilla.pdf
+[Cora_gcn_32L_vanilla] epoch 001  loss=1.9459  valF1=0.070
+[Cora_gcn_32L_vanilla] epoch 020  loss=1.9348  valF1=0.120
+[Cora_gcn_32L_vanilla] epoch 040  loss=1.9389  valF1=0.166
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_vanilla.pdf
+[Cora_gcn_32L_vanilla] epoch 001  loss=1.9459  valF1=0.092
+[Cora_gcn_32L_vanilla] epoch 020  loss=1.9382  valF1=0.096
+[Cora_gcn_32L_vanilla] epoch 040  loss=1.9284  valF1=0.162
+[Cora_gcn_32L_vanilla] epoch 060  loss=1.9174  valF1=0.146
+[Cora_gcn_32L_vanilla] epoch 080  loss=1.8786  valF1=0.216
+[Cora_gcn_32L_vanilla] epoch 100  loss=1.8802  valF1=0.174
+[Cora_gcn_32L_vanilla] epoch 120  loss=1.8666  valF1=0.156
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_vanilla.pdf
+[Cora_gcn_32L_vanilla] epoch 001  loss=1.9459  valF1=0.166
+[Cora_gcn_32L_vanilla] epoch 020  loss=1.9421  valF1=0.100
+[Cora_gcn_32L_vanilla] epoch 040  loss=1.9330  valF1=0.160
+[Cora_gcn_32L_vanilla] epoch 060  loss=1.9210  valF1=0.138
+[Cora_gcn_32L_vanilla] epoch 080  loss=1.8956  valF1=0.164
+[Cora_gcn_32L_vanilla] epoch 100  loss=1.8325  valF1=0.192
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_vanilla.pdf
+Cora_gcn_32L_vanilla – test F1 = 0.1684 ± 0.0151
+
+----------------  Running: Cora_gcn_32L_adasmooth  ----------------
+[Cora_gcn_32L_adasmooth] epoch 001  loss=1.9459  valF1=0.126
+[Cora_gcn_32L_adasmooth] epoch 020  loss=1.9220  valF1=0.124
+[Cora_gcn_32L_adasmooth] epoch 040  loss=1.8925  valF1=0.136
+[Cora_gcn_32L_adasmooth] epoch 060  loss=1.8977  valF1=0.128
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_adasmooth.pdf
+[Cora_gcn_32L_adasmooth] epoch 001  loss=1.9459  valF1=0.116
+[Cora_gcn_32L_adasmooth] epoch 020  loss=1.9411  valF1=0.184
+[Cora_gcn_32L_adasmooth] epoch 040  loss=1.9190  valF1=0.126
+[Cora_gcn_32L_adasmooth] epoch 060  loss=1.8811  valF1=0.164
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_adasmooth.pdf
+[Cora_gcn_32L_adasmooth] epoch 001  loss=1.9459  valF1=0.132
+[Cora_gcn_32L_adasmooth] epoch 020  loss=1.9312  valF1=0.142
+[Cora_gcn_32L_adasmooth] epoch 040  loss=1.9079  valF1=0.112
+[Cora_gcn_32L_adasmooth] epoch 060  loss=1.8924  valF1=0.140
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_adasmooth.pdf
+[Cora_gcn_32L_adasmooth] epoch 001  loss=1.9459  valF1=0.120
+[Cora_gcn_32L_adasmooth] epoch 020  loss=1.9405  valF1=0.164
+[Cora_gcn_32L_adasmooth] epoch 040  loss=1.9098  valF1=0.152
+[Cora_gcn_32L_adasmooth] epoch 060  loss=1.8625  valF1=0.166
+[Cora_gcn_32L_adasmooth] epoch 080  loss=1.8385  valF1=0.136
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_adasmooth.pdf
+[Cora_gcn_32L_adasmooth] epoch 001  loss=1.9459  valF1=0.236
+[Cora_gcn_32L_adasmooth] epoch 020  loss=1.9325  valF1=0.146
+[Cora_gcn_32L_adasmooth] epoch 040  loss=1.9187  valF1=0.156
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_adasmooth.pdf
+[Cora_gcn_32L_adasmooth] epoch 001  loss=1.9459  valF1=0.144
+[Cora_gcn_32L_adasmooth] epoch 020  loss=1.9361  valF1=0.132
+[Cora_gcn_32L_adasmooth] epoch 040  loss=1.9148  valF1=0.116
+[Cora_gcn_32L_adasmooth] epoch 060  loss=1.8722  valF1=0.124
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_adasmooth.pdf
+[Cora_gcn_32L_adasmooth] epoch 001  loss=1.9459  valF1=0.094
+[Cora_gcn_32L_adasmooth] epoch 020  loss=1.9331  valF1=0.156
+[Cora_gcn_32L_adasmooth] epoch 040  loss=1.9135  valF1=0.120
+[Cora_gcn_32L_adasmooth] epoch 060  loss=1.8821  valF1=0.136
+[Cora_gcn_32L_adasmooth] epoch 080  loss=1.8727  valF1=0.142
+[Cora_gcn_32L_adasmooth] epoch 100  loss=1.8607  valF1=0.156
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_adasmooth.pdf
+[Cora_gcn_32L_adasmooth] epoch 001  loss=1.9459  valF1=0.200
+[Cora_gcn_32L_adasmooth] epoch 020  loss=1.9363  valF1=0.144
+[Cora_gcn_32L_adasmooth] epoch 040  loss=1.9045  valF1=0.134
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_adasmooth.pdf
+[Cora_gcn_32L_adasmooth] epoch 001  loss=1.9459  valF1=0.146
+[Cora_gcn_32L_adasmooth] epoch 020  loss=1.9163  valF1=0.112
+[Cora_gcn_32L_adasmooth] epoch 040  loss=1.8971  valF1=0.116
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_adasmooth.pdf
+[Cora_gcn_32L_adasmooth] epoch 001  loss=1.9459  valF1=0.098
+[Cora_gcn_32L_adasmooth] epoch 020  loss=1.9322  valF1=0.206
+[Cora_gcn_32L_adasmooth] epoch 040  loss=1.9007  valF1=0.154
+[Cora_gcn_32L_adasmooth] epoch 060  loss=1.8021  valF1=0.186
+Figure saved – iteration5/images/training_loss_Cora_gcn_32L_adasmooth.pdf
+Cora_gcn_32L_adasmooth – test F1 = 0.1463 ± 0.0265
+
+----------------  Running: Cora_gcn_64L_vanilla  ----------------
+[Cora_gcn_64L_vanilla] epoch 001  loss=1.9459  valF1=0.194
+[Cora_gcn_64L_vanilla] epoch 020  loss=1.9385  valF1=0.152
+[Cora_gcn_64L_vanilla] epoch 040  loss=1.9334  valF1=0.144
+[Cora_gcn_64L_vanilla] epoch 060  loss=1.9135  valF1=0.206
+[Cora_gcn_64L_vanilla] epoch 080  loss=1.8317  valF1=0.170
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_vanilla.pdf
+[Cora_gcn_64L_vanilla] epoch 001  loss=1.9459  valF1=0.148
+[Cora_gcn_64L_vanilla] epoch 020  loss=1.9395  valF1=0.132
+[Cora_gcn_64L_vanilla] epoch 040  loss=1.9342  valF1=0.142
+[Cora_gcn_64L_vanilla] epoch 060  loss=1.9237  valF1=0.192
+[Cora_gcn_64L_vanilla] epoch 080  loss=1.8787  valF1=0.154
+[Cora_gcn_64L_vanilla] epoch 100  loss=1.8500  valF1=0.158
+[Cora_gcn_64L_vanilla] epoch 120  loss=1.8187  valF1=0.156
+[Cora_gcn_64L_vanilla] epoch 140  loss=1.7306  valF1=0.208
+[Cora_gcn_64L_vanilla] epoch 160  loss=1.7059  valF1=0.240
+[Cora_gcn_64L_vanilla] epoch 180  loss=1.7355  valF1=0.206
+[Cora_gcn_64L_vanilla] epoch 200  loss=1.6591  valF1=0.212
+[Cora_gcn_64L_vanilla] epoch 220  loss=1.7704  valF1=0.170
+[Cora_gcn_64L_vanilla] epoch 240  loss=1.5984  valF1=0.246
+[Cora_gcn_64L_vanilla] epoch 260  loss=1.6873  valF1=0.204
+[Cora_gcn_64L_vanilla] epoch 280  loss=1.7029  valF1=0.192
+[Cora_gcn_64L_vanilla] epoch 300  loss=1.6676  valF1=0.184
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_vanilla.pdf
+[Cora_gcn_64L_vanilla] epoch 001  loss=1.9459  valF1=0.264
+[Cora_gcn_64L_vanilla] epoch 020  loss=1.9412  valF1=0.094
+[Cora_gcn_64L_vanilla] epoch 040  loss=1.9344  valF1=0.136
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_vanilla.pdf
+[Cora_gcn_64L_vanilla] epoch 001  loss=1.9459  valF1=0.156
+[Cora_gcn_64L_vanilla] epoch 020  loss=1.9366  valF1=0.124
+[Cora_gcn_64L_vanilla] epoch 040  loss=1.9367  valF1=0.138
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_vanilla.pdf
+[Cora_gcn_64L_vanilla] epoch 001  loss=1.9459  valF1=0.148
+[Cora_gcn_64L_vanilla] epoch 020  loss=1.9348  valF1=0.152
+[Cora_gcn_64L_vanilla] epoch 040  loss=1.9335  valF1=0.176
+[Cora_gcn_64L_vanilla] epoch 060  loss=1.9114  valF1=0.144
+[Cora_gcn_64L_vanilla] epoch 080  loss=1.8935  valF1=0.168
+[Cora_gcn_64L_vanilla] epoch 100  loss=1.8857  valF1=0.168
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_vanilla.pdf
+[Cora_gcn_64L_vanilla] epoch 001  loss=1.9459  valF1=0.178
+[Cora_gcn_64L_vanilla] epoch 020  loss=1.9447  valF1=0.140
+[Cora_gcn_64L_vanilla] epoch 040  loss=1.9233  valF1=0.176
+[Cora_gcn_64L_vanilla] epoch 060  loss=1.9237  valF1=0.084
+[Cora_gcn_64L_vanilla] epoch 080  loss=1.9053  valF1=0.134
+[Cora_gcn_64L_vanilla] epoch 100  loss=1.8866  valF1=0.212
+[Cora_gcn_64L_vanilla] epoch 120  loss=1.8823  valF1=0.174
+[Cora_gcn_64L_vanilla] epoch 140  loss=1.8697  valF1=0.174
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_vanilla.pdf
+[Cora_gcn_64L_vanilla] epoch 001  loss=1.9459  valF1=0.160
+[Cora_gcn_64L_vanilla] epoch 020  loss=1.9364  valF1=0.130
+[Cora_gcn_64L_vanilla] epoch 040  loss=1.9171  valF1=0.144
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_vanilla.pdf
+[Cora_gcn_64L_vanilla] epoch 001  loss=1.9459  valF1=0.078
+[Cora_gcn_64L_vanilla] epoch 020  loss=1.9558  valF1=0.158
+[Cora_gcn_64L_vanilla] epoch 040  loss=1.9311  valF1=0.160
+[Cora_gcn_64L_vanilla] epoch 060  loss=1.9223  valF1=0.124
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_vanilla.pdf
+[Cora_gcn_64L_vanilla] epoch 001  loss=1.9459  valF1=0.152
+[Cora_gcn_64L_vanilla] epoch 020  loss=1.9460  valF1=0.182
+[Cora_gcn_64L_vanilla] epoch 040  loss=1.9290  valF1=0.096
+[Cora_gcn_64L_vanilla] epoch 060  loss=1.9202  valF1=0.156
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_vanilla.pdf
+[Cora_gcn_64L_vanilla] epoch 001  loss=1.9459  valF1=0.130
+[Cora_gcn_64L_vanilla] epoch 020  loss=1.9469  valF1=0.130
+[Cora_gcn_64L_vanilla] epoch 040  loss=1.9349  valF1=0.114
+[Cora_gcn_64L_vanilla] epoch 060  loss=1.9134  valF1=0.162
+[Cora_gcn_64L_vanilla] epoch 080  loss=1.8993  valF1=0.118
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_vanilla.pdf
+Cora_gcn_64L_vanilla – test F1 = 0.1615 ± 0.0167
+
+----------------  Running: Cora_gcn_64L_adasmooth  ----------------
+[Cora_gcn_64L_adasmooth] epoch 001  loss=1.9459  valF1=0.186
+[Cora_gcn_64L_adasmooth] epoch 020  loss=1.9348  valF1=0.140
+[Cora_gcn_64L_adasmooth] epoch 040  loss=1.8989  valF1=0.152
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_adasmooth.pdf
+[Cora_gcn_64L_adasmooth] epoch 001  loss=1.9459  valF1=0.132
+[Cora_gcn_64L_adasmooth] epoch 020  loss=1.9044  valF1=0.136
+[Cora_gcn_64L_adasmooth] epoch 040  loss=1.8971  valF1=0.120
+[Cora_gcn_64L_adasmooth] epoch 060  loss=1.8932  valF1=0.126
+[Cora_gcn_64L_adasmooth] epoch 080  loss=1.8892  valF1=0.110
+[Cora_gcn_64L_adasmooth] epoch 100  loss=1.8634  valF1=0.154
+[Cora_gcn_64L_adasmooth] epoch 120  loss=1.8434  valF1=0.180
+[Cora_gcn_64L_adasmooth] epoch 140  loss=1.8273  valF1=0.166
+[Cora_gcn_64L_adasmooth] epoch 160  loss=1.8078  valF1=0.174
+[Cora_gcn_64L_adasmooth] epoch 180  loss=1.7943  valF1=0.156
+[Cora_gcn_64L_adasmooth] epoch 200  loss=1.7835  valF1=0.124
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_adasmooth.pdf
+[Cora_gcn_64L_adasmooth] epoch 001  loss=1.9459  valF1=0.144
+[Cora_gcn_64L_adasmooth] epoch 020  loss=1.9417  valF1=0.142
+[Cora_gcn_64L_adasmooth] epoch 040  loss=1.9290  valF1=0.180
+[Cora_gcn_64L_adasmooth] epoch 060  loss=1.8474  valF1=0.146
+[Cora_gcn_64L_adasmooth] epoch 080  loss=1.8069  valF1=0.170
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_adasmooth.pdf
+[Cora_gcn_64L_adasmooth] epoch 001  loss=1.9459  valF1=0.122
+[Cora_gcn_64L_adasmooth] epoch 020  loss=1.9324  valF1=0.206
+[Cora_gcn_64L_adasmooth] epoch 040  loss=1.9024  valF1=0.132
+[Cora_gcn_64L_adasmooth] epoch 060  loss=1.8470  valF1=0.144
+[Cora_gcn_64L_adasmooth] epoch 080  loss=1.8161  valF1=0.182
+[Cora_gcn_64L_adasmooth] epoch 100  loss=1.7663  valF1=0.140
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_adasmooth.pdf
+[Cora_gcn_64L_adasmooth] epoch 001  loss=1.9459  valF1=0.122
+[Cora_gcn_64L_adasmooth] epoch 020  loss=1.9339  valF1=0.152
+[Cora_gcn_64L_adasmooth] epoch 040  loss=1.9011  valF1=0.106
+[Cora_gcn_64L_adasmooth] epoch 060  loss=1.8003  valF1=0.170
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_adasmooth.pdf
+[Cora_gcn_64L_adasmooth] epoch 001  loss=1.9459  valF1=0.130
+[Cora_gcn_64L_adasmooth] epoch 020  loss=1.9227  valF1=0.126
+[Cora_gcn_64L_adasmooth] epoch 040  loss=1.9067  valF1=0.124
+[Cora_gcn_64L_adasmooth] epoch 060  loss=1.8861  valF1=0.130
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_adasmooth.pdf
+[Cora_gcn_64L_adasmooth] epoch 001  loss=1.9459  valF1=0.196
+[Cora_gcn_64L_adasmooth] epoch 020  loss=1.9105  valF1=0.148
+[Cora_gcn_64L_adasmooth] epoch 040  loss=1.9050  valF1=0.134
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_adasmooth.pdf
+[Cora_gcn_64L_adasmooth] epoch 001  loss=1.9459  valF1=0.140
+[Cora_gcn_64L_adasmooth] epoch 020  loss=1.9078  valF1=0.132
+[Cora_gcn_64L_adasmooth] epoch 040  loss=1.8933  valF1=0.118
+[Cora_gcn_64L_adasmooth] epoch 060  loss=1.8946  valF1=0.124
+[Cora_gcn_64L_adasmooth] epoch 080  loss=1.8943  valF1=0.148
+[Cora_gcn_64L_adasmooth] epoch 100  loss=1.8628  valF1=0.136
+[Cora_gcn_64L_adasmooth] epoch 120  loss=1.8724  valF1=0.158
+[Cora_gcn_64L_adasmooth] epoch 140  loss=1.8548  valF1=0.152
+[Cora_gcn_64L_adasmooth] epoch 160  loss=1.8062  valF1=0.202
+[Cora_gcn_64L_adasmooth] epoch 180  loss=1.8312  valF1=0.164
+[Cora_gcn_64L_adasmooth] epoch 200  loss=1.7896  valF1=0.134
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_adasmooth.pdf
+[Cora_gcn_64L_adasmooth] epoch 001  loss=1.9459  valF1=0.132
+[Cora_gcn_64L_adasmooth] epoch 020  loss=1.9350  valF1=0.178
+[Cora_gcn_64L_adasmooth] epoch 040  loss=1.8874  valF1=0.102
+[Cora_gcn_64L_adasmooth] epoch 060  loss=1.7838  valF1=0.146
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_adasmooth.pdf
+[Cora_gcn_64L_adasmooth] epoch 001  loss=1.9459  valF1=0.098
+[Cora_gcn_64L_adasmooth] epoch 020  loss=1.9319  valF1=0.152
+[Cora_gcn_64L_adasmooth] epoch 040  loss=1.8911  valF1=0.120
+[Cora_gcn_64L_adasmooth] epoch 060  loss=1.8905  valF1=0.132
+Figure saved – iteration5/images/training_loss_Cora_gcn_64L_adasmooth.pdf
+Cora_gcn_64L_adasmooth – test F1 = 0.1475 ± 0.0134
+
+----------------  Running: Cora_sage_2L_vanilla  ----------------
