@@ -1,11 +1,12 @@
+[UPDATED]
 from pathlib import Path
 from typing import Dict
 
 import matplotlib.pyplot as plt
 
 # Where camera-ready figures must go -----------------------------------------
-# NOTE: repository policy update – all images are now stored under iteration12
-FIG_DIR = Path(".research/iteration12/images")
+# NOTE: repository policy update – all images are now stored under iteration13
+FIG_DIR = Path(".research/iteration13/images")
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 ###############################################################################

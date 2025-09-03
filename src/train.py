@@ -1,3 +1,4 @@
+[UPDATED]
 """
 train.py – model definitions, algorithms and the generic training loop
 The module is self-contained; utility helpers (set_seed, timing) are re-declared
@@ -7,7 +8,7 @@ here to avoid missing-import issues when the package is executed via
 from __future__ import annotations
 import json, time, random, contextlib, numpy as np
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 import torch
 import torch.nn as nn
@@ -109,18 +110,44 @@ class ERM:
         self.o.step()
         return loss.item()
 
-# Optional methods – import lazily so that the project still installs even if
-# reviewers do not have every exotic dependency.
+# ---------------------------------------------------------------------------
+# IRM & GroupDRO – attempt import more robustly across wilds versions
+# ---------------------------------------------------------------------------
+
+_IRM: Optional[type] = None
+_GroupDRO: Optional[type] = None
+
+# Try default re-export path first ------------------------------------------------
 try:
-    from wilds.algorithms import IRM as _IRM, GroupDRO as _GroupDRO
-except ImportError:      # pragma: no cover – missing wilds during unit tests
-    _IRM = _GroupDRO = None
+    from wilds.algorithms import IRM as _IRM, GroupDRO as _GroupDRO  # type: ignore
+except Exception:
+    # Fall back to sub-module paths (WILDS ≥2 may not re-export at pkg level)
+    try:
+        from wilds.algorithms.irm import IRM as _IRM  # type: ignore
+    except Exception:
+        _IRM = None
+    try:
+        from wilds.algorithms.group_dro import GroupDRO as _GroupDRO  # type: ignore
+    except Exception:
+        _GroupDRO = None
 
-class IRM(_IRM):
-    pass  # subclass only so that hasattr() checks below succeed even if wilds missing
+# Define public wrappers that either subclass real implementation or raise helpful error
+if _IRM is not None:
+    class IRM(_IRM):
+        """Thin subclass to maintain isinstance checks without modification."""
+        pass
+else:
+    class IRM:  # type: ignore
+        def __init__(self, *_, **__):
+            raise RuntimeError("wilds is required for IRM – package not found or incompatible version")
 
-class GroupDRO(_GroupDRO):
-    pass
+if _GroupDRO is not None:
+    class GroupDRO(_GroupDRO):
+        pass
+else:
+    class GroupDRO:  # type: ignore
+        def __init__(self, *_, **__):
+            raise RuntimeError("wilds is required for GroupDRO – package not found or incompatible version")
 
 class DiCA:
     """Stub for DiCA. Fail-fast if user actually tries to run it."""
@@ -136,13 +163,9 @@ def make_algorithm(method: str, model: nn.Module, optimiser, device):
     if method == "erm":
         return ERM(model, optimiser, device)
     if method == "irm":
-        if _IRM is None:
-            raise RuntimeError("wilds is required for IRM – package not found")
-        return IRM(model, optimiser, irm_lambda=1.0, device=device)
+        return IRM(model, optimiser, irm_lambda=1.0, device=device)  # type: ignore[arg-type]
     if method == "groupdro":
-        if _GroupDRO is None:
-            raise RuntimeError("wilds is required for GroupDRO – package not found")
-        return GroupDRO(model, optimiser, device=device)
+        return GroupDRO(model, optimiser, device=device)  # type: ignore[arg-type]
     if method == "dica":
         return DiCA(model, optimiser, device)
     raise NotImplementedError(method)
@@ -168,7 +191,7 @@ class Trainer:
         self.optim = _make_optim(self.model.parameters(), backbone)
         self.alg   = make_algorithm(method, self.model, self.optim, self.device)
 
-        self.scaler = torch.cuda.amp.GradScaler(enabled=cfg["hardware"]["amp"]) if torch.cuda.is_available() else None
+        self.scaler = (torch.cuda.amp.GradScaler(enabled=cfg["hardware"]["amp"]) if torch.cuda.is_available() else None)
         self.best_val = 0.0
 
         run_ts = int(time.time())
