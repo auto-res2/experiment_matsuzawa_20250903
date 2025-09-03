@@ -1,4 +1,3 @@
-[UPDATED]
 """
 train.py – model definitions, algorithms and the generic training loop
 The module is self-contained; utility helpers (set_seed, timing) are re-declared
@@ -6,6 +5,10 @@ here to avoid missing-import issues when the package is executed via
 `python -m src.main`.
 """
 from __future__ import annotations
+# NOTE: This future import must directly follow the module docstring.  It was
+# previously preceded by an unintended token, which violated Python's rule that
+# `from __future__` imports appear only after the docstring and comments.
+
 import json, time, random, contextlib, numpy as np
 from pathlib import Path
 from typing import Dict, Optional
@@ -22,6 +25,7 @@ from .preprocess import get_loaders
 # ─── LIGHTWEIGHT UTILS (replaces missing src.utils) ───────────────────────────
 ################################################################################
 
+
 def set_seed(seed: int) -> None:
     """Seed Python, NumPy and PyTorch for (best-effort) determinism."""
     random.seed(seed)
@@ -36,6 +40,7 @@ def set_seed(seed: int) -> None:
         pass
     torch.backends.cudnn.allow_tf32 = False
 
+
 @contextlib.contextmanager
 def timing(msg: str):
     """Context manager that prints elapsed wall-clock time when exiting."""
@@ -49,6 +54,7 @@ def timing(msg: str):
 ################################################################################
 
 import yaml
+
 _CFG_PATH = Path(__file__).resolve().parent.parent / "config" / "config.yaml"
 with open(_CFG_PATH, "r") as _f:
     cfg = yaml.safe_load(_f)
@@ -56,6 +62,7 @@ with open(_CFG_PATH, "r") as _f:
 ################################################################################
 # ─── BACKBONE FACTORY ────────────────────────────────────────────────────────
 ################################################################################
+
 
 class Backbone:
     """Factory that returns an ImageNet-pre-trained backbone with correct head"""
@@ -75,18 +82,23 @@ class Backbone:
 # ─── OPTIMISER HELPER ────────────────────────────────────────────────────────
 ################################################################################
 
+
 def _make_optim(params, backbone_name: str):
     o_cfg = cfg["backbones"][backbone_name]["optim"]
     if o_cfg["type"].lower() == "sgd":
-        optim = torch.optim.SGD(params,
-                                lr=o_cfg["lr"],
-                                momentum=o_cfg.get("momentum", 0.9),
-                                weight_decay=o_cfg.get("wd", 0.0))
+        optim = torch.optim.SGD(
+            params,
+            lr=o_cfg["lr"],
+            momentum=o_cfg.get("momentum", 0.9),
+            weight_decay=o_cfg.get("wd", 0.0),
+        )
     elif o_cfg["type"].lower() == "adamw":
-        optim = torch.optim.AdamW(params,
-                                  lr=o_cfg["lr"],
-                                  betas=tuple(o_cfg.get("betas", (0.9, 0.999))),
-                                  weight_decay=o_cfg.get("wd", 0.0))
+        optim = torch.optim.AdamW(
+            params,
+            lr=o_cfg["lr"],
+            betas=tuple(o_cfg.get("betas", (0.9, 0.999))),
+            weight_decay=o_cfg.get("wd", 0.0),
+        )
     else:
         raise KeyError(o_cfg["type"])
     return optim
@@ -94,6 +106,7 @@ def _make_optim(params, backbone_name: str):
 ################################################################################
 # ─── ALGORITHMS / TRAINING OBJECTIVES ────────────────────────────────────────
 ################################################################################
+
 
 class ERM:
     """Empirical Risk Minimisation – default cross-entropy"""
@@ -110,6 +123,7 @@ class ERM:
         self.o.step()
         return loss.item()
 
+
 # ---------------------------------------------------------------------------
 # IRM & GroupDRO – attempt import more robustly across wilds versions
 # ---------------------------------------------------------------------------
@@ -117,7 +131,7 @@ class ERM:
 _IRM: Optional[type] = None
 _GroupDRO: Optional[type] = None
 
-# Try default re-export path first ------------------------------------------------
+# Try default re-export path first -------------------------------------------
 try:
     from wilds.algorithms import IRM as _IRM, GroupDRO as _GroupDRO  # type: ignore
 except Exception:
@@ -133,26 +147,42 @@ except Exception:
 
 # Define public wrappers that either subclass real implementation or raise helpful error
 if _IRM is not None:
+
     class IRM(_IRM):
         """Thin subclass to maintain isinstance checks without modification."""
+
         pass
+
 else:
+
     class IRM:  # type: ignore
         def __init__(self, *_, **__):
-            raise RuntimeError("wilds is required for IRM – package not found or incompatible version")
+            raise RuntimeError(
+                "wilds is required for IRM – package not found or incompatible version"
+            )
 
 if _GroupDRO is not None:
+
     class GroupDRO(_GroupDRO):
         pass
+
 else:
+
     class GroupDRO:  # type: ignore
         def __init__(self, *_, **__):
-            raise RuntimeError("wilds is required for GroupDRO – package not found or incompatible version")
+            raise RuntimeError(
+                "wilds is required for GroupDRO – package not found or incompatible version"
+            )
+
 
 class DiCA:
     """Stub for DiCA. Fail-fast if user actually tries to run it."""
+
     def __init__(self, *_, **__):
-        raise RuntimeError("DiCA full implementation not included in public refactor – aborting as per fail-fast policy.")
+        raise RuntimeError(
+            "DiCA full implementation not included in public refactor – aborting as per fail-fast policy."
+        )
+
 
 # ---------------------------------------------------------------------------
 # factory
@@ -174,6 +204,7 @@ def make_algorithm(method: str, model: nn.Module, optimiser, device):
 # ─── TRAINER ─────────────────────────────────────────────────────────────────
 ################################################################################
 
+
 class Trainer:
     """Handles one complete train → val → test cycle."""
 
@@ -189,38 +220,46 @@ class Trainer:
         # model ----------------------------------------------------------------
         self.model = Backbone.build(backbone, n_cls).to(self.device)
         self.optim = _make_optim(self.model.parameters(), backbone)
-        self.alg   = make_algorithm(method, self.model, self.optim, self.device)
+        self.alg = make_algorithm(method, self.model, self.optim, self.device)
 
-        self.scaler = (torch.cuda.amp.GradScaler(enabled=cfg["hardware"]["amp"]) if torch.cuda.is_available() else None)
+        self.scaler = (
+            torch.cuda.amp.GradScaler(enabled=cfg["hardware"]["amp"])
+            if torch.cuda.is_available()
+            else None
+        )
         self.best_val = 0.0
 
         run_ts = int(time.time())
         self.run_id = f"{dataset}_{backbone}_{method}_seed{seed}_{run_ts}"
-        self.ckpt_dir = Path("outputs/checkpoints"); self.ckpt_dir.mkdir(parents=True, exist_ok=True)
-        self.json_dir = Path("outputs/runs");       self.json_dir.mkdir(parents=True, exist_ok=True)
+        self.ckpt_dir = Path("outputs/checkpoints")
+        self.ckpt_dir.mkdir(parents=True, exist_ok=True)
+        self.json_dir = Path("outputs/runs")
+        self.json_dir.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
     # utilities
     # ------------------------------------------------------------------
+
     @torch.no_grad()
     def _accuracy(self, loader):
         self.model.eval()
         correct = total = 0
         for x, y in loader:
-            x = x.to(self.device); y = y.to(self.device)
+            x = x.to(self.device)
+            y = y.to(self.device)
             preds = self.model(x).argmax(1)
             correct += (preds == y).sum().item()
-            total   += y.size(0)
+            total += y.size(0)
         return correct / max(total, 1)
 
     def _dump_metrics(self, metrics: Dict):
         record = {
-            "run_id":  self.run_id,
+            "run_id": self.run_id,
             "dataset": self.ds,
             "backbone": self.bk,
-            "method":  self.meth,
-            "seed":    self.seed,
-            **metrics
+            "method": self.meth,
+            "seed": self.seed,
+            **metrics,
         }
         with open(self.json_dir / f"{self.run_id}.json", "w") as f:
             json.dump(record, f, indent=2)
@@ -229,9 +268,9 @@ class Trainer:
     # main entry
     # ------------------------------------------------------------------
     def fit(self) -> float:
-        epochs   = cfg["training"]["epochs"]
+        epochs = cfg["training"]["epochs"]
         patience = cfg["training"]["patience"]
-        stall    = 0
+        stall = 0
 
         with timing(self.run_id):
             for ep in range(epochs):

@@ -1,12 +1,12 @@
-[UPDATED]
 from pathlib import Path
 from typing import Dict
 
 import matplotlib.pyplot as plt
 
 # Where camera-ready figures must go -----------------------------------------
-# NOTE: repository policy update – all images are now stored under iteration13
-FIG_DIR = Path(".research/iteration13/images")
+# Updated according to repository policy: all images are now stored under
+# iteration14.  (Older path .research/iteration13/images has been deprecated.)
+FIG_DIR = Path(".research/iteration14/images")
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 ###############################################################################
@@ -15,10 +15,12 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 def bar_chart(data: Dict[str, float], title: str, file_stem: str) -> Path:
     """Save a bar chart as PDF and return the resulting path."""
+
     labels, vals = list(data.keys()), list(data.values())
 
-    w = 0.5 * max(len(labels), 1) + 2  # keep a sensible minimum width
-    plt.figure(figsize=(w, 4))
+    # Ensure a reasonable figure width regardless of number of bars
+    width = 0.5 * max(len(labels), 1) + 2
+    plt.figure(figsize=(width, 4))
     plt.bar(range(len(vals)), vals, color="#4C72B0")
     plt.xticks(range(len(vals)), labels, rotation=45, ha="right")
 
