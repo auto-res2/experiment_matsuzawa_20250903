@@ -28,8 +28,8 @@ from .preprocess import build_task_stream
 # ---------------------------------------------------------------------
 ROOT = Path(__file__).resolve().parent.parent
 RUNS_DIR = ROOT / "runs"
-# --------- UPDATED TO ITERATION 11 AS REQUIRED -----------------------
-IMG_DIR = ROOT / ".research/iteration11/images"
+# --------- UPDATED TO ITERATION 12 AS REQUIRED -----------------------
+IMG_DIR = ROOT / ".research/iteration12/images"
 RUNS_DIR.mkdir(parents=True, exist_ok=True)
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -54,11 +54,29 @@ def run_method(
     cfg_train: dict,
     seed: int = 0,
 ):
+    """Train one continual-learning method on the given task stream."""
+
     torch.manual_seed(seed)
     random.seed(seed)
     np.random.seed(seed)
 
-    model = ModelCls(num_cls=cfg_train["classes_per_task"], cap_bytes=cfg_train["budget_bytes"]).to(DEVICE)
+    # ------------------------------------------------------------------
+    # The original implementation mistakenly instantiated the classifier
+    # heads with only *classes_per_task* output neurons.  As soon as the
+    # data loader encountered a label outside this narrow range, CUDA
+    # asserted that the target label be < n_classes, leading to the
+    # device-side assert seen in the crash log.  We fix this by sizing
+    # the heads for the *total* number of dataset classes (100 for
+    # CIFAR-100).  The constant is inferred either from the training
+    # subsection (optional key ``total_classes``) or falls back to 100.
+    # ------------------------------------------------------------------
+    total_classes = cfg_train.get("total_classes", 100)
+
+    model = ModelCls(
+        num_cls=total_classes,
+        cap_bytes=cfg_train["budget_bytes"],
+    ).to(DEVICE)
+
     opt = torch.optim.SGD(
         model.parameters(),
         lr=cfg_train["lr"],
@@ -144,6 +162,13 @@ def run_experiment(cfg: dict):
         "inflora": InfLoRA,
         "aqm_er": AQM_ER,
     }
+
+    # ------------------------------------------------------------------
+    # Inject the *total number of classes* into the training subsection
+    # so that `run_method` can retrieve it without needing the full
+    # dataset config.  This keeps the public API unchanged.
+    # ------------------------------------------------------------------
+    cfg["training"]["total_classes"] = cfg["dataset"]["num_tasks"] * cfg["dataset"]["classes_per_task"]
 
     for m in cfg["experiment"]["methods"]:
         res, lg = run_method(m, name2cls[m], stream, cfg["training"], seed=cfg["experiment"]["seed"])
