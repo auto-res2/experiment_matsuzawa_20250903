@@ -6,5 +6,82 @@
     "invariant risk minimization",
     "causal representation learning",
     "domain generalization robustness"
+  ],
+  "research_study_list": [
+    {
+      "title": "A Causal Framework for Decomposing Spurious Variations"
+    },
+    {
+      "title": "Learning The Difference That Makes A Difference With Counterfactually-Augmented Data"
+    },
+    {
+      "title": "Causal Effect Regularization: Automated Detection and Removal of Spurious Correlations"
+    },
+    {
+      "title": "Counterfactual Invariance to Spurious Correlations in Text Classification"
+    },
+    {
+      "title": "Counterfactual Invariance to Spurious Correlations in Text Classification"
+    },
+    {
+      "title": "Models Out of Line: A Fourier Lens on Distribution Shift Robustness"
+    },
+    {
+      "title": "YolOOD: Utilizing Object Detection Concepts for Multi-Label Out-of-Distribution Detection"
+    },
+    {
+      "title": "On the Adversarial Robustness of Out-of-distribution Generalization Models"
+    },
+    {
+      "title": "OODRobustBench: a Benchmark and Large-Scale Analysis of Adversarial Robustness under Distribution Shift"
+    },
+    {
+      "title": "Long-Tailed Out-of-Distribution Detection via Normalized Outlier Distribution Adaptation"
+    },
+    {
+      "title": "Invariant Risk Minimization Is A Total Variation Model"
+    },
+    {
+      "title": "The Missing Invariance Principle found --  the Reciprocal Twin of Invariant Risk Minimization "
+    },
+    {
+      "title": "Sparse Invariant Risk Minimization"
+    },
+    {
+      "title": "Sparse Invariant Risk Minimization"
+    },
+    {
+      "title": "The Risks of Invariant Risk Minimization"
+    },
+    {
+      "title": "Causal Representation Learning Made Identifiable by Grouping of Observational Variables"
+    },
+    {
+      "title": "Causal Representation Learning for Instantaneous and Temporal Effects in Interactive Systems"
+    },
+    {
+      "title": "A Sparsity Principle for Partially Observable Causal Representation Learning"
+    },
+    {
+      "title": "Identifiable Latent Polynomial Causal Models through the Lens of Change"
+    },
+    {
+      "title": "Causal Representation Learning from Multiple Distributions: A General Setting"
+    },
+    {
+      "title": "Adversarially Robust Models may not Transfer Better: Sufficient Conditions for Domain Transferability from the View of Regularization"
+    },
+    {
+      "title": "Adversarially Robust Models may not Transfer Better: Sufficient Conditions for Domain Transferability from the View of Regularization"
+    },
+    {
+      "title": "In Search of Lost Domain Generalization"
+    },
+    {
+      "title": "Model-Based Domain Generalization"
+    },
+    {
+      "title": "Rethinking the Evaluation Protocol of Domain Generalization"
+    }
   ]
 }
