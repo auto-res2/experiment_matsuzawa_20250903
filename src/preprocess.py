@@ -13,15 +13,16 @@ from typing import Dict
 
 import numpy as np
 
-# Make sure that *all* project-wide directories exist early.
+# -----------------------------------------------------------------------------
+#  Directory setup (updated figure path for iteration-2) -----------------------
+# -----------------------------------------------------------------------------
 root_dir = Path(".")
 data_dir = root_dir / "data"
 checkpoints_dir = root_dir / "checkpoints"
-images_dir = root_dir / ".research/iteration1/images"
+images_dir = root_dir / ".research/iteration2/images"
 
 for _d in [data_dir, checkpoints_dir, images_dir]:
     _d.mkdir(parents=True, exist_ok=True)
-
 
 # -----------------------------------------------------------------------------
 #  Global utilities
@@ -36,7 +37,6 @@ def set_global_seed(seed: int):
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-
 
 # -----------------------------------------------------------------------------
 #  Download helpers
@@ -69,56 +69,55 @@ _DATASETS: Dict[str, Dict[str, str]] = {
     },
 }
 
-
+# -----------------------------------------------------------------------------
+#  Internal helpers ------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
 def _download(url: str, dest: Path, expected_sha256: str):
-    """Download *url* to *dest* and check SHA-256 integrity."""
+    """Download *url* to *dest* and verify SHA-256 integrity."""
 
     import tempfile
 
+    # Already present and valid – nothing to do.
     if dest.exists() and _sha256sum(dest) == expected_sha256:
-        return  # already downloaded & verified
+        return
 
     print(f"Downloading {url} → {dest}")
-    try:
-        with tempfile.NamedTemporaryFile(delete=False) as tmp:
-            urllib.request.urlretrieve(url, tmp.name)
-            tmp_path = Path(tmp.name)
-            if _sha256sum(tmp_path) != expected_sha256:
-                raise RuntimeError(f"Checksum mismatch for {dest.name}")
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            tmp_path.replace(dest)
-    finally:
-        if tmp_path.exists():
-            tmp_path.unlink(missing_ok=True)
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        urllib.request.urlretrieve(url, tmp.name)
+        tmp_path = Path(tmp.name)
+        if _sha256sum(tmp_path) != expected_sha256:
+            raise RuntimeError(f"Checksum mismatch for {dest.name}")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path.replace(dest)
 
 
 # -----------------------------------------------------------------------------
+#  Public API ------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-def acquire_datasets(cfg):
+def acquire_datasets(cfg):  # noqa: D401 – public API
     """Download (if necessary) and extract all datasets referenced in *cfg*."""
 
     for name, meta in _DATASETS.items():
         url, sha256 = meta["url"], meta["sha256"]
-        out_file = data_dir / Path(url).name
+        file_name = Path(url).name
+        out_file = data_dir / file_name
         _download(url, out_file, sha256)
 
         # ---------------- extraction ---------------------------------
-        if out_file.suffix in {".gz", ".tar"}:
-            target_dir = data_dir / name
-            if target_dir.exists():
+        # CIFAR-100 / miniImageNet / TinyImageNet come as TAR.GZ, MNIST as GZ.
+        # We only handle archives that are *not* already extracted.
+        if tarfile.is_tarfile(out_file):
+            # Heuristic: the first member's top-level directory is the marker.
+            with tarfile.open(out_file) as tar:
+                top_level = tar.getmembers()[0].name.split("/")[0]
+            marker_dir = data_dir / top_level
+            if marker_dir.exists():
                 continue  # already extracted
-            print(f"Extracting {out_file} → {target_dir}")
-            target_dir.mkdir(exist_ok=True)
-            try:
-                if tarfile.is_tarfile(out_file):
-                    with tarfile.open(out_file) as tar:
-                        tar.extractall(target_dir)
-                else:
-                    import gzip, shutil
 
-                    with gzip.open(out_file, "rb") as f_in, open(target_dir / name, "wb") as f_out:
-                        shutil.copyfileobj(f_in, f_out)
-            except Exception as e:
-                raise RuntimeError(f"Failed to extract {out_file}: {e}")
+            print(f"Extracting {out_file} → {data_dir}")
+            with tarfile.open(out_file) as tar:
+                tar.extractall(data_dir)
+        # Individual .gz files (e.g. MNIST) are kept compressed – torchvision
+        # will handle them directly – so no further action is required.

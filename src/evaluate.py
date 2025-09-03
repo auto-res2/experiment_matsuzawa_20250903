@@ -1,14 +1,14 @@
 """src/evaluate.py
 Experiment orchestration, statistical analysis and plotting utilities.
 It builds dataset streams, invokes *ContinualLearner* from train.py and
-creates accuracy plots that are stored under `.research/iteration1/images`.
+creates accuracy plots that are stored under `.research/iteration2/images`.
 """
 from __future__ import annotations
 
 import random
 import time
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,10 +21,11 @@ import torchvision
 from .train import ContinualLearner
 from .preprocess import data_dir, set_global_seed
 
-# Make sure the images directory exists.
-images_dir = Path(".research/iteration1/images")
+# -----------------------------------------------------------------------------
+#  Figure output directory (updated for iteration-2) ---------------------------
+# -----------------------------------------------------------------------------
+images_dir = Path(".research/iteration2/images")
 images_dir.mkdir(parents=True, exist_ok=True)
-
 
 # -----------------------------------------------------------------------------
 #  Dataset stream builders
@@ -104,6 +105,7 @@ def build_stream(exp_cfg, shared_cfg):
 # -----------------------------------------------------------------------------
 #  Experiment Engine
 # -----------------------------------------------------------------------------
+
 
 class ExperimentEngine:
     def __init__(self, exp_cfg, shared_cfg):

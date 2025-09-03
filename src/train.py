@@ -20,8 +20,56 @@ from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 
 # -----------------------------------------------------------------------------
+#  Optional import of the original JAX VQ-GAN implementation -------------------
+# -----------------------------------------------------------------------------
+# The reference implementation lives in the `vqgan_jax` package which, at the
+# time of writing, does not provide wheels for Python ﹥=3.11 and therefore
+# cannot be installed in the execution environment of this repository.  To keep
+# the code import-able we fall back to a minimal stub that exposes the *same*
+# public interface (encode / decode_code) but **does not** perform any real
+# computation.  If you want to run the full method, install `vqgan-jax` in a
+# compatible environment and remove the try/except block below.
+try:
+    from vqgan_jax.modeling_flax_vqgan import VQModel  # pragma: no cover
+except ModuleNotFoundError:  # ⇐ expected on Python ≥3.11
+
+    class _StubVQModel:
+        """Fallback that makes the training pipeline import-able.
+
+        encode() returns an all-zero token grid;  decode_code() produces all-zero
+        images.  This is **not** a faithful replacement – it only exists so that
+        unit-tests and lightweight sanity-checks can execute end-to-end without
+        a heavy external dependency.  A clear RuntimeError is raised once the
+        methods are *actually* used so that accidental silent degradation is
+        avoided.
+        """
+
+        @classmethod
+        def from_pretrained(cls, ckpt_path: str):  # noqa: D401
+            return cls()
+
+        # ------------------------------------------------------------------
+        def encode(self, x: torch.Tensor):
+            raise RuntimeError(
+                "VQModel.encode() was called but the real `vqgan_jax` package "
+                "is not available in this Python environment.  Install "
+                "`vqgan-jax` (requires Python ≤3.10) or switch to a compatible "
+                "environment to use the full T-DLR pipeline."
+            )
+
+        # ------------------------------------------------------------------
+        def decode_code(self, z_grid: torch.Tensor):
+            raise RuntimeError(
+                "VQModel.decode_code() was called but the real `vqgan_jax` "
+                "package is missing.  Install it or avoid the VQ-GAN path."
+            )
+
+    VQModel = _StubVQModel  # type: ignore
+
+# -----------------------------------------------------------------------------
 #  Model definitions
 # -----------------------------------------------------------------------------
+
 
 class Backbone(nn.Module):
     """ResNet-18 backbone with a replaceable classifier head."""
@@ -38,7 +86,6 @@ class Backbone(nn.Module):
 
 
 # -------------  VQ-GAN wrapper ------------------------------------------------
-from vqgan_jax.modeling_flax_vqgan import VQModel  # pip install vqgan-jax
 
 
 class VQGANWrapper(nn.Module):
@@ -46,6 +93,8 @@ class VQGANWrapper(nn.Module):
 
     def __init__(self, ckpt_path: str):
         super().__init__()
+        # `vqgan_jax` loads its own weights internally.  For the stub this call
+        # will be inexpensive and merely instantiate the placeholder.
         self.vq = VQModel.from_pretrained(ckpt_path)
 
     @torch.no_grad()
@@ -60,13 +109,13 @@ class VQGANWrapper(nn.Module):
 
 # -------------  Tiny latent-space diffusion model ----------------------------
 
+
 class SinusoidalPosEmb(nn.Module):
     def __init__(self, dim: int):
         super().__init__()
         self.dim = dim
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        
         half = self.dim // 2
         emb_scale = math.log(10000.0) / (half - 1)
         device = x.device
@@ -98,6 +147,7 @@ class TinyLatentDiffusion(nn.Module):
 
 
 # -------------  Token Buffer (memory) ----------------------------------------
+
 
 class TokenBuffer:
     """Fixed-capacity token grid storage obeying a byte budget."""
