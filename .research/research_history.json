@@ -6,5 +6,82 @@
     "generative replay compression",
     "parameter-efficient continual learning",
     "sparse experience replay"
+  ],
+  "research_study_list": [
+    {
+      "title": "Continual Learning in Low-rank Orthogonal Subspaces"
+    },
+    {
+      "title": "Contextual Transformation Networks for Online Continual Learning"
+    },
+    {
+      "title": "Improving Task-free Continual Learning by Distributionally Robust Memory Evolution"
+    },
+    {
+      "title": "Improving Task-free Continual Learning by Distributionally Robust Memory Evolution"
+    },
+    {
+      "title": "SparCL: Sparse Continual Learning on the Edge"
+    },
+    {
+      "title": "Impossibility Results for Grammar-Compressed Linear Algebra"
+    },
+    {
+      "title": "Online Learned Continual Compression with Adaptive Quantization Modules"
+    },
+    {
+      "title": "Analysis of Stochastic Processes through Replay Buffers"
+    },
+    {
+      "title": "Analysis of Stochastic Processes through Replay Buffers"
+    },
+    {
+      "title": "On Efficient Constructions of Checkpoints"
+    },
+    {
+      "title": "Coherent Temporal Synthesis for Incremental Action Segmentation"
+    },
+    {
+      "title": "Synthetic Experience Replay"
+    },
+    {
+      "title": "OSOA: One-Shot Online Adaptation of Deep Generative Models for Lossless Compression"
+    },
+    {
+      "title": "Towards Backward-Compatible Continual Learning of Image Compression"
+    },
+    {
+      "title": "Replay across Experiments: A Natural Extension of Off-Policy RL"
+    },
+    {
+      "title": "InfLoRA: Interference-Free Low-Rank Adaptation for Continual Learning"
+    },
+    {
+      "title": "Semantically-Shifted Incremental Adapter-Tuning is A Continual ViTransformer"
+    },
+    {
+      "title": "SAFE: Slow and Fast Parameter-Efficient Tuning for Continual Learning with Pre-Trained Models"
+    },
+    {
+      "title": "Overcoming Generic Knowledge Loss with Selective Parameter Update"
+    },
+    {
+      "title": "Does Continual Learning Equally Forget All Parameters?"
+    },
+    {
+      "title": "The State of Sparse Training in Deep Reinforcement Learning"
+    },
+    {
+      "title": "The State of Sparse Training in Deep Reinforcement Learning"
+    },
+    {
+      "title": "Memory Based Trajectory-conditioned Policies for Learning from Sparse Rewards"
+    },
+    {
+      "title": "Replay Memory as An Empirical MDP: Combining Conservative Estimation with Experience Replay"
+    },
+    {
+      "title": "Fuzzy Tiling Activations: A Simple Approach to Learning Sparse Representations Online"
+    }
   ]
 }
