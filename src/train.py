@@ -20,29 +20,12 @@ def train_epoch(model: torch.nn.Module,
                 optimiser: torch.optim.Optimizer,
                 scaler: GradScaler | None = None,
                 epoch: int = 0) -> tuple[float, Dict[str, Any]]:
-    """Run a single optimisation step.
+    """Run a single optimisation step (full-batch).
 
-    Parameters
-    ----------
-    model
-        The GNN model.
-    data
-        Full-batch graph data object living on *the same* device as ``model``.
-    optimiser
-        Torch optimiser.
-    scaler
-        AMP scaler when ``fp16`` is enabled.
-    epoch
-        Current epoch number – forwarded so that models such as APD-GNN can
-        anneal their internal temperature schedules.
-
-    Returns
-    -------
-    loss : float
-        Training loss **after** the backward / optimiser step (for logging).
-    aux  : Dict[str, Any]
-        Any auxiliary statistics returned by the model (e.g. expected depth).
+    The function is AMP-aware: pass an instantiated ``GradScaler`` to train
+    in fp16; pass ``None`` for standard fp32 training.
     """
+
     model.train()
     optimiser.zero_grad(set_to_none=True)
 
@@ -50,7 +33,7 @@ def train_epoch(model: torch.nn.Module,
         out, aux = model(data.x, data.edge_index, epoch=epoch)
         loss = F.cross_entropy(out[data.train_mask], data.y[data.train_mask])
 
-        # depth regulariser for APD-GNN (no-op for standard models)
+        # depth regulariser for APD-GNN (ignored by vanilla backbones)
         if hasattr(model, "lambda_depth"):
             depth_penalty = (aux.get("expected_K", 0.0) - model.K_target) ** 2
             loss = loss + model.lambda_depth * depth_penalty
@@ -75,11 +58,8 @@ def full_train(model: torch.nn.Module,
                cfg: Dict[str, Any],
                run_dir: pathlib.Path,
                run_tag: str) -> Dict[str, float]:
-    """Train *model* on *data* according to *cfg*.
+    """Train *model* on *data* according to *cfg* and return final test metrics."""
 
-    Figures are automatically written to ``.research/iteration1/images``.
-    The function returns a dictionary with the final test-set metrics.
-    """
     device = torch.device(cfg["common"].get("device", "cpu"))
     if not torch.cuda.is_available() and device.type == "cuda":
         print("CUDA requested but not available – falling back to CPU.")
@@ -135,12 +115,12 @@ def full_train(model: torch.nn.Module,
     save_lineplot(xs, {"loss": loss_hist},
                   "Epoch", "Loss",
                   f"Training loss – {run_tag}",
-                  f".research/iteration1/images/training_loss_{run_tag}.pdf")
+                  f".research/iteration2/images/training_loss_{run_tag}.pdf")
 
     save_lineplot(xs, {"accuracy": acc_hist},
                   "Epoch", "Accuracy",
                   f"Accuracy – {run_tag}",
-                  f".research/iteration1/images/accuracy_{run_tag}.pdf")
+                  f".research/iteration2/images/accuracy_{run_tag}.pdf")
 
     elapsed = (time.time() - start_time) / 60
     print(f"Run {run_tag} finished in {elapsed:.1f} min – best acc {best_val:.3f}")
