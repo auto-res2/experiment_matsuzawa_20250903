@@ -1,0 +1,15 @@
+/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/torch/nn/init.py:412: UserWarning: Initializing zero-element tensors is a no-op
+  warnings.warn("Initializing zero-element tensors is a no-op")
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 112, in <module>
+    main()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 74, in main
+    run_unit_tests()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 403, in run_unit_tests
+    t()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 386, in _test_head_expansion
+    assert m.head.fc.out_features == 5
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
