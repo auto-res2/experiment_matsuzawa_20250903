@@ -1,1 +1,21 @@
-# Please list the required python packages.
+torch
+torchvision
+timm
+diffusers
+transformers
+opendilab-sam
+sentencepiece
+datasets
+huggingface_hub
+scikit-learn
+pandas
+numpy
+matplotlib
+seaborn
+tqdm
+ptflops
+captum
+scipy
+pillow
+requests
+foolbox
