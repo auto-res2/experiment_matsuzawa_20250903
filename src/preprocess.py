@@ -1,6 +1,9 @@
 """src/preprocess.py
 Data loading utilities, global paths, reproducibility helpers and hard
 environment checks.  Other modules import datasets & constants from here.
+NOTE:  All experiment figures are now stored under
+    .research/iteration14/images
+as required by the CI instructions.
 """
 from __future__ import annotations
 
@@ -32,7 +35,10 @@ DEVICE = torch.device("cuda")
 
 ROOT = Path(__file__).resolve().parent.parent  # project root
 DATA_DIR = ROOT / "data"
-FIG_DIR = ROOT / ".research" / "iteration13" / "images"
+# -------------------------------------------------------------------------
+#  IMPORTANT: All figures must go to .research/iteration14/images as per CI
+# -------------------------------------------------------------------------
+FIG_DIR = ROOT / ".research" / "iteration14" / "images"
 LOG_DIR = ROOT / "logs"
 CKPT_DIR = ROOT / "checkpoints"
 
