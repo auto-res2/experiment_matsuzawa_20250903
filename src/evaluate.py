@@ -2,7 +2,7 @@ from __future__ import annotations
 """
 evaluate.py – all metric computations & plotting utilities.
 All experiment figures are now saved under the directory
-`.research/iteration25/images` as mandated by the task description.
+`.research/iteration26/images` as mandated by the task description.
 """
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -49,11 +49,11 @@ def worst_group_acc(model, loader, device: str) -> float:
 # plotting helpers (publication-style bar chart)
 # -----------------------------------------------------------------------------
 
-_IMG_DIR = Path(".research/iteration25/images")
+_IMG_DIR = Path(".research/iteration26/images")
 _IMG_DIR.mkdir(parents=True, exist_ok=True)
 
 def bar_chart(data: dict, title: str, fname: str):
-    keys, vals = list(data.keys()), [data[k] for k in data]
+    keys, vals = list(data.keys()), [data[k] for data_key in data for k in [data_key]]
     plt.figure(figsize=(max(len(keys) * 0.6, 4), 4))
     plt.bar(range(len(keys)), vals)
     plt.xticks(range(len(keys)), keys, rotation=45, ha="right")
