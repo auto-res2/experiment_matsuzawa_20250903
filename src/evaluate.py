@@ -1,32 +1,52 @@
-"""src/evaluate.py – tiny evaluation helpers
-
-The real code base would provide *much* richer functionality (calculation of
-additional metrics, logging, etc.).  For the purposes of the automated tests we
-only need **accuracy** on the canonical train/val/test node splits.
+"""src/evaluate.py
+Utilities for computing metrics and model evaluation.
 """
 from __future__ import annotations
+from typing import Dict
 
 import torch
+import torch.nn.functional as F
 from torch_geometric.data import Data
 
-__all__ = ["eval_model"]
+################################################################################
+#  METRIC PRIMITIVES
+################################################################################
+
+def accuracy(logits: torch.Tensor, labels: torch.Tensor) -> float:
+    return (logits.argmax(dim=-1) == labels).float().mean().item() * 100
 
 
-def _accuracy(logits: torch.Tensor, labels: torch.Tensor) -> float:
-    """Compute classification accuracy (as a *percentage*, not a fraction)."""
-    preds = logits.argmax(dim=-1)
-    correct = (preds == labels).sum().item()
-    return 100.0 * correct / labels.numel()
+def row_diff(z: torch.Tensor) -> float:
+    z = z.detach()
+    return (z - z.mean(dim=1, keepdim=True)).norm(dim=1).mean().item()
 
 
-def eval_model(model: torch.nn.Module, data: Data) -> tuple[float, float, float]:
-    """Return `(train_acc, val_acc, test_acc)` – the exact tuple shape expected by
-    the rest of the repository (see calls in `src/main.py`).
-    """
+def col_diff(z: torch.Tensor) -> float:
+    z = z.detach()
+    return (z - z.mean(dim=0, keepdim=True)).norm(dim=1).mean().item()
+
+
+def apsd(z: torch.Tensor) -> float:
+    z = z - z.mean(0, keepdim=True)
+    s = torch.linalg.svdvals(z)
+    return s.mean().item()
+
+################################################################################
+#  FULL EVALUATION ROUTINE
+################################################################################
+
+@torch.no_grad()
+def evaluate(model, data: Data) -> Dict[str, float]:
     model.eval()
-    with torch.no_grad():
-        logits = model(data)
-        train_acc = _accuracy(logits[data.train_mask], data.y[data.train_mask])
-        val_acc = _accuracy(logits[data.val_mask], data.y[data.val_mask])
-        test_acc = _accuracy(logits[data.test_mask], data.y[data.test_mask])
-    return train_acc, val_acc, test_acc
+    logits, _ = model(data.x, data.edge_index)
+    out = {}
+    for split in ["train", "val", "test"]:
+        mask = getattr(data, f"{split}_mask")
+        out[f"acc_{split}"] = accuracy(logits[mask], data.y[mask])
+
+    # Representation statistics on *all* nodes
+    _, h = model(data.x, data.edge_index)
+    out["row_diff"] = row_diff(h)
+    out["col_diff"] = col_diff(h)
+    out["apsd"] = apsd(h)
+    return out
