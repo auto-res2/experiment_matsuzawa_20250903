@@ -1,0 +1,18 @@
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py:96: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler = GradScaler()
+cifar100.tar.gz:   0%|          | 0.00/169M [00:00<?, ?B/s]cifar100.tar.gz:   0%|          | 65.5k/169M [00:00<04:55, 572kB/s]cifar100.tar.gz:   0%|          | 229k/169M [00:00<02:36, 1.08MB/s]cifar100.tar.gz:   1%|          | 918k/169M [00:00<00:50, 3.33MB/s]cifar100.tar.gz:   2%|▏         | 3.60M/169M [00:00<00:13, 11.9MB/s]cifar100.tar.gz:   5%|▌         | 9.27M/169M [00:00<00:05, 27.2MB/s]cifar100.tar.gz:   8%|▊         | 13.6M/169M [00:00<00:04, 32.2MB/s]cifar100.tar.gz:  12%|█▏        | 20.0M/169M [00:00<00:03, 39.2MB/s]cifar100.tar.gz:  16%|█▌        | 26.3M/169M [00:00<00:03, 43.4MB/s]cifar100.tar.gz:  19%|█▉        | 32.7M/169M [00:01<00:02, 46.2MB/s]cifar100.tar.gz:  23%|██▎       | 39.2M/169M [00:01<00:02, 48.2MB/s]cifar100.tar.gz:  27%|██▋       | 45.5M/169M [00:01<00:02, 49.3MB/s]cifar100.tar.gz:  31%|███       | 52.0M/169M [00:01<00:02, 50.3MB/s]cifar100.tar.gz:  35%|███▍      | 58.4M/169M [00:01<00:02, 50.8MB/s]cifar100.tar.gz:  38%|███▊      | 64.7M/169M [00:01<00:02, 51.0MB/s]cifar100.tar.gz:  42%|████▏     | 71.1M/169M [00:01<00:01, 50.7MB/s]cifar100.tar.gz:  46%|████▌     | 77.8M/169M [00:01<00:01, 51.3MB/s]cifar100.tar.gz:  50%|████▉     | 84.1M/169M [00:02<00:01, 51.4MB/s]cifar100.tar.gz:  53%|█████▎    | 90.4M/169M [00:02<00:01, 51.5MB/s]cifar100.tar.gz:  57%|█████▋    | 96.5M/169M [00:02<00:01, 53.8MB/s]cifar100.tar.gz:  60%|██████    | 102M/169M [00:02<00:01, 52.4MB/s] cifar100.tar.gz:  63%|██████▎   | 107M/169M [00:02<00:01, 51.8MB/s]cifar100.tar.gz:  67%|██████▋   | 113M/169M [00:02<00:01, 50.5MB/s]cifar100.tar.gz:  70%|███████   | 119M/169M [00:02<00:00, 50.7MB/s]cifar100.tar.gz:  74%|███████▍  | 125M/169M [00:02<00:00, 51.1MB/s]cifar100.tar.gz:  78%|███████▊  | 132M/169M [00:02<00:00, 51.5MB/s]cifar100.tar.gz:  82%|████████▏ | 138M/169M [00:03<00:00, 51.6MB/s]cifar100.tar.gz:  85%|████████▌ | 144M/169M [00:03<00:00, 51.6MB/s]cifar100.tar.gz:  89%|████████▉ | 151M/169M [00:03<00:00, 51.5MB/s]cifar100.tar.gz:  93%|█████████▎| 157M/169M [00:03<00:00, 51.6MB/s]cifar100.tar.gz:  97%|█████████▋| 164M/169M [00:03<00:00, 51.7MB/s]cifar100.tar.gz: 100%|██████████| 169M/169M [00:03<00:00, 46.5MB/s]
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py:116: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast():
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 209, in <module>
+    main()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 205, in main
+    experiment_edge(seeds)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 122, in experiment_edge
+    model.store(tok, y)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 163, in store
+    self.tok_buf = torch.cat((self.tok_buf, t.unsqueeze(0)), dim=0)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Expected all tensors to be on the same device, but got tensors is on cpu, different from other tensors on cuda:0 (when checking argument in method wrapper_CUDA_cat)
