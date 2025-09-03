@@ -1,59 +1,33 @@
-hardware:
-  device: cuda
-  mixed_precision: true
-  max_vram_gb: 10
+device: "cuda"
+seeds: [1, 2, 3]
+budgets:
+  small: 262144
+  medium: 524288
+  large: 1048576
 
+# dataset meta-data kept for future extensions
 datasets:
-  cifar100:
-    url: https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz
-    train_split: 50000
-    test_split: 10000
-    num_tasks: 10
+  CIFAR100:
+    url: "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
+    tasks: 10
     classes_per_task: 10
     img_size: 32
-  tiny_imagenet:
-    url: http://cs231n.stanford.edu/tiny-imagenet-200.zip
-    num_tasks: 10
+  TinyIN:
+    url: "https://zenodo.org/records/10720917/files/tiny-imagenet-200.zip?download=1"
+    tasks: 10
     classes_per_task: 20
     img_size: 64
-  imagenet100:
-    url: https://huggingface.co/datasets/lostboiii6/ImageNet100/resolve/main/ImageNet100.zip
-    num_tasks: 10
+  ImageNet100:
+    url: "https://huggingface.co/datasets/lostboiii6/ImageNet100/resolve/main/ImageNet100.zip"
+    tasks: 10
     classes_per_task: 10
     img_size: 112
 
-models:
-  resnet18:
-    pretrained: true
-    checkpoint_url: https://huggingface.co/timm/resnet18.a1_in1k/resolve/main/pytorch_model.bin
-  vqgan:
-    repo: dalle-mini/vqgan_imagenet_f16_16384
+optim:
+  lr: 0.05
+  momentum: 0.9
+  weight_decay: 0.0005
 
-training:
-  optim:
-    lr: 0.05
-    momentum: 0.9
-    weight_decay: 0.0005
-  lr_schedule: cosine
-  batch_size: 128
-  epochs_per_task: 1
-  consolidation_epochs: 1
-  seeds:
-  - 1
-  - 2
-  - 3
-  - 4
-  - 5
-
-memory_budgets_bytes:
-- 262144
-- 524288
-- 1048576
-
-hatem:
-  L: 4
-  vocab: 256
-  proto_per_cls: 5
-
-plots:
-  dir: .research/iteration1/images
+batch: 128
+vqgan_ckpt: "vqgan_imagenet_f16_16384"
+plots: ".research/iteration2/images"
