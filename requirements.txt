@@ -1,7 +1,1 @@
-torch>=2.2.0
-torchvision
-omegaconf
-PyYAML
-numpy
-matplotlib
-seaborn
+original

@@ -23,12 +23,12 @@ from torchvision.models import resnet18
 #  Optional import of the original JAX VQ-GAN implementation -------------------
 # -----------------------------------------------------------------------------
 # The reference implementation lives in the `vqgan_jax` package which, at the
-# time of writing, does not provide wheels for Python ﹥=3.11 and therefore
+# time of writing, does not provide wheels for Python ≥3.11 and therefore
 # cannot be installed in the execution environment of this repository.  To keep
 # the code import-able we fall back to a minimal stub that exposes the *same*
 # public interface (encode / decode_code) but **does not** perform any real
-# computation.  If you want to run the full method, install `vqgan-jax` in a
-# compatible environment and remove the try/except block below.
+# computation.  A clear RuntimeError is raised once these methods are *actually*
+# used so that accidental silent degradation is avoided.
 try:
     from vqgan_jax.modeling_flax_vqgan import VQModel  # pragma: no cover
 except ModuleNotFoundError:  # ⇐ expected on Python ≥3.11
@@ -36,13 +36,13 @@ except ModuleNotFoundError:  # ⇐ expected on Python ≥3.11
     class _StubVQModel:
         """Fallback that makes the training pipeline import-able.
 
-        encode() returns an all-zero token grid;  decode_code() produces all-zero
-        images.  This is **not** a faithful replacement – it only exists so that
-        unit-tests and lightweight sanity-checks can execute end-to-end without
-        a heavy external dependency.  A clear RuntimeError is raised once the
-        methods are *actually* used so that accidental silent degradation is
-        avoided.
+        encode() / decode_code() deliberately raise – we do *not* silently
+        produce fake data so that experiments fail fast when the real VQ-GAN
+        implementation is unavailable.
         """
+
+        # flag so that other parts of the code can detect the stub safely
+        is_stub = True
 
         @classmethod
         def from_pretrained(cls, ckpt_path: str):  # noqa: D401
@@ -216,10 +216,17 @@ class ContinualLearner:
             TinyLatentDiffusion().to(self.device) if cfg_exp["use_diffusion"] else None
         )
 
+        # detect stub – when the real VQ-GAN is missing we disable replay
+        self._vq_stub = getattr(self.vqgan.vq, "is_stub", False)
+        self.replay_enabled = not self._vq_stub
+
         # ---------------- optimisation -------------------------------
-        params = list(self.backbone.parameters()) + list(self.vqgan.parameters())
-        if self.diffuser is not None:
-            params += list(self.diffuser.parameters())
+        params = list(self.backbone.parameters())
+        # Only add VQ-GAN / diffuser params when they are trainable (i.e. real)
+        if not self._vq_stub:
+            params += list(self.vqgan.parameters())
+            if self.diffuser is not None:
+                params += list(self.diffuser.parameters())
         self.opt = torch.optim.AdamW(params, **cfg_shared["optim"])
         self.scaler = GradScaler()
 
@@ -238,7 +245,7 @@ class ContinualLearner:
                 imgs, y = imgs.to(self.device), y.to(self.device)
 
                 # ----- latent replay --------------------------------
-                if self.buffer.n_bytes > 0:
+                if self.replay_enabled and self.buffer.n_bytes > 0:
                     toks_rep, y_rep = self.buffer.sample(len(imgs))
                     toks_rep, y_rep = toks_rep.to(self.device), y_rep.to(self.device)
 
@@ -261,18 +268,19 @@ class ContinualLearner:
             scheduler.step()
 
         # ------------- store tokens from the finished task -----------
-        all_imgs = torch.stack(
-            [loader_real.dataset[i][0] for i in range(len(loader_real.dataset))]
-        ).to(self.device)
-        toks = self.vqgan.encode(all_imgs).cpu().numpy()
-        labels = np.array(
-            [loader_real.dataset[i][1] for i in range(len(loader_real.dataset))]
-        )
-        for c in np.unique(labels):
-            idx = np.where(labels == c)[0][: self.shared["K"]]
-            self.buffer.add(int(c), toks[idx])
-            if self.cfg["use_wgf"]:
-                self.buffer.evolve()
+        if self.replay_enabled:
+            all_imgs = torch.stack(
+                [loader_real.dataset[i][0] for i in range(len(loader_real.dataset))]
+            ).to(self.device)
+            toks = self.vqgan.encode(all_imgs).cpu().numpy()
+            labels = np.array(
+                [loader_real.dataset[i][1] for i in range(len(loader_real.dataset))]
+            )
+            for c in np.unique(labels):
+                idx = np.where(labels == c)[0][: self.shared["K"]]
+                self.buffer.add(int(c), toks[idx])
+                if self.cfg["use_wgf"]:
+                    self.buffer.evolve()
 
     # -----------------------------------------------------------------
     @torch.no_grad()

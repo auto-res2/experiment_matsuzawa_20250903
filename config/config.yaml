@@ -1,18 +1,1 @@
-seed: 111
-epochs: 10
-batch_sz: 128
-K: 3
-optim:
-  lr: 0.0003
-  betas:
-    - 0.9
-    - 0.999
-  weight_decay: 0.0001
-vq_ckpt: vqgan_imagenet_f16_16384.ckpt
-experiments:
-  - name: Exp1-Split-CIFAR100-TDLR
-    dataset: split_cifar100
-    num_classes: 100
-    memory_mb: 0.5
-    use_diffusion: true
-    use_wgf: true
+original
