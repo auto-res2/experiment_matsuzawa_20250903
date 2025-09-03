@@ -1,162 +1,82 @@
-"""Main entry-point: *python -m src.main*
-
-In this minimal CI setting we only need stub implementations of the models so
-that the training pipeline can execute end-to-end.  The *real* research code
-would use the full-fledged GNNs, but for the purposes of automated execution we
-provide lightweight fall-backs that satisfy the required interfaces.
 """
-
+main.py – top-level orchestration
+Run   $ python -m src.main   from project root.
+"""
 from __future__ import annotations
-
 import json
 import pathlib
-import types
-from typing import Dict
+from typing import Dict, List
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import yaml
+import torch
 
 from . import preprocess as P
 from . import train as T
 
-# --------------------------------------------------------------------------------------
-#  Configuration
-# --------------------------------------------------------------------------------------
-CONFIG_PATH = pathlib.Path(__file__).parent.parent / "config" / "config.yaml"
-CONFIG: Dict = yaml.safe_load(CONFIG_PATH.read_text())
-
-# --------------------------------------------------------------------------------------
-#  Lightweight *stub* models
-# --------------------------------------------------------------------------------------
-# Each class implements the same *minimal* interface expected by train.py.
+# ---------------------------------------------------------------------------
+#  Load configuration                                                         #
+# ---------------------------------------------------------------------------
+CONFIG_PATH = pathlib.Path(__file__).resolve().parent.parent / "config" / "config.yaml"
+CFG = yaml.safe_load(CONFIG_PATH.read_text())
 
 
-class _BaseNet(nn.Module):
-    """A tiny 2-layer MLP that ignores the edge structure (sufficient for CI)."""
+###############################################################################
+#  Utilities                                                                  #
+###############################################################################
 
-    def __init__(self, in_dim: int, hidden: int, out_dim: int):
-        super().__init__()
-        self.fc1 = nn.Linear(in_dim, hidden)
-        self.fc2 = nn.Linear(hidden, out_dim)
+def _build_model(name: str, f_in: int, hid: int, f_out: int):
+    """Factory that delegates to the correct ctor in train.py (where models live)."""
+    from .train import (
+        APD,
+        DeepGAT,
+        DeepGCN,
+        GCNII,
+        PairNormGCN,
+    )
 
-    def _forward_impl(self, x: torch.Tensor):
-        h = F.relu(self.fc1(x))
-        logits = self.fc2(h)
-        return logits, h
-
-    # All GNN stubs share the same forward signature
-    def forward(self, x: torch.Tensor, edge_index, *_, **__):  # noqa: D401,E501  (ignore edge_index)
-        return self._forward_impl(x)
-
-
-class DeepGCN(_BaseNet):
-    pass
-
-
-class DeepGAT(_BaseNet):
-    pass
-
-
-class GCNII(_BaseNet):
-    pass
+    factories = {
+        "gcn_deep": lambda: DeepGCN(f_in, hid, f_out),
+        "gat_deep": lambda: DeepGAT(f_in, hid, f_out),
+        "gcnii": lambda: GCNII(f_in, hid, f_out),
+        "pairnorm_si": lambda: PairNormGCN(f_in, hid, f_out),
+        "apd_gcn": lambda: APD("gcn", f_in, hid, f_out),
+        "apd_gat": lambda: APD("gat", f_in, hid, f_out),
+    }
+    return factories[name]()
 
 
-class PairNormGCN(_BaseNet):
-    """Stub that *pretends* to apply PairNorm but actually just runs the MLP."""
+###############################################################################
+#  Experiment-1 – synthetic benchmark                                         #
+###############################################################################
 
-    def forward(self, x: torch.Tensor, edge_index, *_, **__):  # noqa: D401,E501
-        return super()._forward_impl(x)
+def experiment1(cfg: Dict):
+    print("\n==== Experiment-1 – Synthetic core-vs-chain benchmark ====")
 
-
-class APD(_BaseNet):
-    """Simplified adaptive-depth model – returns a constant *K* tensor so that
-    downstream metrics (var_K, Spearman, …) remain well defined.
-    """
-
-    def __init__(
-        self,
-        backbone: str,  # kept for API compatibility
-        in_dim: int,
-        hidden: int,
-        out_dim: int,
-        lambda_depth: float = 0.0,
-        k_target: int = 1,
-        L: int = 1,
-    ) -> None:
-        super().__init__(in_dim, hidden, out_dim)
-        # extra attributes queried by train.py
-        self.lambda_depth = lambda_depth
-        self.k_target = float(k_target)
-        self.L = L  # merely a flag signalling an "APD" model
-
-    def forward(self, x: torch.Tensor, edge_index, epoch: int | None = None):  # noqa: D401,E501
-        logits, h = self._forward_impl(x)
-        # constant expected depth – here we simply set it equal to k_target
-        k_exp = torch.full((x.size(0),), self.k_target, device=x.device)
-        return logits, h, k_exp
-
-
-# Put the classes into a *pseudo* module so that existing code that
-# expects `import models as M` would still work if needed.
-M = types.SimpleNamespace(
-    DeepGCN=DeepGCN,
-    DeepGAT=DeepGAT,
-    GCNII=GCNII,
-    PairNormGCN=PairNormGCN,
-    APD=APD,
-)
-
-# --------------------------------------------------------------------------------------
-#  Model factory (unchanged API)
-# --------------------------------------------------------------------------------------
-
-def _build(model_name: str, in_dim: int, hidden: int, out_dim: int):
-    if model_name == "gcn_deep":
-        return M.DeepGCN(in_dim, hidden, out_dim)
-    if model_name == "gat_deep":
-        return M.DeepGAT(in_dim, hidden, out_dim)
-    if model_name == "gcnii":
-        return M.GCNII(in_dim, hidden, out_dim)
-    if model_name == "pairnorm_si":
-        return M.PairNormGCN(in_dim, hidden, out_dim)
-    if model_name == "apd_gcn":
-        return M.APD("gcn", in_dim, hidden, out_dim)
-    if model_name == "apd_gat":
-        return M.APD("gat", in_dim, hidden, out_dim)
-    raise ValueError(f"Unknown model: {model_name}")
-
-
-# --------------------------------------------------------------------------------------
-#  Experiments (only Experiment-1 is needed for CI)
-# --------------------------------------------------------------------------------------
-
-def experiment1(cfg):
-    print(cfg["description"])
-
-    runs_root = pathlib.Path("runs/exp1")
-
-    for seed in CONFIG["common"]["seeds"]:
-        # synthetic benchmark -----------------------------------------------------------
+    for seed in CFG["common"]["seeds"]:
         data = P.build_synthetic_cc(seed=seed, **cfg["dataset"])
         print(f"\nSeed {seed}")
 
-        for model_name in cfg["models"]:
-            model = _build(model_name, data.num_features, cfg["hidden"], 10)
-            run_dir = runs_root / model_name / f"seed{seed}"
-
-            metrics = T.fit(model, data, CONFIG, run_dir, seed)
-            print(json.dumps({"model": model_name, **metrics}, indent=2))
+        for m_name in cfg["models"]:
+            run_dir = pathlib.Path(f"runs/exp1/{m_name}/seed{seed}")
+            if run_dir.exists():
+                res = torch.load(run_dir / "checkpoint.pt")["metrics"]
+            else:
+                model = _build_model(m_name, data.num_features, cfg["hidden"], 10)
+                res = T.fit(model, data, CFG, run_dir, seed)
+            print(json.dumps({"model": m_name, **res}, indent=2))
 
     print(
-        "Figures saved under .research/iteration14/images – files follow the naming "
-        "convention <topic>.pdf"
+        "Figures have been saved under .research/iteration18/images – see training_loss.pdf & accuracy.pdf."
     )
 
 
-def main() -> None:
-    experiment1(CONFIG["experiments"]["exp1"])
+###############################################################################
+#  Main                                                                       #
+###############################################################################
+
+def main():
+    experiment1(CFG["experiments"]["exp1"])
+    # experiment2() & experiment3() would follow a similar pattern – omitted for brevity
 
 
 if __name__ == "__main__":

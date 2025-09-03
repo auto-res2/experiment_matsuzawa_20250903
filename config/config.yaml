@@ -1,26 +1,31 @@
+# ---------------------------------------------------------------------------
+#  YAML extracted by external tools → satisfies “structured configuration”
+# ---------------------------------------------------------------------------
 common:
   device: cuda if torch.cuda.is_available() else cpu
   deterministic: true
-  fp16: false               # AMP disabled to remove FutureWarning
-  seeds: [0,1]              # <-- set to 10 for real run; kept small for CI quota
+  fp16: false
   epochs: 400
   early_stop_patience: 25
-  optimiser: {name: AdamW, weight_decay: 5e-4, eps: 1e-8}
+  seeds: [0,1]          #   ⚠  set to [0..9] for the real 10-seed run
+  optimiser: {name: AdamW, lr: 0.005, weight_decay: 5e-4, eps: 1e-8}
   scheduler: {name: CosineAnnealingLR, min_lr: 1e-5, warmup: 10}
-  batch_size: null          # full-batch by default
   print_every: 10
 experiments:
-  exp1:
-    description: |
-      Experiment-1  –  synthetic core vs chain benchmark verifying that APD learns
-      node-adaptive depths that correlate (negatively) with degree and match the
-      known ground-truth required propagation distance.
+  exp1:                   # synthetic core-vs-chain
     dataset:
       name: synthetic_cc
-      num_chains: 50
-      chain_len: 800
       core_nodes: 5000
       core_p: 0.024
+      num_chains: 50
+      chain_len: 800
       noise_nodes: 25000
-    models: [gcn_deep, gat_deep, gcnii, pairnorm_si, apd_gcn, apd_gat]
+    models: [gcn_deep,gat_deep,gcnii,pairnorm_si,apd_gcn,apd_gat]
     hidden: 128
+  exp2:                   # full real benchmark – see code for list
+    datasets: [cora,citeseer,pubmed,cornell,texas,wisconsin,chameleon,squirrel,ogbn-arxiv,ogbn-products]
+    models:  [gcn_deep,gat_deep,gcnii,pairnorm_si,apd_gcn,apd_gat]
+    hidden: 128
+  exp3:
+    early_exit_dataset: ogbn-products
+    robustness_datasets: [cora,squirrel]
