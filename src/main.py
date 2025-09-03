@@ -33,10 +33,13 @@ def set_seed(seed: int):
     cudnn.benchmark = False
 
 
-def _dict_to_ns(d: Dict[str, Any]):
-    """Recursively converts a nested dict to SimpleNamespace for convenient dot access."""
-    out = SimpleNamespace(**{k: _dict_to_ns(v) if isinstance(v, dict) else v for k, v in d.items()})
-    return out
+def _dict_to_ns(obj):
+    """Recursively converts dicts/lists into SimpleNamespace for convenient dot access."""
+    if isinstance(obj, dict):
+        return SimpleNamespace(**{k: _dict_to_ns(v) for k, v in obj.items()})
+    if isinstance(obj, list):
+        return [_dict_to_ns(v) for v in obj]
+    return obj
 
 
 # -----------------------------------------------------------------------------
@@ -50,10 +53,15 @@ def run_experiment(cfg):
     print("Datasets:", [d.name for d in cfg.datasets])
     print("================================\n")
 
+    # Disable AutoCF-Diff if no CUDA is available to avoid heavy diffusion downloads
+    if cfg.autocf.enabled and not torch.cuda.is_available():
+        print("[Warning] CUDA not available – disabling AutoCF-Diff (set autocf.enabled=false in config to suppress).")
+        cfg.autocf.enabled = False
+
     # Currently only Waterbirds is implemented.
     train_ds, val_ds, test_ds = get_waterbirds_splits()
     train_loader = DataLoader(train_ds, batch_size=cfg.train.batch_size, shuffle=True,
-                              num_workers=4, pin_memory=True)
+                              num_workers=4, pin_memory=torch.cuda.is_available())
     val_loader = DataLoader(val_ds, batch_size=cfg.train.batch_size, shuffle=False, num_workers=4)
     test_loader = DataLoader(test_ds, batch_size=cfg.train.batch_size, shuffle=False, num_workers=4)
 

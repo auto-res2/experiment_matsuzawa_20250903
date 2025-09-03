@@ -1,5 +1,5 @@
 """
-train.py – model architectures and training loop
+train.py – model architectures and training loop (CPU/GPU-agnostic)
 """
 from types import SimpleNamespace
 from typing import Tuple, Any
@@ -11,9 +11,23 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from torch.cuda.amp import GradScaler, autocast
+from torch.cuda.amp import GradScaler, autocast as _autocast
+from contextlib import nullcontext
 
 import timm
+
+# -----------------------------------------------------------------------------
+# Helper – auto-detect device & mixed precision helpers
+# -----------------------------------------------------------------------------
+_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+_USE_AMP = False  # will be set by Trainer according to cfg & CUDA
+
+# fallback autocast that is a no-op on CPU
+def autocast(enabled: bool = False):
+    if _DEVICE.type == "cuda":
+        return _autocast(enabled=enabled)
+    return nullcontext()
+
 
 # -----------------------------------------------------------------------------
 # Helper – backbone wrapper
@@ -86,6 +100,8 @@ class AutoCFDiffClassifier(nn.Module):
         self.cfg = cfg
         self.backbone = ClassifierBackbone(cfg.model, num_classes)
         if cfg.autocf.enabled:
+            if not torch.cuda.is_available():
+                raise RuntimeError("AutoCF-Diff requires CUDA for the diffusion model. Disable autocf.enabled or run on a GPU.")
             self.diffuser = DiffusionInpaintWrapper(cfg.autocf.diffusion_ckpt)
 
     def forward(self, x, y=None):
@@ -111,7 +127,7 @@ class AutoCFDiffClassifier(nn.Module):
                                            guidance=self.cfg.autocf.guidance_scale,
                                            steps=self.cfg.autocf.ddim_steps)
             cf_img = F.interpolate(cf_img.unsqueeze(0).to(device), 224)
-            with autocast(enabled=self.cfg.train.amp):
+            with autocast(enabled=_USE_AMP):
                 _, feat_o, ce_o = self.forward(xi, yi)
                 _, feat_cf, ce_cf = self.forward(cf_img, yi)
             l2 = F.mse_loss(feat_o, feat_cf)
@@ -138,19 +154,23 @@ class ERMClassifier(nn.Module):
 # Trainer (uses evaluation utilities from src.evaluate)
 # -----------------------------------------------------------------------------
 class Trainer:
-    """Lightweight single-GPU trainer."""
+    """Lightweight single-device trainer (GPU if available, CPU otherwise)."""
 
     def __init__(self, cfg: SimpleNamespace, model: nn.Module,
                  loaders: Tuple[DataLoader, DataLoader, DataLoader]):
         from .evaluate import evaluate_model  # local import to avoid circularity
         self.evaluate_model = evaluate_model
 
+        global _USE_AMP
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        _USE_AMP = cfg.train.amp and self.device.type == "cuda"
+
         self.cfg = cfg
-        self.model = model.cuda()
+        self.model = model.to(self.device)
         self.train_loader, self.val_loader, self.test_loader = loaders
         self.opt = torch.optim.AdamW(model.parameters(), lr=cfg.train.lr,
                                      weight_decay=cfg.train.weight_decay, betas=(0.9, 0.95))
-        self.scaler = GradScaler(enabled=cfg.train.amp)
+        self.scaler = GradScaler(enabled=_USE_AMP)
         self.best_val_wga = 0.0
         self.best_state = None
 
@@ -158,8 +178,8 @@ class Trainer:
         accumulate = int(self.cfg.train.accum_steps)
         self.model.train()
         for step, (x, y, _) in enumerate(self.train_loader):
-            x, y = x.cuda(non_blocking=True), y.cuda(non_blocking=True)
-            with autocast(enabled=self.cfg.train.amp):
+            x, y = x.to(self.device, non_blocking=self.device.type == "cuda"), y.to(self.device, non_blocking=self.device.type == "cuda")
+            with autocast(enabled=_USE_AMP):
                 if self.cfg.autocf.enabled:
                     _, _, ce = self.model(x, y)
                     cc_l2, ce_cf = self.model.causal_consistency_loss(x, y)

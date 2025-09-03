@@ -10,14 +10,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # -----------------------------------------------------------------------------
-# Group-aware worst-group accuracy (default: 4 groups in Waterbirds)
+# Group-aware worst-group accuracy (robust to arbitrary hashable group objects)
 # -----------------------------------------------------------------------------
 
 def worst_group_acc(preds: torch.Tensor, labels: torch.Tensor, groups: List[Any]) -> float:
-    groups_tensor = torch.tensor(groups)
+    # Convert group objects to string tokens so they become hashable & comparable
+    group_tokens = [str(g) for g in groups]
+    unique_groups = set(group_tokens)
     worst = 1.0
-    for g in torch.unique(groups_tensor):
-        idx = groups_tensor == g
+    for g in unique_groups:
+        idx = torch.tensor([i for i, gg in enumerate(group_tokens) if gg == g], dtype=torch.long)
+        if idx.numel() == 0:
+            continue
         correct = (preds[idx] == labels[idx]).float().mean().item()
         worst = min(worst, correct)
     return worst
@@ -29,10 +33,11 @@ def worst_group_acc(preds: torch.Tensor, labels: torch.Tensor, groups: List[Any]
 
 def evaluate_model(model, loader: DataLoader) -> Dict[str, float]:
     model.eval()
+    device = next(model.parameters()).device
     all_preds, all_labels, all_groups = [], [], []
     with torch.no_grad():
         for x, y, g in loader:
-            x = x.cuda(non_blocking=True)
+            x = x.to(device, non_blocking=device.type == "cuda")
             logits = model(x)
             preds = logits.argmax(1).cpu()
             all_preds.append(preds)
@@ -50,10 +55,10 @@ def evaluate_model(model, loader: DataLoader) -> Dict[str, float]:
 # -----------------------------------------------------------------------------
 
 def save_bar(values: Dict[str, float], title: str, fname: Path):
-    """Save a bar plot to .research/iteration2/images/ <fname>.  Directory is
+    """Save a bar plot to .research/iteration3/images/ <fname>.  Directory is
     created if needed.
     """
-    out_dir = Path(".research/iteration2/images")
+    out_dir = Path(".research/iteration3/images")
     out_dir.mkdir(parents=True, exist_ok=True)
     fname = out_dir / fname.name
 
