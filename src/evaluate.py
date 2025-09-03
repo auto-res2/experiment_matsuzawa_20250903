@@ -1,15 +1,18 @@
-"""src/evaluate.py – metrics reporting and plotting utilities"""
 from pathlib import Path
 from typing import Dict
 
 import matplotlib.pyplot as plt
 
-IMG_DIR = Path(".research/iteration1/images")
+# -----------------------------------------------------------------------------
+# All figures must be stored under .research/iteration2/images according to the
+# project guidelines.  We therefore create (or reuse) that exact directory.
+# -----------------------------------------------------------------------------
+IMG_DIR = Path(".research/iteration2/images")
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
-# --------------------------------------------------
-# simple helpers
-# --------------------------------------------------
+# -----------------------------------------------------------------------------
+# Simple plotting helpers
+# -----------------------------------------------------------------------------
 
 def plot_curve(xs, ys, title: str, xlab: str, ylab: str, fname: str) -> None:
     plt.figure()
