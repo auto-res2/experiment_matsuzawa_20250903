@@ -24,9 +24,9 @@ from .preprocess import cifar_stream, ROOT as _ROOT  # project root as seen in p
 ROOT = _ROOT  # use the same ROOT definition
 RUNS = ROOT / "runs"
 # ------------------------------------------------------------------
-#   ALL experiment figures must live in .research/iteration6/images
+#   ALL experiment figures must live in .research/iteration7/images
 # ------------------------------------------------------------------
-FIGDIR = ROOT / ".research" / "iteration6" / "images"
+FIGDIR = ROOT / ".research" / "iteration7" / "images"
 for d in (RUNS, FIGDIR):
     d.mkdir(parents=True, exist_ok=True)
 
