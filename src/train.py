@@ -1,9 +1,11 @@
 """src/train.py
 Logic related to model definition and the end-to-end training loop.
-The file hosts three major blocks
-1.  Normalisation layer (SCNR)
-2.  Backbone network (DeepGCN)
-3.  Trainer class that orchestrates optimisation for a single run / seed
+This variant removes the hard dependency on *torch_sparse* so that the
+project installs cleanly on vanilla PyPI without having to compile CUDA
+extensions.  If the real package is present we use it, otherwise a very
+light-weight fallback (based on torch.sparse_coo_tensor) is registered
+under the same import path so that third-party libraries – in particular
+PyG – continue to import successfully.
 """
 from __future__ import annotations
 
@@ -12,26 +14,82 @@ import time
 import copy
 import math
 import random
+import types
+import sys
 from typing import Dict, Any, List, Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+# -----------------------------------------------------------------------------
+#  Create a minimal stub of `torch_sparse.SparseTensor` if the real package
+#  is absent.  This avoids the build-time failure of torch_sparse (which needs
+#  a full PyTorch/CUDA tool-chain) while still providing the small subset of
+#  functionality required by the SCNR layer and by PyG's type annotations.
+# -----------------------------------------------------------------------------
+try:
+    from torch_sparse import SparseTensor  # pylint: disable=import-error
+except ModuleNotFoundError:  # pragma: no cover – only executed in CPU-only CI
+
+    class _SparseTensor:  # noqa: D401, pylint: disable=too-few-public-methods
+        """Very small wrapper around *torch.sparse* tensors.
+
+        Only implements `matmul`, subtraction and `.device` property which are
+        the operations required by *SCNR* as well as PyG's internal checks.
+        It is **not** a full replacement for `torch_sparse.SparseTensor` – it
+        merely keeps the demo code functional on small/medium graphs.
+        """
+
+        def __init__(self, row: torch.Tensor, col: torch.Tensor, value: torch.Tensor,
+                     sparse_sizes: Tuple[int, int]):
+            indices = torch.stack([row, col], dim=0)
+            self._tensor = torch.sparse_coo_tensor(indices, value, sparse_sizes,
+                                                   dtype=value.dtype,
+                                                   device=value.device).coalesce()
+
+        # ----------------------------- basic ops -----------------------------
+        def matmul(self, other: torch.Tensor) -> torch.Tensor:  # noqa: D401
+            """Sparse-dense matrix multiplication."""
+            return torch.sparse.mm(self._tensor, other)
+
+        def __sub__(self, other):  # noqa: D401
+            if isinstance(other, _SparseTensor):
+                result = self._tensor - other._tensor
+            elif torch.is_tensor(other):  # dense → convert to sparse
+                result = self._tensor - other.to_sparse()
+            else:
+                raise TypeError("Unsupported operand type for subtraction")
+            out = self.__class__.__new__(self.__class__)
+            out._tensor = result.coalesce()
+            return out
+
+        # ----------------------------- helpers ------------------------------
+        def to(self, device):  # noqa: D401
+            out = self.__class__.__new__(self.__class__)
+            out._tensor = self._tensor.to(device)
+            return out
+
+        @property
+        def device(self):  # noqa: D401
+            return self._tensor.device
+
+    # Expose the stub as a bona-fide module so that `import torch_sparse` works
+    _mod = types.ModuleType("torch_sparse")
+    _mod.SparseTensor = _SparseTensor
+    sys.modules["torch_sparse"] = _mod
+    SparseTensor = _SparseTensor  # type: ignore  # noqa: N816
+
+# Now that *torch_sparse* is guaranteed to import, we can safely pull in PyG
 from torch_geometric.nn import GCNConv, PairNorm
 from torch_geometric.utils import add_self_loops
-from torch_sparse import SparseTensor
 
 # ---------------------------------------------------------------------------
 #   1)  SCNR – Spectral-Contrastive Node Rebalancing
 # ---------------------------------------------------------------------------
 class SCNR(nn.Module):
-    """Spectral-Contrastive Node Rebalancing normalisation layer.
-    Works as a **plug-in** module and can be inserted after any
-    message-passing block.  During training it constructs a low-rank
-    spectral sketch and accumulates a contrastive re-balancing loss.  At
-    inference time the layer degrades to a fast LayerNorm-only path.
-    """
+    """Spectral-Contrastive Node Rebalancing normalisation layer."""
 
     def __init__(
         self,
@@ -49,19 +107,16 @@ class SCNR(nn.Module):
         self.lambda2 = lambda2
         self.p_high = p_high
 
-        # learnable gradient step size η (see §4 in paper)
         self._eta = nn.Parameter(torch.tensor(1e-2, dtype=torch.float32))
         self.ln = nn.LayerNorm(in_dim, eps=eps)
-
-        # public attribute that the outer loop will query
-        self.extra_loss: torch.Tensor | float = 0.0
+        self.extra_loss: torch.Tensor | float = 0.0  # populated during fwd
 
     # ---------------------------------------------------------------------
     # helpers
     # ---------------------------------------------------------------------
     @staticmethod
     def _normalised_adj(edge_index: torch.Tensor, num_nodes: int, device: torch.device) -> SparseTensor:
-        """D^{-1/2} (A+I) D^{-1/2} in sparse format."""
+        """Return Â = D⁻¹ᐟ² (A+I) D⁻¹ᐟ² as *SparseTensor*."""
         edge_index, _ = add_self_loops(edge_index, num_nodes=num_nodes)
         row, col = edge_index
         deg = torch.bincount(row, minlength=num_nodes).float().to(device)
@@ -77,57 +132,51 @@ class SCNR(nn.Module):
         residual = adj
         for _ in range(self.K):
             v = torch.randn(num_nodes, 1, device=device)
-            for _ in range(3):  # a few power iterations improve alignment
+            for _ in range(3):
                 v = residual.matmul(v)
                 v = F.normalize(v, dim=0)
             vecs.append(v)
-            # rank-1 deflation:  residual ← residual − λ vvᵀ  (λ absorbed)
-            residual = residual - residual.matmul(v).matmul(v.t())
+            # rank-1 deflation – *dense* outer-product is small for the graphs
+            residual = residual - residual.matmul(v).matmul(v.t())  # type: ignore[arg-type]
         return torch.cat(vecs, dim=1)  # [N, K]
 
     # ---------------------------------------------------------------------
     # forward
     # ---------------------------------------------------------------------
-    def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:  # noqa: D401
         if not self.training:
-            # inference-time fast path
-            return self.ln(x)
+            return self.ln(x)  # inference-time fast path
 
         N = x.size(0)
         device = x.device
-        # build (A+I) and spectral sketch
         adj = self._normalised_adj(edge_index, N, device)
         V = self._spectral_sketch(adj, N, device)  # [N, K]
 
         # projections
-        H_low = V @ (V.T @ x)          # low-frequency component
-        H_high = x - H_low             # residual / high-freq component
+        H_low = V @ (V.T @ x)
+        H_high = x - H_low
 
         # optional high-frequency dropout
         if self.p_high > 0.0:
             mask = torch.rand_like(H_high).lt(self.p_high)
             H_high = H_high.masked_fill(mask, 0.0)
 
-        # --------------------------------------------------------------
-        # Contrastive re-balancing loss
-        # --------------------------------------------------------------
-        def barlow_twins_loss(h: torch.Tensor) -> torch.Tensor:
+        # ---------------- Contrastive re-balancing loss ----------------
+        def _bt_loss(h: torch.Tensor) -> torch.Tensor:  # Barlow-Twins helper
             h = h - h.mean(0)
             c = h.T @ h / max(N - 1, 1)
             on_diag = torch.diagonal(c).add_(-1).pow_(2).sum()
             off_diag = (c - torch.diag(torch.diagonal(c))).pow_(2).sum()
             return on_diag + 0.005 * off_diag
 
-        L_uni = barlow_twins_loss(H_low) + barlow_twins_loss(H_high)
+        L_uni = _bt_loss(H_low) + _bt_loss(H_high)
         H_low_c = H_low - H_low.mean(0)
         H_high_c = H_high - H_high.mean(0)
         L_dec = (H_low_c.T @ H_high_c / max(N - 1, 1)).pow(2).sum()
 
         self.extra_loss = self.lambda1 * L_uni + self.lambda2 * L_dec
 
-        # --------------------------------------------------------------
-        # one gradient step (folded) – see §4 in paper
-        # --------------------------------------------------------------
+        # one folded gradient step (see §4 in paper)
         x_tilde = x - self._eta * torch.autograd.grad(
             outputs=self.extra_loss,
             inputs=x,
@@ -142,9 +191,7 @@ class SCNR(nn.Module):
 #   2)  Backbone – deep, plain GCN
 # ---------------------------------------------------------------------------
 class DeepGCN(nn.Module):
-    """Plain Graph Convolutional Network of arbitrary depth.
-    Normalisation after each hidden layer is controlled by *normaliser_cfg*.
-    """
+    """Plain Graph Convolutional Network of arbitrary depth."""
 
     def __init__(
         self,
@@ -184,7 +231,6 @@ class DeepGCN(nn.Module):
             return PairNorm(scale=1.0, mode="PN-S")
         if name == "contranorm":
             lam = cfg.get("lambda", 0.1)
-            # Cheap proxy: pair-norm with inflated scale ≈ contrastive-norm
             return PairNorm(scale=1.0 + lam, mode="PN-S")
         if name == "scnr":
             return SCNR(
@@ -197,7 +243,7 @@ class DeepGCN(nn.Module):
         raise ValueError(f"Unknown normaliser {name}")
 
     # ------------------------------------------------------------------
-    def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+    def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> Tuple[torch.Tensor, List[torch.Tensor]]:  # noqa: D401
         extra_losses: List[torch.Tensor] = []
         for conv, norm in zip(self.convs[:-1], self.norms):
             x = conv(x, edge_index)
@@ -211,7 +257,7 @@ class DeepGCN(nn.Module):
 
 
 # ---------------------------------------------------------------------------
-#   3)  Single-seed trainer (optimisation, early-stopping, metrics)
+#   3)  Single-seed trainer
 # ---------------------------------------------------------------------------
 class Trainer:
     """Self-contained helper that trains *one* model on *one* dataset for *one* seed."""
@@ -249,7 +295,8 @@ class Trainer:
         )
 
         best_val, best_state, patience = 0.0, None, 0
-        torch.cuda.reset_peak_memory_stats(self.device)
+        if self.device.type == "cuda":
+            torch.cuda.reset_peak_memory_stats(self.device)
         tic = time.time()
 
         for epoch in range(1, epochs + 1):
@@ -263,7 +310,7 @@ class Trainer:
             loss.backward()
             optimiser.step()
 
-            # --------------- validation -------------------
+            # ---------------- validation -------------------
             if epoch % 10 == 0 or epoch == epochs:
                 val_acc = eval_fn(model, data, split="val")
                 if val_acc > best_val:
@@ -275,13 +322,12 @@ class Trainer:
                 if patience >= early_stop_patience:
                     break
 
-        # --------------- test + bookkeeping -------------
-        model.load_state_dict(best_state)
+        # ---------------- test + bookkeeping -------------
+        model.load_state_dict(best_state)  # type: ignore[arg-type]
         test_acc = eval_fn(model, data, split="test")
         duration = time.time() - tic
         mem_mb = (
             torch.cuda.max_memory_allocated(self.device) / 1e6
-            if self.device.type == "cuda"
-            else 0.0
+            if self.device.type == "cuda" else 0.0
         )
         return {"test_acc": test_acc, "best_val": best_val, "seconds": duration, "memMB": mem_mb}

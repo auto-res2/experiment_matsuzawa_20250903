@@ -2,6 +2,8 @@
 Evaluation utilities – accuracy computation and result visualisation.
 All heavy dependencies (matplotlib / seaborn) live here so that importing
 *train.py* remains light-weight when evaluation is not required.
+The figure directory has been updated to comply with the project-wide rule
+that *all* images must be stored under `.research/iteration2/images`.
 """
 from __future__ import annotations
 
@@ -14,7 +16,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # create figure directory once ------------------------------------------------
-_FIG_DIR = os.path.join(".research", "iteration1", "images")
+_FIG_DIR = os.path.join(".research", "iteration2", "images")
 os.makedirs(_FIG_DIR, exist_ok=True)
 
 # -----------------------------------------------------------------------------
