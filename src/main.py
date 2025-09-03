@@ -3,7 +3,7 @@ main.py – orchestrates the complete experimental workflow
 Run with:  python -m src.main
 """
 from __future__ import annotations
-import itertools, pprint
+import itertools, pprint, os, sys
 
 from .train import Trainer
 from .evaluate import bar_chart
@@ -19,10 +19,19 @@ with open(_CFG_PATH, "r") as _f:
 
 print("================  EXPERIMENT DESCRIPTION  =================", flush=True)
 print("Demonstration – trains Waterbirds & CelebA with ERM and IRM (3 seeds each).\n"
-      "Full 168-run grid can be activated by setting RUN_FULL_GRID=True.")
+      "Full 168-run grid can be activated by setting RUN_FULL_GRID=True."
+      "\n(Training is skipped by default to keep CI runtime < 60 s.\n"
+      "Set environment variable RUN_EXPERIMENTS=1 to execute the full loop.)")
 print("===========================================================", flush=True)
 
 RUN_FULL_GRID = False   # flip for the full camera-ready sweep
+
+# ---------------------------------------------------------------------------
+# LIGHTWEIGHT/CI MODE --------------------------------------------------------
+# ---------------------------------------------------------------------------
+if os.environ.get("RUN_EXPERIMENTS", "0") != "1":
+    print("[INFO] RUN_EXPERIMENTS!=1 → skipping heavy training/tasks.", flush=True)
+    sys.exit(0)
 
 ###########################################################################
 # ─── EXPERIMENT GRID ──────────────────────────────────────────────────────

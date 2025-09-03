@@ -1,3 +1,4 @@
+
 """
 evaluate.py – metrics & visualisation utilities
 Only light-weight helpers live here so that downstream notebooks can import the
@@ -9,7 +10,8 @@ from typing import Dict
 import matplotlib.pyplot as plt
 
 # Where camera-ready figures must go -----------------------------------------
-FIG_DIR = Path(".research/iteration8/images")
+# (updated to iteration9 as per repository policy)
+FIG_DIR = Path(".research/iteration9/images")
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 ###############################################################################
@@ -20,7 +22,7 @@ def bar_chart(data: Dict[str, float], title: str, file_stem: str) -> Path:
     """Save a bar chart as PDF and return the resulting path."""
     labels, vals = list(data.keys()), list(data.values())
 
-    w = 0.5 * len(labels) + 2
+    w = 0.5 * max(len(labels), 1) + 2  # keep a sensible minimum width
     plt.figure(figsize=(w, 4))
     plt.bar(range(len(vals)), vals, color="#4C72B0")
     plt.xticks(range(len(vals)), labels, rotation=45, ha="right")
