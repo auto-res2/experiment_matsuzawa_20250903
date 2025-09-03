@@ -1,0 +1,9 @@
+  Running command git clone --filter=blob:none --quiet https://github.com/aimagelab/mammoth.git /tmp/pip-install-impir5re/mammoth_691723723f624e49b15d93e0c9bd842d
+  Running command git clone --filter=blob:none --quiet https://github.com/pclucas14/adaptive-quantization-modules.git /tmp/pip-install-impir5re/adaptive-quantization-modules_d207889004364e5e9701f020f4b62575
+ERROR: adaptive-quantization-modules@ git+https://github.com/pclucas14/adaptive-quantization-modules.git from git+https://github.com/pclucas14/adaptive-quantization-modules.git (from -r requirements.txt (line 9)) does not appear to be a Python project: neither 'setup.py' nor 'pyproject.toml' found.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 4, in <module>
+    import time, yaml
+ModuleNotFoundError: No module named 'yaml'

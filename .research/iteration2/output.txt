@@ -1,0 +1,14 @@
+=== pip install start Wed Sep  3 10:59:48 UTC 2025 ===
+Collecting mammoth@ git+https://github.com/aimagelab/mammoth.git (from -r requirements.txt (line 8))
+  Cloning https://github.com/aimagelab/mammoth.git to /tmp/pip-install-impir5re/mammoth_691723723f624e49b15d93e0c9bd842d
+  Resolved https://github.com/aimagelab/mammoth.git to commit f82adcaadfc2d513bab9e14cac0d07f5ba8343ac
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting adaptive-quantization-modules@ git+https://github.com/pclucas14/adaptive-quantization-modules.git (from -r requirements.txt (line 9))
+  Cloning https://github.com/pclucas14/adaptive-quantization-modules.git to /tmp/pip-install-impir5re/adaptive-quantization-modules_d207889004364e5e9701f020f4b62575
+  Resolved https://github.com/pclucas14/adaptive-quantization-modules.git to commit f33984ce8e03a19c1f465ed9a0c1c7b64edcdfc4
+=== experiment start Wed Sep  3 10:59:53 UTC 2025 ===
