@@ -1,7 +1,11 @@
 torch
 torchvision
-numpy
-pyyaml
-matplotlib
+bitsandbytes
+fvcore
 tqdm
 seaborn
+torchmetrics
+matplotlib
+numpy
+pyyaml
+vq_vae_2_pytorch @ git+https://github.com/rosinality/vq-vae-2-pytorch.git

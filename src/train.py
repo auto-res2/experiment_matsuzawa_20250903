@@ -1,245 +1,242 @@
-"""src/train.py
-Model architectures, memory-allocation controller and task-training
-routines live here.  All heavy tensor operations stay in this file so that the
-remaining modules have minimal dependencies on PyTorch.
+"""src/train.py – model, memory-accounting and controller logic for JEMB
+The file only contains *model–related* components so that it can be imported
+independently from training / evaluation orchestration code.
 """
 from __future__ import annotations
-import math, random, warnings
-from pathlib import Path
-from typing import List, Tuple, Dict
+import math
+from typing import List, Tuple
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import torch.nn.functional as F  # noqa: F401 (kept for possible future use)
 import torchvision
 
-# device is determined once in main.py and re-exported here during run-time
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# -------------------------------------------------------------
+#                    Adapter and memory helpers
+# -------------------------------------------------------------
+class LoRAAdapter(nn.Module):
+    """InfLoRA-style low-rank adapter whose rank can grow / shrink on-line."""
 
-################################################################################
-#                              ───  BACKBONE  ───                              #
-################################################################################
-class FrozenBackbone(nn.Module):
-    """ResNet-18 truncated after layer-3 – parameters are frozen."""
-
-    def __init__(self) -> None:
+    def __init__(self, in_dim: int, out_dim: int, r0: int):
         super().__init__()
-        base = torchvision.models.resnet18(weights=None)
-        # everything except the last two residual layers + FC / pooling
-        self.features = nn.Sequential(*list(base.children())[:-2])
-        for p in self.features.parameters():
-            p.requires_grad = False
-        self.out_dim: int = 512
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.features(x).mean([-2, -1])  # global average-pool –> 512-d
-
-################################################################################
-#                        ───  LOW-RANK  ADAPTER (LoRA) ───                     #
-################################################################################
-# ---------------------------------------------------------------------------
-#  The original implementation depended on an external GitHub repository that
-#  cannot be installed in the execution environment because it lacks standard
-#  packaging metadata (setup.py/pyproject.toml).  To remove this hard
-#  dependency we provide a *very small* in-house alternative that replicates
-#  the essential behaviour: a learnable linear projection implemented as the
-#  product of two low-rank matrices (B @ A).  This keeps the parameter count
-#  and memory footprint comparable to a LoRA head while avoiding any external
-#  requirements.
-# ---------------------------------------------------------------------------
-class LowRankLinear(nn.Module):
-    """Linear layer implemented as the product of two low-rank matrices.
-
-    y = x · (B @ A) where  A: [in_dim, r]  and  B: [r, out_dim].
-    """
-
-    def __init__(self, in_dim: int, out_dim: int, r: int, bias: bool = False):
-        super().__init__()
-        self.A = nn.Parameter(torch.randn(in_dim, r) * 0.01)
-        self.B = nn.Parameter(torch.randn(r, out_dim) * 0.01)
-        if bias:
-            self.bias = nn.Parameter(torch.zeros(out_dim))
-        else:
-            self.register_parameter("bias", None)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:  # noqa: D401
-        weight = self.A @ self.B  # [in_dim, out_dim]
-        y = x @ weight  # [..., out_dim]
-        if self.bias is not None:
-            y = y + self.bias
-        return y
-
-class SimpleAdapter(nn.Module):
-    """Low-rank linear head as a drop-in replacement for InfLoRA.LinearLoRA."""
-
-    def __init__(self, in_dim: int, rank: int, num_classes: int):
-        super().__init__()
-        self.adapter = LowRankLinear(in_dim, num_classes, r=rank, bias=False)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:  # noqa: D401
-        return self.adapter(x)
-
-################################################################################
-#                   ───  AQM  –  VQ-VAE-2  LATENT COMPRESSOR ───               #
-################################################################################
-# ---------------------------------------------------------------------------
-#  The reference code relies on `rosinality/vq-vae-2-pytorch`, another GitHub
-#  repository that is not a proper Python package.  For the purposes of the
-#  demo the compressor is *never used for a forward pass* in the main
-#  experiment.  We therefore provide a minimal stub that fulfils the interface
-#  without any heavy dependencies.
-# ---------------------------------------------------------------------------
-class _VQVAETwoStub(nn.Module):
-    def __init__(self, img_size: int, num_layers: int, codebook_dim: int, num_codebook_vectors: int):
-        super().__init__()
-        self.codebook_dim = codebook_dim
-        self.num_codebook_vectors = num_codebook_vectors
-
-    # return value signature mimics the real implementation
-    def encode(self, x):
-        B = x.size(0)
-        codes = torch.zeros(B, dtype=torch.long, device=x.device)
-        return None, None, codes  # dummy outputs
-
-    def decode(self, codes):  # noqa: D401 – dummy recon
-        B = codes.size(0)
-        return torch.zeros(B, 3, 32, 32, device=codes.device)
-
-class AQM(nn.Module):
-    """Vector-quantised latent compressor (stubbed)."""
-
-    def __init__(self, latent_dim: int, codebook_size: int):
-        super().__init__()
-        # Use the lightweight stub
-        self.vqvae = _VQVAETwoStub(
-            img_size=32, num_layers=2, codebook_dim=latent_dim, num_codebook_vectors=codebook_size
-        )
-        for p in self.vqvae.parameters():
-            p.requires_grad = False
-
-    def encode(self, x: torch.Tensor) -> torch.Tensor:  # uint16 indices
-        _, _, codes = self.vqvae.encode(x)
-        return codes
-
-    def decode(self, codes: torch.Tensor) -> torch.Tensor:  # noqa: D401
-        return self.vqvae.decode(codes)
-
-################################################################################
-#                          ───  MEMORY  LEDGER  ───                            #
-################################################################################
-class KnapsackController:
-    """Single-step greedy allocator that moves bytes between replay buffer and
-    low-rank adapter subject to a global memory budget M_max.
-    """
-
-    def __init__(self, M_max: int):
-        self.M_max = int(M_max)
-        self.bytes_adapter: int = 0
-        self.bytes_buffer: int = 0
-
-    # ---------------------------------------------------------------------
-    def update_ledger(self, bytes_adapter: int, bytes_buffer: int) -> None:  # noqa: D401
-        self.bytes_adapter = int(bytes_adapter)
-        self.bytes_buffer = int(bytes_buffer)
-
-    # ---------------------------------------------------------------------
-    def decide(self, util_adapter: float, util_buffer: float) -> Tuple[str, int, int]:
-        """Reallocate one percent of the total budget towards the higher marginal
-        utility consumer.  Returns (action, new_bytes_adapter, new_bytes_buffer).
-        A tiny heuristic but sufficient for the demo script.
-        """
-
-        if self.bytes_adapter + self.bytes_buffer > self.M_max:
-            raise RuntimeError("Memory ledger overflow – check accounting logic.")
-
-        shift: int = max(1, int(0.01 * self.M_max))  # at least one byte
-        action = "keep"
-        if util_buffer > util_adapter and self.bytes_adapter >= shift:
-            self.bytes_adapter -= shift
-            self.bytes_buffer += shift
-            action = "A→B"
-        elif util_adapter >= util_buffer and self.bytes_buffer >= shift:
-            self.bytes_buffer -= shift
-            self.bytes_adapter += shift
-            action = "B→A"
-
-        return action, self.bytes_adapter, self.bytes_buffer
-
-################################################################################
-#                              ───  JEMB  ───                                  #
-################################################################################
-class JEMBModel(nn.Module):
-    """Full continual-learning system composed of a frozen CNN backbone, a
-    learnable low-rank adapter and a latent-compression VQ-VAE (AQM).
-    """
-
-    def __init__(self, cfg):
-        super().__init__()
-        self.cfg = cfg
-        self.backbone = FrozenBackbone()
-        self.adapter = SimpleAdapter(self.backbone.out_dim, cfg["model"]["adapter"]["rank_init"], cfg["model"]["num_classes"])
-        self.aqm = AQM(cfg["model"]["aqm"]["latent_dim"], cfg["model"]["aqm"]["codebook_size"])
-        self.controller = KnapsackController(cfg["memory"]["M_max_bytes"])
-        self.loss_fn = nn.CrossEntropyLoss()
-        self.util_adapter: float = 0.0  # initial utility estimates
-        self.util_buffer: float = 0.0
+        self.in_dim, self.out_dim = in_dim, out_dim
+        self.col_seeds: List[int] = []  # RNG seeds for pruned columns
+        self.weight_A = nn.Parameter(torch.zeros(in_dim, r0))
+        self.weight_B = nn.Parameter(torch.zeros(r0, out_dim))
+        self.reset_parameters()
 
     # ------------------------------------------------------------------
-    def forward(self, x: torch.Tensor) -> torch.Tensor:  # noqa: D401
+    def reset_parameters(self):
+        nn.init.kaiming_uniform_(self.weight_A, a=math.sqrt(5))
+        nn.init.zeros_(self.weight_B)
+
+    # ------------------------  utilities  ------------------------------
+    def current_rank(self) -> int:
+        return self.weight_A.shape[1]
+
+    def bytes(self) -> int:
+        """Assume 8-bit quantisation → 1 byte per weight."""
+        return self.weight_A.numel() + self.weight_B.numel()
+
+    # ----------------------  dynamic rank  -----------------------------
+    def grow(self, k: int = 1):
+        """Add *k* new rank-1 columns with Stiefel orthogonalisation."""
+        A = torch.zeros(self.in_dim, k, device=self.weight_A.device)
+        B = torch.zeros(k, self.out_dim, device=self.weight_B.device)
+        nn.init.kaiming_uniform_(A, a=math.sqrt(5))
+        nn.init.zeros_(B)
+        self.weight_A = nn.Parameter(torch.cat([self.weight_A.data, A], dim=1))
+        self.weight_B = nn.Parameter(torch.cat([self.weight_B.data, B], dim=0))
+        # Stiefel-orthogonalise new columns – gradient-non-interference guarantee
+        with torch.no_grad():
+            q, _ = torch.linalg.qr(self.weight_A)  # (in_dim, new_r)
+            self.weight_A.copy_(q)
+
+    def prune(self, k: int = 1) -> bool:
+        """Prune the *k* smallest-magnitude columns. Return *True* if pruning happened."""
+        if self.current_rank() <= k:
+            return False
+        col_norm = self.weight_B.abs().sum(dim=1)  # (r,)
+        keep = col_norm.argsort(descending=True)[: self.current_rank() - k]
+        self.weight_A = nn.Parameter(self.weight_A[:, keep])
+        self.weight_B = nn.Parameter(self.weight_B[keep])
+        # store RNG seed for lightweight reconstruction
+        self.col_seeds.extend(torch.randint(0, 2 ** 31, (k,)).tolist())
+        return True
+
+    # ------------------------------------------------------------------
+    def forward(self, x: torch.Tensor) -> torch.Tensor:  # noqa: D401 – simple proxy
+        W = (self.weight_A @ self.weight_B).to(torch.float32)  # de-quant on the fly
+        return x @ W
+
+
+# -------------------------------------------------------------
+#                       Replay buffer (VQ codes)
+# -------------------------------------------------------------
+class VQBuffer:
+    """Store vector-quantised latent codes instead of raw inputs."""
+
+    BYTES_PER_CODE = 2  # uint16 index → 2 bytes
+
+    def __init__(self, vq):
+        self.vq = vq
+        self.codes: List[torch.LongTensor] = []
+
+    def add(self, feats: torch.Tensor):
+        _, _, latents = self.vq.encode(feats)[2]  # (B, H, W)
+        self.codes.append(latents.cpu())
+
+    def sample(self, n: int) -> torch.Tensor:
+        if not self.codes:
+            raise RuntimeError("[buffer] sampling from empty buffer")
+        flat = torch.cat(self.codes)
+        idx = torch.randint(0, len(flat), (n,))
+        device = next(self.vq.parameters()).device
+        return self.vq.decode(flat[idx].to(device))
+
+    def bytes(self) -> int:
+        if not self.codes:
+            return 0
+        return sum(c.numel() for c in self.codes) * self.BYTES_PER_CODE
+
+
+# -------------------------------------------------------------
+#                       Byte-ledger accounting
+# -------------------------------------------------------------
+class ByteLedger:
+    """Tracks bytes used by (A)dapter and (B)uffer under a hard cap."""
+
+    def __init__(self, cap_kb: int):
+        self.cap = cap_kb * 1024  # → bytes
+        self.A = 0  # adapter bytes
+        self.B = 0  # buffer  bytes
+
+    # ------------------------------------------------------------------
+    def update(self, a: int, b: int):
+        self.A, self.B = a, b
+        if self.A + self.B > self.cap:
+            raise RuntimeError("Memory cap breached – aborting run!")
+
+    def move(self, src: str, k: int):
+        if src == "A" and self.A >= k:
+            self.A -= k
+            self.B += k
+        elif src == "B" and self.B >= k:
+            self.B -= k
+            self.A += k
+        else:
+            raise ValueError("[ledger] illegal move request")
+
+    def asdict(self):
+        return dict(bytes_adapter=self.A, bytes_buffer=self.B)
+
+
+# -------------------------------------------------------------
+#               Marginal utility (influence approximation)
+# -------------------------------------------------------------
+@torch.no_grad()
+def marginal_utility(model: nn.Module, val_loader, ledger: ByteLedger):
+    good = 0
+    tot = 0
+    device = next(model.parameters()).device
+    for x, y in val_loader:
+        x, y = x.to(device), y.to(device)
+        good += (model(x).argmax(dim=1) == y).sum().item()
+        tot += y.size(0)
+    acc = good / max(tot, 1)
+    # avoid div/0
+    ua = acc / (ledger.A + 1)
+    ub = acc / (ledger.B + 1)
+    return ua, ub
+
+
+# -------------------------------------------------------------
+#                      Greedy memory controller
+# -------------------------------------------------------------
+class GreedyController:
+    """1-step greedy allocator based on marginal utility."""
+
+    def __init__(self, ledger: ByteLedger, adapter: LoRAAdapter, buffer: VQBuffer):
+        self.ledger = ledger
+        self.adapter, self.buffer = adapter, buffer
+
+    def step(self, util_A: float, util_B: float):
+        delta = max(512, int(0.01 * self.ledger.cap))  # ≥ 512 bytes
+        if util_A > util_B:
+            # free bytes from buffer and grow adapter
+            if self.ledger.B >= delta:
+                self.ledger.move("B", delta)
+                self.adapter.grow(k=1)
+        else:
+            # prune adapter to free bytes for buffer
+            if self.adapter.prune(k=1):
+                self.ledger.move("A", delta)
+
+
+# -------------------------------------------------------------
+#                          Backbone
+# -------------------------------------------------------------
+class Backbone(nn.Module):
+    """Frozen ResNet-18 trunk returning 512-D spatial average features."""
+
+    def __init__(self):
+        super().__init__()
+        net = torchvision.models.resnet18(weights=None)
+        self.features = nn.Sequential(*list(net.children())[:-2])
+        for p in self.features.parameters():
+            p.requires_grad = False
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:  # (B, 512)
+        return self.features(x).mean(dim=[-2, -1])
+
+
+# -------------------------------------------------------------
+#                         Full JEMB model
+# -------------------------------------------------------------
+class JEMB(nn.Module):
+    """Joint-budget Experience & Model Balancing network wrapper."""
+
+    def __init__(self, num_cls: int, cap_kb: int, cfg):
+        super().__init__()
+        self.cfg = cfg  # keep a reference for easy access
+        self.backbone = Backbone()
+        self.adapter = LoRAAdapter(512, num_cls, cfg.model.adapter["rank0"])
+        # VQ-VAE-2 (encoder/decoder are *frozen*)
+        from vq_vae_2_pytorch import VQVAETwo
+
+        self.vq = VQVAETwo(
+            img_size=32,
+            num_layers=2,
+            codebook_dim=cfg.model.aqm["latent_dim"],
+            num_codebook_vectors=cfg.model.aqm["codebook"],
+        )
+        for p in self.vq.parameters():
+            p.requires_grad = False
+
+        # replay buffer & bookkeeping ---------------------------------------------------
+        self.buffer = VQBuffer(self.vq)
+        self.ledger = ByteLedger(cap_kb)
+        self.ctrl = GreedyController(self.ledger, self.adapter, self.buffer)
+
+        self.ce = nn.CrossEntropyLoss()
+        # initial ledger update ---------------------------------------------------------
+        self.ledger.update(self.adapter.bytes(), self.buffer.bytes())
+
+    # ------------------------------------------------------------------
+    def forward(self, x: torch.Tensor):
         feat = self.backbone(x)
         return self.adapter(feat)
 
-    # ------------------------------------------------------------------
-    def training_step(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:  # noqa: D401
-        logits = self(x)
-        return self.loss_fn(logits, y)
+    # ---------------------------  continual-learning helpers -----------
+    def observe_batch(self, x, y, opt):
+        opt.zero_grad()
+        loss = self.ce(self(x), y)
+        loss.backward()
+        opt.step()
+        return float(loss.item())
 
-    # ------------------------------------------------------------------
-    def estimate_marginal_utilities(self, val_loader: torch.utils.data.DataLoader) -> Tuple[float, float]:
-        """Very rough influence-function proxy: current accuracy divided by bytes"""
-        self.eval()
-        correct = n = 0
-        with torch.no_grad():
-            for x, y in val_loader:
-                x, y = x.to(DEVICE), y.to(DEVICE)
-                pred = self(x).argmax(1)
-                correct += (pred == y).sum().item()
-                n += y.size(0)
-        acc = correct / max(1, n)
-        util_a = acc / (self.controller.bytes_adapter + 1)
-        util_b = acc / (self.controller.bytes_buffer + 1)
-        return util_a, util_b
-
-    # ------------------------------------------------------------------
     def after_epoch(self, val_loader):
-        self.util_adapter, self.util_buffer = self.estimate_marginal_utilities(val_loader)
-
-    # ------------------------------------------------------------------
-    def allocate_memory(self) -> None:  # noqa: D401
-        action, ba, bb = self.controller.decide(self.util_adapter, self.util_buffer)
-        print(f"[ALLOC] action={action}  bytes_adapter={ba}  bytes_buffer={bb}")
-
-################################################################################
-#                         ───  TRAINING  LOOPS ───                             #
-################################################################################
-
-def train_one_task(
-    model: JEMBModel,
-    loader: torch.utils.data.DataLoader,
-    val_loader: torch.utils.data.DataLoader,
-    optim: torch.optim.Optimizer,
-    epochs: int,
-) -> None:
-    """Mini-batch SGD for a single task."""
-
-    model.train()
-    for ep in range(epochs):
-        ep_loss = 0.0
-        for x, y in loader:
-            x, y = x.to(DEVICE), y.to(DEVICE)
-            loss = model.training_step(x, y)
-            optim.zero_grad(); loss.backward(); optim.step()
-            ep_loss += loss.item() * y.size(0)
-        ep_loss /= len(loader.dataset)
-        print(f"  epoch {ep+1}/{epochs}  loss={ep_loss:.4f}")
-        model.after_epoch(val_loader)
+        ua, ub = marginal_utility(self, val_loader, self.ledger)
+        self.ctrl.step(ua, ub)
+        # update ledger after structural changes
+        self.ledger.update(self.adapter.bytes(), self.buffer.bytes())
