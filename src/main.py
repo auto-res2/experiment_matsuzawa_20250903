@@ -25,8 +25,9 @@ CFG: Dict = yaml.safe_load(CFG_PATH.read_text())
 # 2.  Environment guard & wheel bootstrap (unchanged logic)              
 # ----------------------------------------------------------------------
 REQ_MAJOR, REQ_MINOR = 3, 10
-if sys.version_info[:2] != (REQ_MAJOR, REQ_MINOR):
-    raise RuntimeError(f"Python {REQ_MAJOR}.{REQ_MINOR}.x required, found {sys.version}")
+# Allow any Python version >= 3.10 instead of strictly pinning to 3.10.x.
+if sys.version_info < (REQ_MAJOR, REQ_MINOR):
+    raise RuntimeError(f"Python ≥{REQ_MAJOR}.{REQ_MINOR}.0 required, found {sys.version}")
 
 for mod, wheel in CFG['environment']['pinned_wheels'].items():
     try:
