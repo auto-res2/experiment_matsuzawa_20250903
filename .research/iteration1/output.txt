@@ -1,0 +1,12 @@
+=== pip install start Wed Sep  3 07:55:26 UTC 2025 ===
+Collecting torch>=2.2.0 (from -r requirements.txt (line 1))
+  Downloading torch-2.8.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (30 kB)
+Collecting torch_geometric>=2.5.0 (from -r requirements.txt (line 2))
+  Downloading torch_geometric-2.6.1-py3-none-any.whl.metadata (63 kB)
+Collecting torch_sparse>=0.6.0 (from -r requirements.txt (line 3))
+  Downloading torch_sparse-0.6.18.tar.gz (209 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'error'
+=== experiment start Wed Sep  3 07:55:28 UTC 2025 ===
