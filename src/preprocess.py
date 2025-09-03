@@ -19,7 +19,7 @@ from torch_geometric.utils import (
 from ogb.nodeproppred import PygNodePropPredDataset
 
 _DATA_DIR = pathlib.Path(__file__).resolve().parent.parent / "data"
-_DATA_DIR.mkdir(exist_ok=True)
+_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -53,8 +53,8 @@ def build_synthetic_cc(
     random.seed(seed)
 
     # A) Erdős-Rényi core -------------------------------------------------
-    core_e = erdos_renyi_graph(core_nodes, core_p)
-    edge_index = torch.tensor(core_e, dtype=torch.long).t().contiguous()
+    # erdos_renyi_graph already returns an edge_index with shape (2, E)
+    edge_index = erdos_renyi_graph(core_nodes, core_p).long().contiguous()
 
     # B) Append chains ----------------------------------------------------
     chain_offsets = []
@@ -62,15 +62,15 @@ def build_synthetic_cc(
         head = core_nodes + c * chain_len
         chain_offsets.append(head)
 
-        # linear chain edges
+        # linear chain edges (u -> v)
         chain_edges = [[head + i, head + i + 1] for i in range(chain_len - 1)]
         # attach head to a random core node
         attach = torch.randint(0, core_nodes, (1,)).item()
         chain_edges.append([attach, head])
 
-        edge_index = torch.cat(
-            [edge_index, torch.tensor(chain_edges, dtype=torch.long).t()], dim=1
-        )
+        # Convert to shape (2, N_edges) to match PyG format
+        chain_ei = torch.tensor(chain_edges, dtype=torch.long).t().contiguous()
+        edge_index = torch.cat([edge_index, chain_ei], dim=1)
 
     # C) make undirected & add self-loops --------------------------------
     edge_index = to_undirected(edge_index)
