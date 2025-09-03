@@ -1,9 +1,8 @@
 torch
 torch_geometric
-ogb
 numpy
-scikit-learn
-scipy
 matplotlib
 seaborn
+scikit-learn
+scipy
 pyyaml

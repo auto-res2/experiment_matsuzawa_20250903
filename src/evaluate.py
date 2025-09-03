@@ -1,100 +1,62 @@
-"""
-evaluate.py – evaluation metrics & visualisation helpers
-All plots are saved into .research/iteration28/images in compliance with the
-latest project specification.
+"""src/evaluate.py
+Evaluation utilities: metrics and plotting.
 """
 from __future__ import annotations
-
 import pathlib
-from typing import Dict, List
+from typing import Dict, Sequence
 
 import matplotlib.pyplot as plt
-import numpy as np
 import seaborn as sns
+import numpy as np
 import torch
-from scipy.stats import spearmanr
 from sklearn.metrics import accuracy_score, f1_score
+from scipy.stats import spearmanr
 
-sns.set(style="whitegrid")
+from .utils import ensure_dir, IMAGE_ROOT
 
-# ---------------------------------------------------------------------------
-#  Global output directory for all figures                                    
-# ---------------------------------------------------------------------------
-PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
-IMAGES_DIR = PROJECT_ROOT / ".research" / "iteration28" / "images"
-IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+sns.set_style("whitegrid")
 
-###############################################################################
-#  Metrics                                                                    #
-###############################################################################
+################################################################################
+#  Metrics                                                                     #
+################################################################################
 
-def cls_metrics(logits: torch.Tensor, y: torch.Tensor) -> Dict[str, float]:
-    pred = logits.argmax(dim=-1).cpu().numpy()
-    y_np = y.cpu().numpy()
+def classification_metrics(logits: torch.Tensor, y: torch.Tensor) -> Dict[str, float]:
+    """Return accuracy and macro-F1 computed on CPU."""
+    pred = logits.argmax(-1).detach().cpu().numpy()
+    y_true = y.detach().cpu().numpy()
     return {
-        "accuracy": accuracy_score(y_np, pred),
-        "macro_f1": f1_score(y_np, pred, average="macro"),
+        "acc": accuracy_score(y_true, pred),
+        "macro_f1": f1_score(y_true, pred, average="macro"),
     }
 
 
-def row_diff(h: torch.Tensor) -> float:
-    d = h.unsqueeze(0) - h.unsqueeze(1)
-    return d.norm(p=2, dim=-1).mean().item()
+def spearman_corr(a: torch.Tensor, b: torch.Tensor) -> float:
+    """Spearman correlation helper (converts tensors to CPU numpy)."""
+    return float(spearmanr(a.detach().cpu().numpy(), b.detach().cpu().numpy())[0])
 
+################################################################################
+#  Plotting                                                                    #
+################################################################################
 
-def col_diff(h: torch.Tensor) -> float:
-    d = h.T.unsqueeze(0) - h.T.unsqueeze(1)
-    return d.norm(p=2, dim=-1).mean().item()
-
-
-def eff_rank(h: torch.Tensor, eps: float = 1e-6) -> float:
-    _u, s, _v = torch.linalg.svd(h, full_matrices=False)
-    p = s / (s.sum() + eps)
-    H = -(p * torch.log(p + eps)).sum()
-    return torch.exp(H).item()
-
-
-def spearman(x: torch.Tensor, y: torch.Tensor) -> float:
-    return spearmanr(x.cpu().numpy(), y.cpu().numpy())[0]
-
-###############################################################################
-#  Plotting helpers                                                           #
-###############################################################################
-
-def _annotate(ax):
-    for line in ax.lines:
-        for x, y in zip(line.get_xdata(), line.get_ydata()):
-            ax.annotate(
-                f"{y:.2f}",
-                (x, y),
-                textcoords="offset points",
-                xytext=(0, 5),
-                ha="center",
-                fontsize=6,
-            )
-
-
-def line(
-    xs: List[int],
-    ys: Dict[str, List[float]],
+def plot_lines(
+    xs: Sequence[int],
+    ys: Dict[str, Sequence[float]],
     xlabel: str,
     ylabel: str,
     title: str,
-    fname: str | pathlib.Path,
-):
-    """Line plot that is always redirected into IMAGES_DIR."""
-
+    out_path: pathlib.Path,
+) -> None:
+    """Draw line plot and save it under .research/iteration29/images/…"""
+    ensure_dir(out_path.parent)
     plt.figure(figsize=(6, 4))
-    for k, v in ys.items():
-        plt.plot(xs, v, label=k)
-    _annotate(plt.gca())
+    for lbl, series in ys.items():
+        plt.plot(xs, series, label=lbl)
+        for x, y in zip(xs, series):
+            plt.text(x, y, f"{y:.2f}", fontsize=6, ha="center", va="bottom")
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
     plt.legend()
     plt.tight_layout()
-
-    fname = pathlib.Path(fname).with_suffix(".pdf").name  # keep only file name
-    out_path = IMAGES_DIR / fname
     plt.savefig(out_path, format="pdf", bbox_inches="tight")
     plt.close()

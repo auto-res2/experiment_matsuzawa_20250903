@@ -1,294 +1,282 @@
-"""
-train.py – models and training utilities (patched – bug-fix release)
-Improvements over previous revision
-1.  EXPORT *all* model classes referenced by main.py so that
-    `from src.train import APD, DeepGAT, …` works without ImportError.
-2.  Provide **light-weight, CPU-friendly** reference implementations – the
-    focus of CI is to ensure plumbing correctness, not to replicate the full
-    research models.  Every model:
-        • accepts signature  forward(x, edge_index, epoch=None)
-        • returns   (logits, hidden, Kexp)
-          so that the existing training loop stays unchanged.
-        • non-APD models output  Kexp = zeros  and expose no `reg_loss`.
-3.  APD includes a minimal gating mechanism and a `reg_loss` method so that
-    the additional metrics in `fit()` work as intended.
-4.  No heavy PyG convolutions are used – everything is a tiny MLP so the test
-    suite remains fast and memory-light (< 50 MB on CPU).
+"""src/train.py
+Model definitions and training utilities.
 """
 from __future__ import annotations
+import json
+import time
+import pathlib
+import typing as T
 
-# standard lib -----------------------------------------------------------------
-import random
-from typing import Any, Dict, List, Union
-
-# third-party ------------------------------------------------------------------
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch_geometric.nn import GCNConv, GATConv, GCN2Conv
+from torch_geometric.utils import degree
 
-# ------------------------------------------------------------------------------
-# elements reused by the training loop                                           
-# ------------------------------------------------------------------------------
-import torch_geometric.utils as pyg_utils
+from .evaluate import classification_metrics, spearman_corr, plot_lines
+from .utils import set_seed, ensure_dir, IMAGE_ROOT
 
-from .evaluate import (
-    IMAGES_DIR,  # noqa: F401  (needed by callers – re-export unchanged)
-    cls_metrics,
-    col_diff,
-    eff_rank,
-    line,
-    row_diff,
-    spearman,
-)
-
-###############################################################################
-#  Determinism helper                                                           #
-###############################################################################
-
-def _set_seed(seed: int) -> None:
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if hasattr(torch, "use_deterministic_algorithms"):
-        torch.use_deterministic_algorithms(True, warn_only=True)
-
-###############################################################################
-#  Device parsing helper (unchanged from previous patch)                        #
-###############################################################################
-
-def _resolve_device(device_cfg: Union[str, torch.device]) -> torch.device:
-    if isinstance(device_cfg, torch.device):
-        return device_cfg
-    if not isinstance(device_cfg, str):
-        raise ValueError(f"Unsupported type for device spec: {type(device_cfg)}")
-
-    spec = device_cfg.strip().lower()
-    if "if torch.cuda.is_available()" in spec:
-        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if spec in {"auto", "cuda"}:
-        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if spec in {"cpu", "gpu"}:
-        return torch.device("cuda" if (spec == "gpu" and torch.cuda.is_available()) else "cpu")
-    return torch.device(spec)
-
-###############################################################################
-#  Tiny utility modules – keep the CI fast                                      #
-###############################################################################
-
-class _MLP(nn.Module):
-    """A 2-layer perceptron used by every stub model – cheap & sufficient."""
-
-    def __init__(self, f_in: int, hid: int, f_out: int):
-        super().__init__()
-        self.fc1 = nn.Linear(f_in, hid)
-        self.fc2 = nn.Linear(hid, f_out)
-
-    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        h = F.relu(self.fc1(x))
-        return self.fc2(h), h  # logits, hidden
-
-###############################################################################
-#  Baseline models                                                              #
-###############################################################################
+################################################################################
+#  Model architectures                                                          #
+################################################################################
 
 class DeepGCN(nn.Module):
-    """Lightweight substitute for the original 128-layer DeepGCN."""
+    """Vanilla deep GCN baseline (128-layer)."""
 
-    def __init__(self, f_in: int, hid: int, f_out: int):
+    def __init__(self, fi: int, hid: int, fo: int, layers: int = 128):
         super().__init__()
-        self.mlp = _MLP(f_in, hid, f_out)
-
-    def forward(self, x, edge_index, epoch: int | None = None):  # noqa: D401,E501 – full signature for compatibility
-        logits, h = self.mlp(x)
-        k = torch.zeros(x.size(0), device=x.device)
-        return logits, h, k
-
-
-class DeepGAT(DeepGCN):
-    """Alias – for the purpose of CI we reuse the same stub implementation."""
-
-
-class GCNII(DeepGCN):
-    """Alias stub – shares the same behaviour as DeepGCN here."""
-
-
-class PairNormGCN(DeepGCN):
-    """Alias stub – the real PairNorm is unnecessary for current tests."""
-
-###############################################################################
-#  Adaptive Propagation Depth (APD) – minimal functional version               #
-###############################################################################
-
-class _Gate(nn.Module):
-    def __init__(self, dim_hid: int):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(dim_hid, 64),
-            nn.ReLU(),
-            nn.Linear(64, 1),
+        self.convs = nn.ModuleList(
+            [GCNConv(fi if i == 0 else hid, hid if i < layers - 1 else fo) for i in range(layers)]
         )
 
-    def forward(self, h: torch.Tensor):
-        return torch.sigmoid(self.net(h)).squeeze(-1)
+    def forward(self, x: torch.Tensor, ei: torch.Tensor):
+        for conv in self.convs[:-1]:
+            x = F.relu(conv(x, ei))
+            x = F.dropout(x, p=0.5, training=self.training)
+        return self.convs[-1](x, ei)
 
 
-def _expected_k(p: torch.Tensor) -> torch.Tensor:
-    """Map gate probability → expected halting depth (simple proxy).
-    For the full model this would integrate over layers; here we use 10·p
-    so that statistics are non-trivial.
-    """
-    return 10.0 * p
+class DeepGAT(nn.Module):
+    """Deep GAT baseline (128-layer / 8 heads)."""
+
+    def __init__(self, fi: int, hid: int, fo: int, layers: int = 128):
+        super().__init__()
+        self.convs = nn.ModuleList()
+        self.convs.append(GATConv(fi, hid // 8, heads=8))
+        for _ in range(layers - 2):
+            self.convs.append(GATConv(hid, hid // 8, heads=8))
+        self.convs.append(GATConv(hid, fo, heads=1, concat=False))
+
+    def forward(self, x: torch.Tensor, ei: torch.Tensor):
+        for conv in self.convs[:-1]:
+            x = F.elu(conv(x, ei))
+            x = F.dropout(x, p=0.5, training=self.training)
+        return self.convs[-1](x, ei)
+
+
+class GCNII(nn.Module):
+    """GCNII baseline (64-layer)."""
+
+    def __init__(self, fi: int, hid: int, fo: int, layers: int = 64, alpha: float = 0.1, theta: float = 0.5):
+        super().__init__()
+        self.x0_lin = nn.Linear(fi, hid)
+        self.convs = nn.ModuleList([GCN2Conv(hid, alpha, theta, layer=i) for i in range(layers)])
+        self.out_lin = nn.Linear(hid, fo)
+
+    def forward(self, x: torch.Tensor, ei: torch.Tensor):
+        x0 = F.relu(self.x0_lin(x))
+        h = x0
+        for conv in self.convs:
+            h = F.dropout(h, p=0.5, training=self.training)
+            h = F.relu(conv(h, x0, ei))
+        h = F.dropout(h, p=0.5, training=self.training)
+        return self.out_lin(h)
+
+
+class PairNormGCN(nn.Module):
+    """PairNorm-SI baseline (128-layer)."""
+
+    def __init__(self, fi: int, hid: int, fo: int, layers: int = 128):
+        super().__init__()
+        self.convs = nn.ModuleList([GCNConv(fi if i == 0 else hid, hid) for i in range(layers - 1)])
+        self.final = GCNConv(hid, fo)
+
+    def forward(self, x: torch.Tensor, ei: torch.Tensor):
+        for conv in self.convs:
+            x = F.relu(conv(x, ei))
+            # PairNorm-SI
+            x = x - x.mean(dim=0, keepdim=True)
+            x = F.normalize(x, p=2, dim=1)
+            x = F.dropout(x, p=0.5, training=self.training)
+        return self.final(x, ei)
+
+
+# -----------------------------------------------------------------------------
+# Adaptive Propagation Depth (APD)
+# -----------------------------------------------------------------------------
+class _Gate(nn.Module):
+    def __init__(self, d: int):
+        super().__init__()
+        self.mlp = nn.Sequential(nn.Linear(d, 64), nn.ReLU(), nn.Linear(64, 1))
+
+    def forward(self, z: torch.Tensor) -> torch.Tensor:  # (N, 1)
+        return torch.sigmoid(self.mlp(z))
+
+
+def _gumbel_sigmoid(p: torch.Tensor, tau: float, eps: float = 1e-9) -> torch.Tensor:
+    g = -torch.empty_like(p).exponential_().log()
+    return torch.sigmoid((torch.log(p + eps) + g) / tau)
 
 
 class APD(nn.Module):
-    """Greatly simplified but API-compatible APD implementation."""
+    """Backbone-agnostic Adaptive Propagation Depth wrapper."""
 
     def __init__(
         self,
-        backbone: str,  # kept for arg-parity only
-        f_in: int,
+        backbone: str,
+        fi: int,
         hid: int,
-        f_out: int,
-        *,
-        k_target: int = 8,
+        fo: int,
+        layers: int = 128,
         lambda_depth: float = 0.1,
-    ):
+        lambda_div: float = 1e-4,
+        k_target: int = 8,
+    ) -> None:
         super().__init__()
-        self.backbone = _MLP(f_in, hid, hid)  # produce hidden
-        self.classifier = nn.Linear(hid, f_out)
-        self.gate = _Gate(hid)
-        self.k_target = float(k_target)
-        self.lambda_depth = float(lambda_depth)
+        self.layers: nn.ModuleList
+        if backbone == "gcn":
+            self.layers = nn.ModuleList([GCNConv(fi if i == 0 else hid, hid) for i in range(layers)])
+        elif backbone == "gat":
+            self.layers = nn.ModuleList([GATConv(fi if i == 0 else hid, hid // 8, heads=8) for _ in range(layers)])
+        else:
+            raise ValueError(backbone)
+
+        self.gates = nn.ModuleList([_Gate(hid + 2) for _ in range(layers)])
+        self.classifier = nn.Linear(hid, fo)
+
+        # regulariser hyper-parameters
+        self.lambda_depth = lambda_depth
+        self.lambda_div = lambda_div
+        self.k_target = k_target
+        self.t0, self.tF = 1.0, 0.2  # temperature schedule for Gumbel-Sigmoid
+
+    # ---------------------------------------------------------------------
+    def forward(self, x: torch.Tensor, ei: torch.Tensor, *, epoch: int = 0):
+        N = x.size(0)
+        deg = degree(ei[0], num_nodes=N).unsqueeze(1)
+        tau = max(self.tF, self.t0 - (self.t0 - self.tF) * epoch / 200)
+
+        halted = torch.zeros(N, device=x.device)  # indicator for finished nodes
+        weight_sum = torch.zeros_like(halted)
+        rep_sum = torch.zeros(N, self.classifier.in_features, device=x.device)
+        k_expected = torch.zeros_like(halted)
+
+        # message-passing with per-layer gating
+        for l, layer in enumerate(self.layers):
+            x = torch.relu(layer(x, ei))
+            p = self.gates[l](torch.cat([x, deg, torch.full_like(deg, l)], dim=1)).squeeze()
+            z = _gumbel_sigmoid(p, tau) if self.training else p  # differentiable sample
+            cont = (1 - halted) * z  # nodes still continuing
+
+            weight_sum += cont
+            rep_sum += cont.unsqueeze(1) * x
+            k_expected += cont
+            # update halted mask (only matters for inference/analysis)
+            halted = torch.where((halted == 0) & (cont > 0.5), torch.ones_like(halted), halted)
+
+        h_final = rep_sum / (weight_sum.unsqueeze(1) + 1e-6)
+        return self.classifier(h_final), k_expected
 
     # ------------------------------------------------------------------
-    def forward(self, x, edge_index, epoch: int | None = None):  # noqa: ARG002
-        # 1) backbone representation
-        _, h = self.backbone(x)
-        # 2) gate probability & expected depth
-        p = self.gate(h)
-        k_exp = _expected_k(p)
-        # 3) logits
-        logits = self.classifier(h)
-        return logits, h, k_exp
+    def depth_regulariser(self, k: torch.Tensor) -> torch.Tensor:
+        """Expected-depth regulariser (Equation 4 in the paper)."""
+        return self.lambda_depth * (k.mean() - self.k_target).pow(2)
 
-    # ------------------------------------------------------------------
-    def reg_loss(self, k_exp: torch.Tensor) -> torch.Tensor:  # noqa: D401 – called by fit()
-        return self.lambda_depth * (k_exp.mean() - self.k_target) ** 2
+################################################################################
+#  Training helper                                                             #
+################################################################################
 
-###############################################################################
-#  Public export list – what `main.py` expects                                 #
-###############################################################################
-
-__all__ = [
-    "DeepGCN",
-    "DeepGAT",
-    "GCNII",
-    "PairNormGCN",
-    "APD",
-]
-
-###############################################################################
-#  Training loop (unchanged from previous revision)                            #
-###############################################################################
-
-# NOTE: the body of `fit()` remains identical – importing at *end* to avoid
-# circular-import issues (models defined above ↔ fit uses them).
-from typing import Any  # noqa: E402  – postpone until after model defs
-import pathlib  # noqa: E402
-
-import torch_geometric.utils as pyg_utils  # noqa: E402 – re-import for local scope
-
-# ----------------------------------------------------------------------------
-# (fit definition is exactly the same as before; re-import to keep namespace)
-# ----------------------------------------------------------------------------
-
-
-def fit(
+def train_single_run(
     model: nn.Module,
-    data: "torch_geometric.data.Data",
-    cfg: Dict[str, Any],
-    run_dir: pathlib.Path,
+    data,
+    cfg: dict,
     seed: int,
-) -> Dict[str, float]:
-    """Generic node-classification training loop with early stopping."""
+    exp_name: str,
+    model_tag: str,
+) -> dict:
+    """Train *model* on *data* for one random seed and return evaluation metrics."""
 
-    _set_seed(seed)
+    # ------------------------------------------------------------------
+    set_seed(seed)
+    device = torch.device("cuda" if (cfg["common"].get("device") in {"cuda", "auto"} and torch.cuda.is_available()) else "cpu")
 
-    # Device -----------------------------------------------------------------
-    device = _resolve_device(cfg["common"]["device"])
     model, data = model.to(device), data.to(device)
 
-    opt = torch.optim.AdamW(model.parameters(), **cfg["common"]["optimiser"])
+    # optimiser --------------------------------------------------------
+    opt_cfg = cfg["common"]["optimiser"]
+    optimiser = getattr(torch.optim, opt_cfg.pop("name"))(model.parameters(), **opt_cfg)
 
-    best_val, patience, best_state = 0.0, 0, None
-    tr_loss_hist: List[float] = []
-    val_acc_hist: List[float] = []
+    # bookkeeping ------------------------------------------------------
+    losses, val_accs = [], []
+    best_val, patience, best_state = -1.0, 0, None
+    t_start = time.time()
 
     for epoch in range(cfg["common"]["epochs"]):
         model.train()
-        opt.zero_grad()
-        out, h, k = model(data.x, data.edge_index, epoch=epoch)
-        loss = F.cross_entropy(out[data.train_mask], data.y[data.train_mask])
-        if hasattr(model, "reg_loss"):
-            loss = loss + model.reg_loss(k)
-        loss.backward()
-        opt.step()
+        optimiser.zero_grad(set_to_none=True)
+        logits, k = model(data.x, data.edge_index, epoch=epoch)
 
-        # validation every `print_every` epochs -------------------------
+        loss = F.cross_entropy(logits[data.train_mask], data.y[data.train_mask])
+        if isinstance(model, APD):
+            loss = loss + model.depth_regulariser(k)
+        loss.backward()
+        optimiser.step()
+
         if epoch % cfg["common"]["print_every"] == 0:
             model.eval()
             with torch.no_grad():
-                v_out, *_ = model(data.x, data.edge_index, epoch=epoch)
-                v_acc = cls_metrics(v_out[data.val_mask], data.y[data.val_mask])["accuracy"]
-            tr_loss_hist.append(loss.item())
-            val_acc_hist.append(v_acc)
-
-            if v_acc > best_val:
-                best_val, best_state, patience = v_acc, model.state_dict(), 0
+                val_logits, _ = model(data.x, data.edge_index, epoch=epoch)
+            val_acc = classification_metrics(val_logits[data.val_mask], data.y[data.val_mask])["acc"]
+            losses.append(loss.item())
+            val_accs.append(val_acc)
+            # early-stopping --------------------------------------
+            if val_acc > best_val:
+                best_val, best_state, patience = val_acc, model.state_dict(), 0
             else:
                 patience += 1
-
-            if patience > cfg["common"]["early_stop_patience"]:
+            if patience > cfg["common"]["early_stop"]:
                 break
 
-    # restore best weights ----------------------------------------------------
-    if best_state is not None:
-        model.load_state_dict(best_state)
+    # restore best ------------------------------------------------------
+    model.load_state_dict(best_state)  # type: ignore[arg-type]
 
-    # Plot training curves → .research/iteration27/images ---------------------
-    xs = list(
-        range(0, len(tr_loss_hist) * cfg["common"]["print_every"], cfg["common"]["print_every"])
-    )
-    line(xs, {"train_loss": tr_loss_hist}, "epoch", "loss", f"Train-loss seed{seed}", "training_loss.pdf")
-    line(xs, {"val_acc": val_acc_hist}, "epoch", "acc", f"Val-acc seed{seed}", "accuracy.pdf")
+    # ------------------------------------------------------------------
+    # plots
+    xs = list(range(0, len(losses) * cfg["common"]["print_every"], cfg["common"]["print_every"]))
+    fig_dir = IMAGE_ROOT / exp_name / model_tag / f"seed{seed}"
+    ensure_dir(fig_dir)
+    plot_lines(xs, {"train_loss": losses}, "epoch", "loss", f"Train-loss-{seed}", fig_dir / "training_loss.pdf")
+    plot_lines(xs, {"val_acc": val_accs}, "epoch", "accuracy", f"Val-acc-{seed}", fig_dir / "accuracy.pdf")
 
-    # Test evaluation ---------------------------------------------------------
+    # ------------------------------------------------------------------
+    # final test evaluation
     model.eval()
     with torch.no_grad():
-        logits, h_final, k_final = model(data.x, data.edge_index, epoch=999)
+        test_logits, k = model(data.x, data.edge_index, epoch=999)
 
-    metrics: Dict[str, float] = cls_metrics(logits[data.test_mask], data.y[data.test_mask])
-    metrics.update(
-        {
-            "row_diff": row_diff(h_final),
-            "col_diff": col_diff(h_final),
-            "eff_rank": eff_rank(h_final),
-        }
-    )
+    metrics = classification_metrics(test_logits[data.test_mask], data.y[data.test_mask])
 
-    if hasattr(model, "reg_loss"):
-        deg = pyg_utils.degree(data.edge_index[0], num_nodes=data.num_nodes)
-        metrics.update(
-            {
-                "mean_K": k_final.mean().item(),
-                "var_K": k_final.var().item(),
-                "spearman": spearman(k_final, deg),
-            }
-        )
+    if isinstance(model, APD):
+        deg = degree(data.edge_index[0], num_nodes=data.num_nodes)
+        metrics.update({
+            "mean_K": float(k.mean()),
+            "var_K": float(k.var()),
+            "rho": spearman_corr(k, deg),
+        })
 
-    # save artefacts ----------------------------------------------------------
-    run_dir.mkdir(parents=True, exist_ok=True)
-    torch.save({"state_dict": model.state_dict(), "metrics": metrics}, run_dir / "checkpoint.pt")
+    # save numeric metrics next to figures --------------------------------
+    metrics_path = fig_dir / "metrics.json"
+    with metrics_path.open("w") as fp:
+        json.dump(metrics, fp, indent=2)
 
+    print(f"Finished seed={seed:02d} | model={model_tag:<10} | acc={metrics['acc']:.4f} | runtime={time.time()-t_start:.1f}s")
     return metrics
+
+################################################################################
+#  Factory helper                                                              #
+################################################################################
+
+def build_model(tag: str, fi: int, hid: int, fo: int) -> nn.Module:
+    """Utility that maps *tag* ⇢ instantiated nn.Module."""
+
+    factories = {
+        "gcn_deep": lambda: DeepGCN(fi, hid, fo),
+        "gat_deep": lambda: DeepGAT(fi, hid, fo),
+        "gcnii": lambda: GCNII(fi, hid, fo),
+        "pairnorm_si": lambda: PairNormGCN(fi, hid, fo),
+        "apd_gcn": lambda: APD("gcn", fi, hid, fo),
+        "apd_gat": lambda: APD("gat", fi, hid, fo),
+    }
+    if tag not in factories:
+        raise KeyError(f"Unknown model tag '{tag}'. Available: {list(factories)}")
+    return factories[tag]()

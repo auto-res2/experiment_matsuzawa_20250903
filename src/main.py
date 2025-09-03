@@ -1,82 +1,52 @@
-"""
-main.py – top-level orchestration
-Run   $ python -m src.main   from project root.
+"""src/main.py
+Entry-point orchestrating the experimental workflow.
+Call   python -m src.main
 """
 from __future__ import annotations
+import os
 import json
 import pathlib
-from typing import Dict, List
-
 import yaml
-import torch
 
-from . import preprocess as P
-from . import train as T
+from .preprocess import build_synthetic_cc
+from .train import build_model, train_single_run
+from .utils import ensure_dir
 
-# ---------------------------------------------------------------------------
-#  Load configuration                                                         #
-# ---------------------------------------------------------------------------
-CONFIG_PATH = pathlib.Path(__file__).resolve().parent.parent / "config" / "config.yaml"
-CFG = yaml.safe_load(CONFIG_PATH.read_text())
+################################################################################
+#  Configuration                                                               #
+################################################################################
+CFG_PATH = pathlib.Path(__file__).parent.parent / "config" / "config.yaml"
+CONFIG = yaml.safe_load(CFG_PATH.read_text())
 
+################################################################################
+#  Experiment-1 : Synthetic core-vs-chain                                     #
+################################################################################
 
-###############################################################################
-#  Utilities                                                                  #
-###############################################################################
+def experiment_1(cfg: dict) -> None:
+    print("\n=====================  EXPERIMENT 1 – Synthetic  =====================")
+    exp_name = "exp1"
+    for seed in CONFIG["common"]["seeds"]:
+        data = build_synthetic_cc(seed=seed, **cfg["dataset"])
+        print(f"Seed {seed:02d} | Nodes={data.num_nodes} | Edges={data.num_edges}")
+        for model_tag in cfg["models"]:
+            metrics_path = pathlib.Path("runs") / exp_name / model_tag / f"seed{seed}" / "metrics.json"
+            if metrics_path.exists():
+                print(metrics_path.read_text())
+                continue
+            model = build_model(model_tag, data.num_node_features, cfg["hidden"], 10)
+            train_single_run(model, data, CONFIG, seed, exp_name, model_tag)
 
-def _build_model(name: str, f_in: int, hid: int, f_out: int):
-    """Factory that delegates to the correct ctor in train.py (where models live)."""
-    from .train import (
-        APD,
-        DeepGAT,
-        DeepGCN,
-        GCNII,
-        PairNormGCN,
-    )
+################################################################################
+#  Main                                                                        #
+################################################################################
 
-    factories = {
-        "gcn_deep": lambda: DeepGCN(f_in, hid, f_out),
-        "gat_deep": lambda: DeepGAT(f_in, hid, f_out),
-        "gcnii": lambda: GCNII(f_in, hid, f_out),
-        "pairnorm_si": lambda: PairNormGCN(f_in, hid, f_out),
-        "apd_gcn": lambda: APD("gcn", f_in, hid, f_out),
-        "apd_gat": lambda: APD("gat", f_in, hid, f_out),
-    }
-    return factories[name]()
-
-
-###############################################################################
-#  Experiment-1 – synthetic benchmark                                         #
-###############################################################################
-
-def experiment1(cfg: Dict):
-    print("\n==== Experiment-1 – Synthetic core-vs-chain benchmark ====")
-
-    for seed in CFG["common"]["seeds"]:
-        data = P.build_synthetic_cc(seed=seed, **cfg["dataset"])
-        print(f"\nSeed {seed}")
-
-        for m_name in cfg["models"]:
-            run_dir = pathlib.Path(f"runs/exp1/{m_name}/seed{seed}")
-            if run_dir.exists():
-                res = torch.load(run_dir / "checkpoint.pt")["metrics"]
-            else:
-                model = _build_model(m_name, data.num_features, cfg["hidden"], 10)
-                res = T.fit(model, data, CFG, run_dir, seed)
-            print(json.dumps({"model": m_name, **res}, indent=2))
-
-    print(
-        "Figures have been saved under .research/iteration18/images – see training_loss.pdf & accuracy.pdf."
-    )
-
-
-###############################################################################
-#  Main                                                                       #
-###############################################################################
-
-def main():
-    experiment1(CFG["experiments"]["exp1"])
-    # experiment2() & experiment3() would follow a similar pattern – omitted for brevity
+def main() -> None:
+    ensure_dir(pathlib.Path("runs"))
+    experiment_1(CONFIG["experiments"]["exp1"])
+    # Real-world experiments are heavy; guard them with an env-flag.
+    if os.getenv("RUN_EXP2") == "1":
+        from .run_real import run_all  # pragma: no cover – heavy optional import
+        run_all(CONFIG)
 
 
 if __name__ == "__main__":

@@ -1,40 +1,32 @@
+"""src/preprocess.py
+Synthetic core-vs-chain graph generation and deterministic utilities.
+"""
 from __future__ import annotations
-"""
-preprocess.py – data loading & synthetic dataset generation
-"""
 import random
 import pathlib
-from typing import Any
+import typing as T
 
 import numpy as np
 import torch
+from torch_geometric.utils import erdos_renyi_graph, add_self_loops, degree
 from torch_geometric.data import Data
-from torch_geometric.datasets import Planetoid, WebKB, WikipediaNetwork
-from torch_geometric.utils import (
-    add_self_loops,
-    erdos_renyi_graph,
-    to_undirected,
-    degree,
-)
-from ogb.nodeproppred import PygNodePropPredDataset
 
-_DATA_DIR = pathlib.Path(__file__).resolve().parent.parent / "data"
-_DATA_DIR.mkdir(parents=True, exist_ok=True)
+from .utils import set_seed
 
+__all__ = ["build_synthetic_cc"]
 
-# ---------------------------------------------------------------------------
-#  Internal helpers                                                           #
-# ---------------------------------------------------------------------------
+################################################################################
+#  Helper                                                                      #
+################################################################################
 
-def _bucket(values: np.ndarray, k: int = 10) -> np.ndarray:
-    """Map a continuous vector into k balanced buckets."""
-    q = np.quantile(values, np.linspace(0, 1, k + 1)[1:-1])
-    return np.digitize(values, q)
+def _bucket(z: np.ndarray, k: int = 10) -> np.ndarray:
+    """Discretise *z* into *k* quantile buckets (0-based labels)."""
+    qs = np.quantile(z, np.linspace(0, 1, k + 1)[1:-1])
+    return np.digitize(z, qs)
 
-
-# ---------------------------------------------------------------------------
-#  Synthetic core-vs-chain dataset                                            #
-# ---------------------------------------------------------------------------
+################################################################################
+#  Synthetic dataset                                                           #
+################################################################################
 
 def build_synthetic_cc(
     *,
@@ -43,107 +35,81 @@ def build_synthetic_cc(
     num_chains: int,
     chain_len: int,
     noise_nodes: int,
-    seed: int,
-    **_: Any,  # ignore any extra keys (e.g. "name") coming from config
+    seed: int = 0,
 ) -> Data:
-    """Generate the synthetic benchmark used in Experiment-1."""
+    """Construct the *core-vs-chain* synthetic benchmark used in Exp-1."""
+    set_seed(seed)
+    # core graph -------------------------------------------------------
+    core_edges = erdos_renyi_graph(core_nodes, core_p)
+    ei = torch.tensor(core_edges, dtype=torch.long)
+    ei = torch.cat([ei, ei.flip(0)], dim=1)  # undirected
 
-    torch.manual_seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-
-    # A) Erdős-Rényi core -------------------------------------------------
-    edge_index = erdos_renyi_graph(core_nodes, core_p).long().contiguous()
-
-    # B) Append chains ----------------------------------------------------
-    chain_offsets = []
+    # chains -----------------------------------------------------------
+    head_offsets = []
     for c in range(num_chains):
         head = core_nodes + c * chain_len
-        chain_offsets.append(head)
+        head_offsets.append(head)
+        chain = torch.arange(head, head + chain_len)
+        edges = torch.stack([chain[:-1], chain[1:]], dim=0)
+        ei = torch.cat([ei, edges, edges.flip(0)], dim=1)
+        # attach chain head to a random core node
+        attach = random.randrange(core_nodes)
+        ei = torch.cat([
+            ei,
+            torch.tensor([[attach], [head]]),
+            torch.tensor([[head], [attach]]),
+        ], dim=1)
 
-        chain_edges = [[head + i, head + i + 1] for i in range(chain_len - 1)]
-        attach = torch.randint(0, core_nodes, (1,)).item()
-        chain_edges.append([attach, head])
+    ei, _ = add_self_loops(ei)
 
-        chain_ei = torch.tensor(chain_edges, dtype=torch.long).t().contiguous()
-        edge_index = torch.cat([edge_index, chain_ei], dim=1)
-
-    # C) make undirected & add self-loops --------------------------------
-    edge_index = to_undirected(edge_index)
-    edge_index, _ = add_self_loops(edge_index)
-
-    # D) Node features ----------------------------------------------------
-    total_nodes = core_nodes + num_chains * chain_len + noise_nodes
-    x = torch.randn(total_nodes, 2)
+    # features & labels ----------------------------------------------
+    N = core_nodes + num_chains * chain_len + noise_nodes
+    x = torch.randn(N, 2)
     z0 = x[:, 0].numpy()
+    y = np.zeros(N, dtype=int)
 
-    # E) Labels with **depth** rule --------------------------------------
-    labels = np.zeros(total_nodes, dtype=int)
-
+    row, col = ei
     for v in range(core_nodes):
-        neigh = edge_index[1][edge_index[0] == v].cpu().numpy()
-        labels[v] = _bucket(z0[neigh].mean())
+        neigh = col[row == v].cpu().numpy()
+        y[v] = _bucket(z0[neigh].mean())
 
-    for head in chain_offsets:
+    # chain labels – need 10 hops                                    
+    for head in head_offsets:
         for t in range(chain_len):
-            node = head + t
-            if t < 10:
-                labels[node] = np.random.randint(0, 10)
-            else:
-                labels[node] = _bucket(z0[node - 10])
+            idx = head + t
+            y[idx] = _bucket(z0[idx - 10]) if t >= 10 else random.randint(0, 9)
 
-    labels[core_nodes + num_chains * chain_len :] = np.random.randint(
-        0, 10, noise_nodes
-    )
+    # noise labels – random
+    y[core_nodes + num_chains * chain_len :] = np.random.randint(0, 10, noise_nodes)
+    y = torch.from_numpy(y).long()
 
-    y = torch.from_numpy(labels).long()
+    # -----------------------------------------------------------------
+    def _split(indices):
+        idxs = list(indices)
+        random.shuffle(idxs)
+        a, b = int(0.6 * len(idxs)), int(0.8 * len(idxs))
+        return set(idxs[:a]), set(idxs[a:b]), set(idxs[b:])
 
-    # F) Train / val / test masks with no leakage ------------------------
-    mask_tr = torch.zeros(total_nodes, dtype=torch.bool)
-    mask_va = torch.zeros_like(mask_tr)
-    mask_te = torch.zeros_like(mask_tr)
+    train, val, test = set(), set(), set()
+    # core
+    a, b, c = _split(range(core_nodes))
+    train |= a; val |= b; test |= c
+    # chains (skip first 10)
+    for head in head_offsets:
+        a, b, c = _split(range(head + 10, head + chain_len))
+        train |= a; val |= b; test |= c
+    # noise
+    a, b, c = _split(range(core_nodes + num_chains * chain_len, N))
+    train |= a; val |= b; test |= c
 
-    rng = np.random.default_rng(seed)
-
-    def _split(idx):
-        idx = np.array(idx)
-        rng.shuffle(idx)
-        n = len(idx)
-        mask_tr[idx[: int(0.6 * n)]] = True
-        mask_va[idx[int(0.6 * n) : int(0.8 * n)]] = True
-        mask_te[idx[int(0.8 * n) :]] = True
-
-    _split(np.arange(core_nodes))
-    for head in chain_offsets:
-        _split(np.arange(head + 10, head + chain_len))
-    _split(np.arange(core_nodes + num_chains * chain_len, total_nodes))
+    def _mask(s):
+        return torch.tensor([i in s for i in range(N)])
 
     return Data(
         x=x,
-        edge_index=edge_index,
+        edge_index=ei,
         y=y,
-        train_mask=mask_tr,
-        val_mask=mask_va,
-        test_mask=mask_te,
+        train_mask=_mask(train),
+        val_mask=_mask(val),
+        test_mask=_mask(test),
     )
-
-
-# ---------------------------------------------------------------------------
-#  Real datasets loader                                                       #
-# ---------------------------------------------------------------------------
-
-def load_real(name: str):
-    name = name.lower()
-    root = _DATA_DIR / name
-
-    if name in {"cora", "citeseer", "pubmed"}:
-        return Planetoid(root=root, name=name.capitalize())[0]
-    if name in {"cornell", "texas", "wisconsin"}:
-        return WebKB(root=root, name=name.capitalize())[0]
-    if name in {"chameleon", "squirrel"}:
-        return WikipediaNetwork(root=root, name=name.capitalize(), geom_gcn_preprocess=True)[
-            0
-        ]
-    if name in {"ogbn-arxiv", "ogbn-products"}:
-        return PygNodePropPredDataset(root=root, name=name)[0]
-    raise ValueError(f"Unknown dataset {name}")
