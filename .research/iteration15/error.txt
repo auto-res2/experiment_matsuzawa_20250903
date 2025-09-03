@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 163, in <module>
+    main()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 159, in main
+    experiment1(CONFIG["experiments"]["exp1"])
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 142, in experiment1
+    data = P.build_synthetic_cc(seed=seed, **cfg["dataset"])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/preprocess.py", line 67, in build_synthetic_cc
+    edge_index = torch.tensor(core_edge_index + chains, dtype=torch.long).t()
+                              ~~~~~~~~~~~~~~~~^~~~~~~~
+TypeError: unsupported operand type(s) for +: 'Tensor' and 'list'
