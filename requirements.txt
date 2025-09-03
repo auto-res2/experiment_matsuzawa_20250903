@@ -1,1 +1,11 @@
-# Please list the required python packages.
+torch
+torchvision
+timm
+diffusers
+transformers
+matplotlib
+pyyaml
+requests
+datasets
+numpy
+Pillow

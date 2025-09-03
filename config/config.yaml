@@ -1,0 +1,58 @@
+common:
+  device: cuda
+  seeds:
+  - 42
+  - 77
+  - 123
+  num_workers: 8
+  precision: fp16
+  batch_size: 64
+  optimizer:
+    name: AdamW
+    lr_backbone: 0.001
+    lr_lora: 0.0005
+    betas:
+    - 0.9
+    - 0.95
+  scheduler:
+    name: cosine
+    warmup: 0.05
+  ortho_lambda: 0.005
+  frozen_generator:
+    name: StableDiffusionLite256
+    hf_repo: CompVis/stable-diffusion-v1-1
+    num_inference_steps: 25
+    guidance_scale: 1.0
+    lora:
+      rank: 8
+      alpha: 16
+experiment_1:
+  datasets:
+  - split_cifar100
+  - split_miniimagenet
+  - tiny_imagenet
+  memory_cap_kb: 512
+  classifier: resnet18
+  methods:
+  - lora_diffmem
+  - finetune
+  - er_ring5
+  - er_ring10
+  - er_ring20
+  - dgr
+  - sparcl
+  - orthosubspace
+  epochs: 30
+experiment_2:
+  dataset: split_miniimagenet
+  classifier: vit_small_patch16_224
+  budgets_kb:
+  - 128
+  - 256
+  - 512
+  - 1024
+  epochs: 20
+experiment_3:
+  dataset: tiny_imagenet
+  classifier: vit_small_patch16_224
+  epochs: 20
