@@ -1,10 +1,10 @@
-[UPDATED]
-from __future__ import annotations
 """
 evaluate.py – evaluation metrics & visualisation helpers
-All plots are saved into .research/iteration27/images in compliance with the
+All plots are saved into .research/iteration28/images in compliance with the
 latest project specification.
 """
+from __future__ import annotations
+
 import pathlib
 from typing import Dict, List
 
@@ -21,7 +21,7 @@ sns.set(style="whitegrid")
 #  Global output directory for all figures                                    
 # ---------------------------------------------------------------------------
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
-IMAGES_DIR = PROJECT_ROOT / ".research" / "iteration27" / "images"
+IMAGES_DIR = PROJECT_ROOT / ".research" / "iteration28" / "images"
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
 ###############################################################################
