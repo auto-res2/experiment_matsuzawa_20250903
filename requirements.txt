@@ -4,10 +4,3 @@ numpy
 matplotlib
 PyYAML
 requests
-avalanche-lib
-advertorch
-git+https://github.com/CompVis/taming-transformers.git
-git+https://github.com/HATEM-project/hatem-cl.git
-git+https://github.com/aimagelab/mammoth.git
-git+https://github.com/pclucas14/adaptive-quantization-modules.git
-git+https://github.com/YaqianZhang/RepeatedAugmentedRehearsal.git
