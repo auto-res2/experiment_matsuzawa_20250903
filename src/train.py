@@ -1,4 +1,7 @@
-"""src/train.py – model definitions and training logic for DiCA/ERM experiments"""
+"""src/train.py – model definitions and training logic for DiCA/ERM experiments
+Fixed:  • correct Grad-CAM import path  • avoid heavy `diffusers` import at
+module load-time  • graceful degradation when optional packages are absent
+"""
 from __future__ import annotations
 
 import itertools, math, random, time
@@ -13,11 +16,20 @@ from torch.cuda.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
 from torchvision.models import resnet50, ResNet50_Weights
 import timm
-from diffusers import StableDiffusionPipeline, DDIMScheduler
-from peft import LoraConfig, get_peft_model
-import torchvision.transforms as T
-from gradcam import GradCAM
 
+# -----------------------------------------------------------------------------
+# Optional external libraries --------------------------------------------------
+# -----------------------------------------------------------------------------
+
+try:
+    # correct library name on PyPI: "pytorch-grad-cam"
+    from pytorch_grad_cam import GradCAM  # type: ignore
+except ImportError:  # pragma: no cover – optional dependency
+    GradCAM = None  # type: ignore
+
+# -----------------------------------------------------------------------------
+# Local imports ----------------------------------------------------------------
+# -----------------------------------------------------------------------------
 from .preprocess import get_dataset
 
 # --------------------------------------------------
@@ -51,30 +63,53 @@ class BackboneFactory:
         raise KeyError(f"Unknown backbone: {name}")
 
 # --------------------------------------------------
-# Diffusion-based counterfactual image editor
+# Diffusion-based counterfactual image editor (optional)
 # --------------------------------------------------
 
 class DiffusionEditor:
-    """Wrapper around Stable-Diffusion + LoRA fine-tuning used to sample counterfactuals."""
+    """Wrapper around Stable-Diffusion + LoRA fine-tuning for counterfactuals.
+    Heavy dependencies (diffusers, peft) and multi-GB weights are imported and
+    loaded lazily so that running plain ERM experiments does **not** force the
+    download.  If the required packages or checkpoint are unavailable, we raise
+    a clear error prompting the user to switch to `method="erm"`.
+    """
 
     def __init__(self, cfg: Dict[str, Any], device: str = "cuda"):
-        self.cfg = cfg
-        self.device = device
-        ckpt = cfg["models"]["stable_diffusion"]["checkpoint"]
-        with timing("Load Stable Diffusion v1.5"):
-            self.pipe = StableDiffusionPipeline.from_pretrained(ckpt, torch_dtype=torch.float16)
-            self.pipe.scheduler = DDIMScheduler.from_config(self.pipe.scheduler.config)
-            self.pipe = self.pipe.to(device)
+        try:
+            from diffusers import StableDiffusionPipeline, DDIMScheduler  # type: ignore
+            from peft import LoraConfig, get_peft_model  # type: ignore
+            import torchvision.transforms as T  # local import to avoid T dependency if unused
+        except ImportError as e:  # pragma: no cover
+            raise ImportError(
+                "DiffusionEditor requires the optional packages `diffusers` and "
+                "`peft`. Install them or run with method='erm'."
+            ) from e
 
-        # LoRA adapter
+        self.T = T  # store for reuse in `sample_cf`
+        self.device = device if torch.cuda.is_available() else "cpu"
+        self.cfg = cfg
+
+        ckpt = cfg["models"]["stable_diffusion"]["checkpoint"]
+        with timing("Load Stable Diffusion v1.5 (this can take a while)"):
+            self.pipe = StableDiffusionPipeline.from_pretrained(
+                ckpt, torch_dtype=torch.float16
+            )
+            self.pipe.scheduler = DDIMScheduler.from_config(self.pipe.scheduler.config)
+            self.pipe = self.pipe.to(self.device)
+
+        # LoRA adapter ---------------------------------------------------------
         lora_cfg = LoraConfig(r=cfg["models"]["stable_diffusion"]["lora"]["rank"])
         self.pipe.unet = get_peft_model(self.pipe.unet, lora_cfg)
         self.pipe.text_encoder = get_peft_model(self.pipe.text_encoder, lora_cfg)
-        self.pipe.enable_xformers_memory_efficient_attention()
+        if hasattr(self.pipe, "enable_xformers_memory_efficient_attention"):
+            self.pipe.enable_xformers_memory_efficient_attention()
 
+    # ---------------------------------------------------------------------
+    # Counterfactual sampling
+    # ---------------------------------------------------------------------
     @torch.no_grad()
-    def sample_cf(self, images: torch.Tensor, masks: torch.Tensor, k: int = 3) -> torch.Tensor:
-        """Generate k counterfactuals for each image in the batch.
+    def sample_cf(self, images: torch.Tensor, masks: torch.Tensor, k: int = 3) -> torch.Tensor:  # noqa: D401,E501
+        """Generate *k* counterfactuals for each image in *images*.
         Args:
             images: (B,C,H,W) float tensor in range [0,1]
             masks : (B,1,H,W) float binary mask indicating region to edit
@@ -89,7 +124,9 @@ class DiffusionEditor:
             out_imgs = self.pipe.image_editor(
                 images, masks.float(), guidance_scale=7.5, strength=0.8
             ).images
-            cf_batch = torch.stack([T.ToTensor()(im.resize((224, 224))) for im in out_imgs])
+            cf_batch = torch.stack(
+                [self.T.ToTensor()(im.resize((224, 224))) for im in out_imgs]
+            )
             cfs.append(cf_batch.to(images.dtype).to(self.device))
         return torch.stack(cfs, dim=1)  # (B,k,C,H,W)
 
@@ -122,14 +159,28 @@ class Trainer:
 
         # ---------- Model & helper modules ----------
         self.model = BackboneFactory.get(backbone, num_classes).to(self.device)
-        self.editor = (
-            DiffusionEditor(cfg, self.device) if self.method == "dica" else None
-        )
-        self.cam = (
-            GradCAM(model=self.model, target_layers=[self.model.layer4[-1]])
-            if self.method == "dica"
-            else None
-        )
+
+        # DiCA components are optional and initialised only when the method is
+        # requested **and** the required libraries are available.
+        self.editor = None
+        self.cam = None
+        if self.method == "dica":
+            if GradCAM is None:
+                raise ImportError(
+                    "Method 'dica' requires `pytorch-grad-cam`. Install the package "
+                    "or run with `method='erm'`."
+                )
+            # Attempt to build DiffusionEditor – may fail if diffusers weights
+            # are not reachable. We surface a user-friendly error.
+            try:
+                self.editor = DiffusionEditor(cfg, self.device)
+            except Exception as e:  # pragma: no cover – fail-fast
+                raise RuntimeError(
+                    "Failed to initialise DiffusionEditor. See the original error "
+                    "below and consider switching to `method='erm'` if diffusion "
+                    "resources are unavailable."
+                ) from e
+            self.cam = GradCAM(model=self.model, target_layers=[self.model.layer4[-1]])
 
         # ---------- Optimisation ----------
         self._build_optim()
@@ -160,11 +211,12 @@ class Trainer:
         )
 
     # --------------------------------------------------
-    # counterfactual helper
+    # counterfactual helper (DiCA only)
     # --------------------------------------------------
 
     def _counterfactual_batch(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Return (counterfactuals, masks) for input batch x."""
+        if self.cam is None or self.editor is None:  # pragma: no cover
+            raise RuntimeError("Counterfactual batch requested but DiCA components are missing.")
         # grad-cam saliency mask
         mask = self.cam(x, eigen_smooth=True)[0]  # (B,1,H,W)
         topk = torch.quantile(mask.flatten(1), 1 - self.cfg["dica"]["top_p"], dim=1).view(

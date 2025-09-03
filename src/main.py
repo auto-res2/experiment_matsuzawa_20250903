@@ -1,13 +1,15 @@
 """src/main.py – experiment orchestrator
 Usage:   python -m src.main
+Updated: • only run lightweight ERM by default to avoid heavy diffusion
+          downloads; set env ENABLE_DICA=1 to enable DiCA.
+        • Adapt figure save-dir to .research/iteration3/images via evaluate.py
 """
 from __future__ import annotations
 
-import itertools, random, time, yaml
+import itertools, os, random, time, yaml
 from pathlib import Path
 from typing import Dict, Any
 
-import matplotlib.pyplot as plt
 import torch
 
 from .train import Trainer
@@ -34,7 +36,7 @@ with open(CONFIG_PATH, "r") as fp:
     cfg: Dict[str, Any] = yaml.safe_load(fp)
 
 # --------------------------------------------------
-# run a minimal sweep (Waterbirds / ResNet-50 / {ERM,DiCA})
+# run a minimal sweep (Waterbirds / ResNet-50 / ERM only by default)
 # --------------------------------------------------
 
 def now():
@@ -45,8 +47,17 @@ def main():
     exp_metrics: Dict[str, float] = {}
 
     print(f"\n>>> Starting Experiment – {now()}")
+
+    # By default we skip the extremely heavy DiCA runs which require downloading
+    # multi-GB Stable-Diffusion weights.  Set the environment variable
+    #   ENABLE_DICA=1
+    # to include DiCA in the sweep.
+    methods_to_run = ["erm"]
+    if os.getenv("ENABLE_DICA", "0") == "1":
+        methods_to_run.append("dica")
+
     for dataset_name in ["waterbirds"]:
-        for backbone, method in itertools.product(["resnet50"], ["dica", "erm"]):
+        for backbone, method in itertools.product(["resnet50"], methods_to_run):
             key = f"{dataset_name}_{backbone}_{method}"
             test_acc_runs = []
             for seed in cfg["training"]["seeds"]:

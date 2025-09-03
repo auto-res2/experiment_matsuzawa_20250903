@@ -4,10 +4,10 @@ from typing import Dict
 import matplotlib.pyplot as plt
 
 # -----------------------------------------------------------------------------
-# All figures must be stored under .research/iteration2/images according to the
+# All figures must be stored under .research/iteration3/images according to the
 # project guidelines.  We therefore create (or reuse) that exact directory.
 # -----------------------------------------------------------------------------
-IMG_DIR = Path(".research/iteration2/images")
+IMG_DIR = Path(".research/iteration3/images")
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
 # -----------------------------------------------------------------------------
