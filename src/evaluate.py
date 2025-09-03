@@ -13,7 +13,15 @@ import matplotlib.pyplot as plt
 import seaborn as sns  # noqa: F401 – required for seaborn styling side-effects
 
 # All experiment figures must be saved under this directory (see instructions)
-FIG_DIR = pathlib.Path(__file__).resolve().parent.parent / ".research" / "iteration3" / "images"
+FIG_DIR = (
+    pathlib.Path(__file__)  # src/evaluate.py
+    .resolve()
+    .parent
+    .parent
+    / ".research"
+    / "iteration4"
+    / "images"
+)
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
