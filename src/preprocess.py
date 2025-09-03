@@ -49,13 +49,36 @@ class WaterbirdsDataset(Dataset):
             raise RuntimeError("huggingface-datasets missing – install to use Waterbirds.")
         ds = load_dataset("grodino/waterbirds", split=split, cache_dir=root)
 
-        # The official dataset uses the singular key "label" – fall back to that
-        # if the pluralised variant is absent. This keeps backward-compatibility
-        # with any older cached versions that might still expose "labels".
-        self.labels = ds["labels"] if "labels" in ds.column_names else ds["label"]
+        # label key varies across cached versions – handle robustly
+        if "labels" in ds.column_names:
+            self.labels = ds["labels"]
+        elif "label" in ds.column_names:
+            self.labels = ds["label"]
+        else:
+            raise ValueError("Waterbirds dataset: cannot locate label column (labels/label).")
+
         self.images = ds["image"]
-        # group label (bird × background) for worst-group accuracy
-        self.groups = list(zip(ds["y"], ds["place"]))
+
+        # ------------------------------------------------------------------
+        # Robust construction of group identifiers (y × place)
+        # ------------------------------------------------------------------
+        # y (class) – fall back to label if the canonical 'y' column is absent
+        if "y" in ds.column_names:
+            y_vals = ds["y"]
+        else:
+            y_vals = self.labels  # same semantics: 0 = landbird, 1 = waterbird
+
+        # place (background) – HF might store as 'place' or 'place_labels' or 'background'
+        if "place" in ds.column_names:
+            place_vals = ds["place"]
+        elif "place_labels" in ds.column_names:
+            place_vals = ds["place_labels"]
+        elif "background" in ds.column_names:
+            place_vals = ds["background"]
+        else:
+            raise ValueError("Waterbirds dataset: cannot locate background column (place/...).")
+
+        self.groups = list(zip(y_vals, place_vals))
         self.transform = transform or ImageTransformEval
 
     def __len__(self):
