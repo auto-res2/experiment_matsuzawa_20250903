@@ -1,0 +1,49 @@
+device: cuda
+# Path where PyG will store downloaded datasets
+data_root: data
+
+aplib:
+  k_max: 8
+  tau: 0.5
+  lambda_mix: 0.1
+  lambda_denoise: 0.1
+  lambda_l0: 0.0001
+
+experiments:
+  exp1:
+    name: Depth-Scalability & Over-smoothing Resistance
+    datasets: [Cora, Citeseer, PubMed, Chameleon, Squirrel]
+    depth_grid: [2, 8, 16, 32, 64]
+    hidden: 128
+    dropout: 0.5
+    lr: 0.005
+    weight_decay: 0.0005
+    epochs: 400
+    patience: 50
+
+  exp2:
+    name: Local Heterogeneity & Noise Robustness
+    datasets: [Cora, Chameleon]
+    corruptions:
+      feat_noise: 0.3
+      feat_missing: 0.3
+      edge_drop: 0.2
+    depth: 16
+    hidden: 128
+    dropout: 0.5
+    lr: 0.005
+    weight_decay: 0.0005
+    epochs: 400
+    patience: 50
+
+  exp3:
+    name: Sparsity, Privacy proxy & Scalability (ogbn-arxiv)
+    dataset: ogbn-arxiv
+    depth: 8
+    hidden: 256
+    dropout: 0.2
+    lr: 0.01
+    weight_decay: 0.0
+    epochs: 100
+    clusters: 20
+    batch_size: 8000
