@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import torch
 
-from train import TCRModel
+# NOTE: Explicit import via the `src` package to avoid ModuleNotFoundError when
+# this file is executed as a module (e.g. `python -m src.main`).
+from src.train import TCRModel
 
 
 def smoke_test() -> None:
