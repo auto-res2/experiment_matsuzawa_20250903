@@ -1,7 +1,7 @@
-torch>=2.1
-torchvision>=0.16
-timm>=1.0.19
-datasets>=2.19.0
+torch
+torchvision
+timm
+datasets
 numpy
 pandas
 matplotlib
@@ -15,5 +15,3 @@ tqdm
 requests
 pillow
 scikit-learn
-git+https://github.com/ExplainableML/aqm@a38bd2e
-git+https://github.com/continual-sparcl/sparcl@17f04c7
