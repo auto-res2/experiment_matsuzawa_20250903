@@ -1,0 +1,769 @@
+=== pip install start Wed Sep  3 14:30:37 UTC 2025 ===
+Collecting torch (from -r requirements.txt (line 1))
+  Using cached torch-2.8.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (30 kB)
+Collecting torchvision (from -r requirements.txt (line 2))
+  Using cached torchvision-0.23.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (6.1 kB)
+Collecting numpy (from -r requirements.txt (line 3))
+  Using cached numpy-2.3.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+Collecting pyyaml (from -r requirements.txt (line 4))
+  Using cached PyYAML-6.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.1 kB)
+Collecting matplotlib (from -r requirements.txt (line 5))
+  Using cached matplotlib-3.10.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (11 kB)
+Collecting tqdm (from -r requirements.txt (line 6))
+  Using cached tqdm-4.67.1-py3-none-any.whl.metadata (57 kB)
+Collecting seaborn (from -r requirements.txt (line 7))
+  Using cached seaborn-0.13.2-py3-none-any.whl.metadata (5.4 kB)
+Collecting filelock (from torch->-r requirements.txt (line 1))
+  Using cached filelock-3.19.1-py3-none-any.whl.metadata (2.1 kB)
+Collecting typing-extensions>=4.10.0 (from torch->-r requirements.txt (line 1))
+  Using cached typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting sympy>=1.13.3 (from torch->-r requirements.txt (line 1))
+  Using cached sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+Collecting networkx (from torch->-r requirements.txt (line 1))
+  Using cached networkx-3.5-py3-none-any.whl.metadata (6.3 kB)
+Collecting jinja2 (from torch->-r requirements.txt (line 1))
+  Using cached jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting fsspec (from torch->-r requirements.txt (line 1))
+  Using cached fsspec-2025.9.0-py3-none-any.whl.metadata (10 kB)
+Collecting nvidia-cuda-nvrtc-cu12==12.8.93 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cuda_nvrtc_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cuda-runtime-cu12==12.8.90 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cuda_runtime_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cuda-cupti-cu12==12.8.90 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cuda_cupti_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cudnn-cu12==9.10.2.21 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cublas-cu12==12.8.4.1 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cublas_cu12-12.8.4.1-py3-none-manylinux_2_27_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cufft-cu12==11.3.3.83 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-curand-cu12==10.3.9.90 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_curand_cu12-10.3.9.90-py3-none-manylinux_2_27_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cusolver-cu12==11.7.3.90 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cusparse-cu12==12.5.8.93 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-cusparselt-cu12==0.7.1 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cusparselt_cu12-0.7.1-py3-none-manylinux2014_x86_64.whl.metadata (7.0 kB)
+Collecting nvidia-nccl-cu12==2.27.3 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_nccl_cu12-2.27.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.0 kB)
+Collecting nvidia-nvtx-cu12==12.8.90 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_nvtx_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-nvjitlink-cu12==12.8.93 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-cufile-cu12==1.13.1.3 (from torch->-r requirements.txt (line 1))
+  Using cached nvidia_cufile_cu12-1.13.1.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+Collecting triton==3.4.0 (from torch->-r requirements.txt (line 1))
+  Using cached triton-3.4.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (1.7 kB)
+Requirement already satisfied: setuptools>=40.8.0 in /home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages (from triton==3.4.0->torch->-r requirements.txt (line 1)) (65.5.0)
+Collecting pillow!=8.3.*,>=5.3.0 (from torchvision->-r requirements.txt (line 2))
+  Using cached pillow-11.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.0 kB)
+Collecting contourpy>=1.0.1 (from matplotlib->-r requirements.txt (line 5))
+  Using cached contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (5.5 kB)
+Collecting cycler>=0.10 (from matplotlib->-r requirements.txt (line 5))
+  Using cached cycler-0.12.1-py3-none-any.whl.metadata (3.8 kB)
+Collecting fonttools>=4.22.0 (from matplotlib->-r requirements.txt (line 5))
+  Using cached fonttools-4.59.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (109 kB)
+Collecting kiwisolver>=1.3.1 (from matplotlib->-r requirements.txt (line 5))
+  Using cached kiwisolver-1.4.9-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.3 kB)
+Collecting packaging>=20.0 (from matplotlib->-r requirements.txt (line 5))
+  Using cached packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting pyparsing>=2.3.1 (from matplotlib->-r requirements.txt (line 5))
+  Using cached pyparsing-3.2.3-py3-none-any.whl.metadata (5.0 kB)
+Collecting python-dateutil>=2.7 (from matplotlib->-r requirements.txt (line 5))
+  Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting pandas>=1.2 (from seaborn->-r requirements.txt (line 7))
+  Using cached pandas-2.3.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (91 kB)
+Collecting pytz>=2020.1 (from pandas>=1.2->seaborn->-r requirements.txt (line 7))
+  Using cached pytz-2025.2-py2.py3-none-any.whl.metadata (22 kB)
+Collecting tzdata>=2022.7 (from pandas>=1.2->seaborn->-r requirements.txt (line 7))
+  Using cached tzdata-2025.2-py2.py3-none-any.whl.metadata (1.4 kB)
+Collecting six>=1.5 (from python-dateutil>=2.7->matplotlib->-r requirements.txt (line 5))
+  Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch->-r requirements.txt (line 1))
+  Using cached mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+Collecting MarkupSafe>=2.0 (from jinja2->torch->-r requirements.txt (line 1))
+  Using cached MarkupSafe-3.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.0 kB)
+Using cached torch-2.8.0-cp311-cp311-manylinux_2_28_x86_64.whl (888.1 MB)
+Using cached nvidia_cublas_cu12-12.8.4.1-py3-none-manylinux_2_27_x86_64.whl (594.3 MB)
+Using cached nvidia_cuda_cupti_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (10.2 MB)
+Using cached nvidia_cuda_nvrtc_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (88.0 MB)
+Using cached nvidia_cuda_runtime_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (954 kB)
+Using cached nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_x86_64.whl (706.8 MB)
+Using cached nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (193.1 MB)
+Using cached nvidia_cufile_cu12-1.13.1.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.2 MB)
+Using cached nvidia_curand_cu12-10.3.9.90-py3-none-manylinux_2_27_x86_64.whl (63.6 MB)
+Using cached nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_x86_64.whl (267.5 MB)
+Using cached nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (288.2 MB)
+Using cached nvidia_cusparselt_cu12-0.7.1-py3-none-manylinux2014_x86_64.whl (287.2 MB)
+Using cached nvidia_nccl_cu12-2.27.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (322.4 MB)
+Using cached nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (39.3 MB)
+Using cached nvidia_nvtx_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (89 kB)
+Using cached triton-3.4.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (155.5 MB)
+Using cached torchvision-0.23.0-cp311-cp311-manylinux_2_28_x86_64.whl (8.6 MB)
+Using cached numpy-2.3.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.9 MB)
+Using cached PyYAML-6.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (762 kB)
+Using cached matplotlib-3.10.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (8.7 MB)
+Using cached tqdm-4.67.1-py3-none-any.whl (78 kB)
+Using cached seaborn-0.13.2-py3-none-any.whl (294 kB)
+Using cached contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (355 kB)
+Using cached cycler-0.12.1-py3-none-any.whl (8.3 kB)
+Using cached fonttools-4.59.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.0 MB)
+Using cached kiwisolver-1.4.9-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
+Using cached packaging-25.0-py3-none-any.whl (66 kB)
+Using cached pandas-2.3.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (12.4 MB)
+Using cached pillow-11.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.6 MB)
+Using cached pyparsing-3.2.3-py3-none-any.whl (111 kB)
+Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Using cached pytz-2025.2-py2.py3-none-any.whl (509 kB)
+Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Using cached sympy-1.14.0-py3-none-any.whl (6.3 MB)
+Using cached mpmath-1.3.0-py3-none-any.whl (536 kB)
+Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+Using cached tzdata-2025.2-py2.py3-none-any.whl (347 kB)
+Using cached filelock-3.19.1-py3-none-any.whl (15 kB)
+Using cached fsspec-2025.9.0-py3-none-any.whl (199 kB)
+Using cached jinja2-3.1.6-py3-none-any.whl (134 kB)
+Using cached MarkupSafe-3.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (23 kB)
+Using cached networkx-3.5-py3-none-any.whl (2.0 MB)
+Installing collected packages: pytz, nvidia-cusparselt-cu12, mpmath, tzdata, typing-extensions, triton, tqdm, sympy, six, pyyaml, pyparsing, pillow, packaging, nvidia-nvtx-cu12, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-curand-cu12, nvidia-cufile-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, numpy, networkx, MarkupSafe, kiwisolver, fsspec, fonttools, filelock, cycler, python-dateutil, nvidia-cusparse-cu12, nvidia-cufft-cu12, nvidia-cudnn-cu12, jinja2, contourpy, pandas, nvidia-cusolver-cu12, matplotlib, torch, seaborn, torchvision
+
+Successfully installed MarkupSafe-3.0.2 contourpy-1.3.3 cycler-0.12.1 filelock-3.19.1 fonttools-4.59.2 fsspec-2025.9.0 jinja2-3.1.6 kiwisolver-1.4.9 matplotlib-3.10.6 mpmath-1.3.0 networkx-3.5 numpy-2.3.2 nvidia-cublas-cu12-12.8.4.1 nvidia-cuda-cupti-cu12-12.8.90 nvidia-cuda-nvrtc-cu12-12.8.93 nvidia-cuda-runtime-cu12-12.8.90 nvidia-cudnn-cu12-9.10.2.21 nvidia-cufft-cu12-11.3.3.83 nvidia-cufile-cu12-1.13.1.3 nvidia-curand-cu12-10.3.9.90 nvidia-cusolver-cu12-11.7.3.90 nvidia-cusparse-cu12-12.5.8.93 nvidia-cusparselt-cu12-0.7.1 nvidia-nccl-cu12-2.27.3 nvidia-nvjitlink-cu12-12.8.93 nvidia-nvtx-cu12-12.8.90 packaging-25.0 pandas-2.3.2 pillow-11.3.0 pyparsing-3.2.3 python-dateutil-2.9.0.post0 pytz-2025.2 pyyaml-6.0.2 seaborn-0.13.2 six-1.17.0 sympy-1.14.0 torch-2.8.0 torchvision-0.23.0 tqdm-4.67.1 triton-3.4.0 typing-extensions-4.15.0 tzdata-2025.2
+=== pip install end Wed Sep  3 14:32:01 UTC 2025 ===
+=== experiment start Wed Sep  3 14:32:01 UTC 2025 ===
+[ENV] using device: cuda
+[DL] cifar-100-python.tar.gz …
+
+================ EXPERIMENT 1 – Standard C-L Benchmarks ================
+
+[Task 1] classes=5  samples=2250
+  epoch 1/5  loss=1.5813
+  epoch 2/5  loss=1.5108
+  epoch 3/5  loss=1.4107
+  epoch 4/5  loss=1.2705
+  epoch 5/5  loss=1.1885
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-1   accuracy=48.20
+
+[Task 2] classes=5  samples=2250
+  epoch 1/5  loss=2.3872
+  epoch 2/5  loss=1.5024
+  epoch 3/5  loss=1.3093
+  epoch 4/5  loss=1.2970
+  epoch 5/5  loss=1.1997
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-2   accuracy=40.60
+
+[Task 3] classes=5  samples=2250
+  epoch 1/5  loss=1.8731
+  epoch 2/5  loss=1.4007
+  epoch 3/5  loss=1.2530
+  epoch 4/5  loss=1.1461
+  epoch 5/5  loss=1.0888
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-3   accuracy=44.00
+
+[Task 4] classes=5  samples=2250
+  epoch 1/5  loss=1.6878
+  epoch 2/5  loss=1.2908
+  epoch 3/5  loss=1.1029
+  epoch 4/5  loss=0.9391
+  epoch 5/5  loss=0.8750
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-4   accuracy=51.40
+
+[Task 5] classes=5  samples=2250
+  epoch 1/5  loss=1.8589
+  epoch 2/5  loss=1.2305
+  epoch 3/5  loss=1.0953
+  epoch 4/5  loss=0.9904
+  epoch 5/5  loss=0.9182
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-5   accuracy=51.60
+
+[Task 6] classes=5  samples=2250
+  epoch 1/5  loss=1.8043
+  epoch 2/5  loss=1.2729
+  epoch 3/5  loss=1.0259
+  epoch 4/5  loss=0.9458
+  epoch 5/5  loss=0.8607
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-6   accuracy=50.80
+
+[Task 7] classes=5  samples=2250
+  epoch 1/5  loss=1.7934
+  epoch 2/5  loss=1.4010
+  epoch 3/5  loss=1.2288
+  epoch 4/5  loss=1.0966
+  epoch 5/5  loss=1.1125
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-7   accuracy=46.20
+
+[Task 8] classes=5  samples=2250
+  epoch 1/5  loss=1.6295
+  epoch 2/5  loss=1.2130
+  epoch 3/5  loss=1.0233
+  epoch 4/5  loss=0.9349
+  epoch 5/5  loss=0.8712
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-8   accuracy=50.00
+
+[Task 9] classes=5  samples=2250
+  epoch 1/5  loss=1.8029
+  epoch 2/5  loss=1.3490
+  epoch 3/5  loss=1.1487
+  epoch 4/5  loss=1.0915
+  epoch 5/5  loss=1.0281
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-9   accuracy=49.60
+
+[Task 10] classes=5  samples=2250
+  epoch 1/5  loss=1.7154
+  epoch 2/5  loss=1.1825
+  epoch 3/5  loss=1.0558
+  epoch 4/5  loss=0.9073
+  epoch 5/5  loss=0.8465
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-10   accuracy=54.20
+
+[Task 11] classes=5  samples=2250
+  epoch 1/5  loss=2.0908
+  epoch 2/5  loss=1.5486
+  epoch 3/5  loss=1.3909
+  epoch 4/5  loss=1.2728
+  epoch 5/5  loss=1.2031
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-11   accuracy=42.00
+
+[Task 12] classes=5  samples=2250
+  epoch 1/5  loss=1.5773
+  epoch 2/5  loss=1.2055
+  epoch 3/5  loss=1.0348
+  epoch 4/5  loss=0.9271
+  epoch 5/5  loss=0.8364
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-12   accuracy=53.80
+
+[Task 13] classes=5  samples=2250
+  epoch 1/5  loss=2.0357
+  epoch 2/5  loss=1.3030
+  epoch 3/5  loss=1.0795
+  epoch 4/5  loss=1.0047
+  epoch 5/5  loss=0.8972
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-13   accuracy=58.60
+
+[Task 14] classes=5  samples=2250
+  epoch 1/5  loss=1.7371
+  epoch 2/5  loss=1.2286
+  epoch 3/5  loss=1.1200
+  epoch 4/5  loss=1.0111
+  epoch 5/5  loss=0.9619
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-14   accuracy=52.00
+
+[Task 15] classes=5  samples=2250
+  epoch 1/5  loss=1.6071
+  epoch 2/5  loss=1.2275
+  epoch 3/5  loss=1.0866
+  epoch 4/5  loss=1.0312
+  epoch 5/5  loss=0.9618
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-15   accuracy=50.00
+
+[Task 16] classes=5  samples=2250
+  epoch 1/5  loss=1.9324
+  epoch 2/5  loss=1.3849
+  epoch 3/5  loss=1.2373
+  epoch 4/5  loss=1.1400
+  epoch 5/5  loss=1.0727
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-16   accuracy=44.00
+
+[Task 17] classes=5  samples=2250
+  epoch 1/5  loss=1.8222
+  epoch 2/5  loss=1.5049
+  epoch 3/5  loss=1.4172
+  epoch 4/5  loss=1.3466
+  epoch 5/5  loss=1.2926
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-17   accuracy=36.00
+
+[Task 18] classes=5  samples=2250
+  epoch 1/5  loss=1.5735
+  epoch 2/5  loss=1.1651
+  epoch 3/5  loss=1.0319
+  epoch 4/5  loss=0.9169
+  epoch 5/5  loss=0.8343
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-18   accuracy=55.40
+
+[Task 19] classes=5  samples=2250
+  epoch 1/5  loss=1.8946
+  epoch 2/5  loss=1.2545
+  epoch 3/5  loss=1.1035
+  epoch 4/5  loss=0.9890
+  epoch 5/5  loss=0.8934
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-19   accuracy=49.40
+
+[Task 20] classes=5  samples=2250
+  epoch 1/5  loss=1.8640
+  epoch 2/5  loss=1.3958
+  epoch 3/5  loss=1.2757
+  epoch 4/5  loss=1.1633
+  epoch 5/5  loss=1.1228
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-20   accuracy=43.20
+
+Experiment-1 CIFAR100 seed=42   Final Average Accuracy A_T = 48.55
+{
+  "Figure": "accuracy_jemb.pdf",
+  "A_T": 48.55,
+  "acc_per_task": [
+    48.2,
+    40.6,
+    44.0,
+    51.4,
+    51.6,
+    50.8,
+    46.2,
+    50.0,
+    49.6,
+    54.2,
+    42.0,
+    53.8,
+    58.6,
+    52.0,
+    50.0,
+    44.0,
+    36.0,
+    55.4,
+    49.4,
+    43.2
+  ]
+}
+Wall-clock: 4.1 min
+
+================ EXPERIMENT 1 – Standard C-L Benchmarks ================
+
+[Task 1] classes=5  samples=2250
+  epoch 1/5  loss=1.5631
+  epoch 2/5  loss=1.4115
+  epoch 3/5  loss=1.0211
+  epoch 4/5  loss=0.9351
+  epoch 5/5  loss=0.8304
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-1   accuracy=64.20
+
+[Task 2] classes=5  samples=2250
+  epoch 1/5  loss=3.5767
+  epoch 2/5  loss=1.7132
+  epoch 3/5  loss=1.2287
+  epoch 4/5  loss=1.0729
+  epoch 5/5  loss=0.9705
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-2   accuracy=54.60
+
+[Task 3] classes=5  samples=2250
+  epoch 1/5  loss=2.0605
+  epoch 2/5  loss=1.4507
+  epoch 3/5  loss=1.2059
+  epoch 4/5  loss=1.0481
+  epoch 5/5  loss=0.9405
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-3   accuracy=51.80
+
+[Task 4] classes=5  samples=2250
+  epoch 1/5  loss=1.8275
+  epoch 2/5  loss=1.3561
+  epoch 3/5  loss=1.1958
+  epoch 4/5  loss=1.1020
+  epoch 5/5  loss=1.1139
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-4   accuracy=47.00
+
+[Task 5] classes=5  samples=2250
+  epoch 1/5  loss=1.7812
+  epoch 2/5  loss=1.4533
+  epoch 3/5  loss=1.2990
+  epoch 4/5  loss=1.2129
+  epoch 5/5  loss=1.1781
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-5   accuracy=40.60
+
+[Task 6] classes=5  samples=2250
+  epoch 1/5  loss=1.6971
+  epoch 2/5  loss=1.3632
+  epoch 3/5  loss=1.2286
+  epoch 4/5  loss=1.1038
+  epoch 5/5  loss=1.0433
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-6   accuracy=49.80
+
+[Task 7] classes=5  samples=2250
+  epoch 1/5  loss=1.5327
+  epoch 2/5  loss=1.2446
+  epoch 3/5  loss=1.0666
+  epoch 4/5  loss=0.9790
+  epoch 5/5  loss=0.9022
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-7   accuracy=53.60
+
+[Task 8] classes=5  samples=2250
+  epoch 1/5  loss=1.9591
+  epoch 2/5  loss=1.2375
+  epoch 3/5  loss=0.9961
+  epoch 4/5  loss=0.9009
+  epoch 5/5  loss=0.8394
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-8   accuracy=56.00
+
+[Task 9] classes=5  samples=2250
+  epoch 1/5  loss=2.0264
+  epoch 2/5  loss=1.5669
+  epoch 3/5  loss=1.4836
+  epoch 4/5  loss=1.3672
+  epoch 5/5  loss=1.2729
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-9   accuracy=39.40
+
+[Task 10] classes=5  samples=2250
+  epoch 1/5  loss=1.5694
+  epoch 2/5  loss=1.1976
+  epoch 3/5  loss=1.0385
+  epoch 4/5  loss=0.9248
+  epoch 5/5  loss=0.8774
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-10   accuracy=55.80
+
+[Task 11] classes=5  samples=2250
+  epoch 1/5  loss=1.7555
+  epoch 2/5  loss=1.2426
+  epoch 3/5  loss=1.0759
+  epoch 4/5  loss=0.9563
+  epoch 5/5  loss=0.8854
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-11   accuracy=57.00
+
+[Task 12] classes=5  samples=2250
+  epoch 1/5  loss=1.9242
+  epoch 2/5  loss=1.3281
+  epoch 3/5  loss=1.1247
+  epoch 4/5  loss=0.9752
+  epoch 5/5  loss=0.8816
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-12   accuracy=55.00
+
+[Task 13] classes=5  samples=2250
+  epoch 1/5  loss=1.8714
+  epoch 2/5  loss=1.5113
+  epoch 3/5  loss=1.4116
+  epoch 4/5  loss=1.3276
+  epoch 5/5  loss=1.2506
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-13   accuracy=38.80
+
+[Task 14] classes=5  samples=2250
+  epoch 1/5  loss=1.6700
+  epoch 2/5  loss=1.3218
+  epoch 3/5  loss=1.1675
+  epoch 4/5  loss=1.1015
+  epoch 5/5  loss=1.0501
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-14   accuracy=43.60
+
+[Task 15] classes=5  samples=2250
+  epoch 1/5  loss=1.8517
+  epoch 2/5  loss=1.4098
+  epoch 3/5  loss=1.2527
+  epoch 4/5  loss=1.1464
+  epoch 5/5  loss=1.0540
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-15   accuracy=46.20
+
+[Task 16] classes=5  samples=2250
+  epoch 1/5  loss=1.7801
+  epoch 2/5  loss=1.5258
+  epoch 3/5  loss=1.4212
+  epoch 4/5  loss=1.3218
+  epoch 5/5  loss=1.2600
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-16   accuracy=39.80
+
+[Task 17] classes=5  samples=2250
+  epoch 1/5  loss=1.7571
+  epoch 2/5  loss=1.5296
+  epoch 3/5  loss=1.4471
+  epoch 4/5  loss=1.3953
+  epoch 5/5  loss=1.2898
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-17   accuracy=37.80
+
+[Task 18] classes=5  samples=2250
+  epoch 1/5  loss=1.6310
+  epoch 2/5  loss=1.2637
+  epoch 3/5  loss=1.1755
+  epoch 4/5  loss=0.9927
+  epoch 5/5  loss=0.9143
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-18   accuracy=53.40
+
+[Task 19] classes=5  samples=2250
+  epoch 1/5  loss=1.7565
+  epoch 2/5  loss=1.2869
+  epoch 3/5  loss=1.1351
+  epoch 4/5  loss=1.0630
+  epoch 5/5  loss=1.0235
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-19   accuracy=46.40
+
+[Task 20] classes=5  samples=2250
+  epoch 1/5  loss=1.9726
+  epoch 2/5  loss=1.3689
+  epoch 3/5  loss=1.1769
+  epoch 4/5  loss=1.0110
+  epoch 5/5  loss=0.9259
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-20   accuracy=48.00
+
+Experiment-1 CIFAR100 seed=2023   Final Average Accuracy A_T = 48.94
+{
+  "Figure": "accuracy_jemb.pdf",
+  "A_T": 48.94,
+  "acc_per_task": [
+    64.2,
+    54.6,
+    51.8,
+    47.0,
+    40.6,
+    49.8,
+    53.6,
+    56.0,
+    39.4,
+    55.8,
+    57.0,
+    55.0,
+    38.8,
+    43.6,
+    46.2,
+    39.8,
+    37.8,
+    53.4,
+    46.4,
+    48.0
+  ]
+}
+Wall-clock: 4.1 min
+
+================ EXPERIMENT 1 – Standard C-L Benchmarks ================
+
+[Task 1] classes=5  samples=2250
+  epoch 1/5  loss=1.6089
+  epoch 2/5  loss=1.6053
+  epoch 3/5  loss=1.5765
+  epoch 4/5  loss=1.4745
+  epoch 5/5  loss=1.3877
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-1   accuracy=40.60
+
+[Task 2] classes=5  samples=2250
+  epoch 1/5  loss=5.1527
+  epoch 2/5  loss=2.5316
+  epoch 3/5  loss=1.4765
+  epoch 4/5  loss=0.8913
+  epoch 5/5  loss=0.7598
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-2   accuracy=60.40
+
+[Task 3] classes=5  samples=2250
+  epoch 1/5  loss=2.3713
+  epoch 2/5  loss=1.2639
+  epoch 3/5  loss=1.0122
+  epoch 4/5  loss=0.9024
+  epoch 5/5  loss=0.8332
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-3   accuracy=55.20
+
+[Task 4] classes=5  samples=2250
+  epoch 1/5  loss=1.9329
+  epoch 2/5  loss=1.2742
+  epoch 3/5  loss=1.0808
+  epoch 4/5  loss=0.9125
+  epoch 5/5  loss=0.8400
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-4   accuracy=55.20
+
+[Task 5] classes=5  samples=2250
+  epoch 1/5  loss=1.9320
+  epoch 2/5  loss=1.4787
+  epoch 3/5  loss=1.4129
+  epoch 4/5  loss=1.3385
+  epoch 5/5  loss=1.2252
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-5   accuracy=39.40
+
+[Task 6] classes=5  samples=2250
+  epoch 1/5  loss=1.7038
+  epoch 2/5  loss=1.1583
+  epoch 3/5  loss=1.0129
+  epoch 4/5  loss=0.9221
+  epoch 5/5  loss=0.8520
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-6   accuracy=47.80
+
+[Task 7] classes=5  samples=2250
+  epoch 1/5  loss=1.9682
+  epoch 2/5  loss=1.4820
+  epoch 3/5  loss=1.3298
+  epoch 4/5  loss=1.2369
+  epoch 5/5  loss=1.1818
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-7   accuracy=43.40
+
+[Task 8] classes=5  samples=2250
+  epoch 1/5  loss=1.7620
+  epoch 2/5  loss=1.2738
+  epoch 3/5  loss=1.1405
+  epoch 4/5  loss=1.0072
+  epoch 5/5  loss=1.0042
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-8   accuracy=50.60
+
+[Task 9] classes=5  samples=2250
+  epoch 1/5  loss=1.8780
+  epoch 2/5  loss=1.4780
+  epoch 3/5  loss=1.3386
+  epoch 4/5  loss=1.2372
+  epoch 5/5  loss=1.1807
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-9   accuracy=43.60
+
+[Task 10] classes=5  samples=2250
+  epoch 1/5  loss=1.5425
+  epoch 2/5  loss=1.3338
+  epoch 3/5  loss=1.1667
+  epoch 4/5  loss=1.0917
+  epoch 5/5  loss=0.9876
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-10   accuracy=50.60
+
+[Task 11] classes=5  samples=2250
+  epoch 1/5  loss=1.9625
+  epoch 2/5  loss=1.2679
+  epoch 3/5  loss=1.1208
+  epoch 4/5  loss=0.9525
+  epoch 5/5  loss=0.8724
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-11   accuracy=57.40
+
+[Task 12] classes=5  samples=2250
+  epoch 1/5  loss=1.7371
+  epoch 2/5  loss=1.3620
+  epoch 3/5  loss=1.1605
+  epoch 4/5  loss=1.0361
+  epoch 5/5  loss=0.9660
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-12   accuracy=52.80
+
+[Task 13] classes=5  samples=2250
+  epoch 1/5  loss=1.8379
+  epoch 2/5  loss=1.5341
+  epoch 3/5  loss=1.4262
+  epoch 4/5  loss=1.3476
+  epoch 5/5  loss=1.2527
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-13   accuracy=35.60
+
+[Task 14] classes=5  samples=2250
+  epoch 1/5  loss=1.6073
+  epoch 2/5  loss=1.2817
+  epoch 3/5  loss=0.9984
+  epoch 4/5  loss=0.8919
+  epoch 5/5  loss=0.8326
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-14   accuracy=65.00
+
+[Task 15] classes=5  samples=2250
+  epoch 1/5  loss=1.9527
+  epoch 2/5  loss=1.5449
+  epoch 3/5  loss=1.4087
+  epoch 4/5  loss=1.3404
+  epoch 5/5  loss=1.2753
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-15   accuracy=38.20
+
+[Task 16] classes=5  samples=2250
+  epoch 1/5  loss=1.7529
+  epoch 2/5  loss=1.5255
+  epoch 3/5  loss=1.3931
+  epoch 4/5  loss=1.3114
+  epoch 5/5  loss=1.2450
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-16   accuracy=38.40
+
+[Task 17] classes=5  samples=2250
+  epoch 1/5  loss=1.7354
+  epoch 2/5  loss=1.5144
+  epoch 3/5  loss=1.4129
+  epoch 4/5  loss=1.3246
+  epoch 5/5  loss=1.2573
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-17   accuracy=40.80
+
+[Task 18] classes=5  samples=2250
+  epoch 1/5  loss=1.5683
+  epoch 2/5  loss=1.0968
+  epoch 3/5  loss=0.9710
+  epoch 4/5  loss=0.8277
+  epoch 5/5  loss=0.7404
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-18   accuracy=63.20
+
+[Task 19] classes=5  samples=2250
+  epoch 1/5  loss=1.9531
+  epoch 2/5  loss=1.3493
+  epoch 3/5  loss=1.1363
+  epoch 4/5  loss=1.0124
+  epoch 5/5  loss=0.9411
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-19   accuracy=51.80
+
+[Task 20] classes=5  samples=2250
+  epoch 1/5  loss=1.8684
+  epoch 2/5  loss=1.2816
+  epoch 3/5  loss=1.0967
+  epoch 4/5  loss=0.9918
+  epoch 5/5  loss=0.9345
+[ALLOC] action=keep  bytes_adapter=0  bytes_buffer=0
+[RESULT] Task-20   accuracy=50.80
+
+Experiment-1 CIFAR100 seed=31415   Final Average Accuracy A_T = 49.04
+{
+  "Figure": "accuracy_jemb.pdf",
+  "A_T": 49.04,
+  "acc_per_task": [
+    40.6,
+    60.4,
+    55.2,
+    55.2,
+    39.4,
+    47.8,
+    43.4,
+    50.6,
+    43.6,
+    50.6,
+    57.4,
+    52.8,
+    35.6,
+    65.0,
+    38.2,
+    38.4,
+    40.8,
+    63.2,
+    51.8,
+    50.8
+  ]
+}
+Wall-clock: 4.1 min
+=== experiment end Wed Sep  3 14:44:23 UTC 2025 ===
