@@ -46,11 +46,14 @@ def evaluate_model(model, loader: DataLoader) -> Dict[str, float]:
 
 
 # -----------------------------------------------------------------------------
-# Simple bar-plot helper – always stores under .research/iteration1/images
+# Simple bar-plot helper – save under mandated directory
 # -----------------------------------------------------------------------------
 
 def save_bar(values: Dict[str, float], title: str, fname: Path):
-    out_dir = Path(".research/iteration1/images")
+    """Save a bar plot to .research/iteration2/images/ <fname>.  Directory is
+    created if needed.
+    """
+    out_dir = Path(".research/iteration2/images")
     out_dir.mkdir(parents=True, exist_ok=True)
     fname = out_dir / fname.name
 
