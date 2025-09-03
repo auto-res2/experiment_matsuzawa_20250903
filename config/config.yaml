@@ -1,0 +1,31 @@
+meta:
+  seeds: [42, 2023, 31415]
+  out_dir: "${oc.env:HOME}/jembruns"
+
+data:
+  cifar100:
+    url: https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz
+    mean: [0.5071, 0.4867, 0.4408]
+    std: [0.2675, 0.2565, 0.2761]
+  miniimagenet:
+    url: https://figshare.com/ndownloader/files/44504649
+  rotmnist:
+    url: https://zenodo.org/records/10609694/files/rot_mnist.npy?download=1
+  speech:
+    url: http://download.tensorflow.org/data/speech_commands_v0.02.tar.gz
+
+model:
+  adapter:
+    rank_init: 8
+  aqm:
+    latent_dim: 256
+    codebook_size: 4096
+  num_classes: 5  # per task; dynamically overwritten
+
+memory:
+  M_max_bytes: 1048576  # 1 MB
+
+opt:
+  lr: 0.05
+  batch: 128
+  epochs: 5
