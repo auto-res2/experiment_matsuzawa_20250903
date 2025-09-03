@@ -1,1 +1,13 @@
-# Please list the required python packages.
+torch
+torchvision
+diffusers[torch]
+peft
+accelerate
+transformers
+matplotlib
+seaborn
+gdown
+pandas
+numpy
+PyYAML
+pillow

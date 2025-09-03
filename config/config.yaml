@@ -1,0 +1,48 @@
+global:
+  device: cuda
+  num_workers: 4
+  print_every: 25
+  figure_dpi: 150
+
+datasets:
+  waterbirds:
+    url: https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz
+    compressed_md5: 8d144fef749398972d1a3e0ad9f3a4c8
+    num_classes: 2
+    img_size: 224
+  celeba:
+    url: https://drive.google.com/uc?export=download&id=1_ee_0u6VbaYkEOI3hQAcB-jR3lQq-v2V
+    gdrive: true
+    num_classes: 2
+    img_size: 224
+    downsample_train: 20000
+  color_mnist_rot:
+    github: https://github.com/Mateo-drr/ColorMNIST
+    rotation: 30
+    num_classes: 10
+    img_size: 28
+  imagenet_mini:
+    url: http://cs231n.stanford.edu/tiny-imagenet-200.zip
+    num_classes: 200
+    img_size: 224
+
+models:
+  resnet18_ssl:
+    type: byol
+    backbone: resnet18
+    epochs: 100
+    batch_size: 256
+    lr: 0.001
+  classifier_resnet18:
+    epochs: 200
+    batch_size: 128
+    lr: 0.0003
+    irm_lambda: 100.0
+    fourier_lambda: 0.5
+
+cdg:
+  base_model: runwayml/stable-diffusion-v1-5
+  lora_rank: 4
+  train_epochs: 10
+  train_batch: 4
+  lr: 0.0001
