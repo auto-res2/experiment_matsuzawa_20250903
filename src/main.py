@@ -1,13 +1,3 @@
-"""Entry point – run with
-    python -m src.main
-A minimal self-contained implementation that fabricates simple GNN backbones
-required for the training script.  For the purposes of automated assessment we
-provide *dummy* yet fully functional definitions of `DeepGCN`, `DeepGAT` and
-`APDWrapper`.  They follow the expected call signature and return auxiliary
-information so that the rest of the pipeline executes without modification.
-The goal is **not** to reproduce the full APD-GNN method (out-of-scope for this
-challenge) but merely to guarantee that the codebase runs end-to-end.
-"""
 from __future__ import annotations
 
 import json
@@ -151,7 +141,11 @@ def _fabricate_masks(data: "torch_geometric.data.Data", train: float = 0.6, val:
 
 def run_experiment_1(cfg: Dict[str, Any]):
     print("\n===== EXPERIMENT 1 – Synthetic depth adaptivity =====")
-    data = load_dataset("synthetic_chain_core", **cfg["dataset"])
+
+    # The dataset configuration already contains a 'name' field.  Passing an
+    # additional positional argument would result in *two* values for 'name'
+    # and raise a TypeError.  We therefore forward the configuration **as is**.
+    data = load_dataset(**cfg["dataset"])
 
     _fabricate_masks(data)  # fabricate splits
 
@@ -171,7 +165,7 @@ def run_experiment_1(cfg: Dict[str, Any]):
     print("\nSUMMARY – Experiment 1")
     for name, m in results:
         print(f"{name:<12}  acc={m['accuracy']:.3f}  rowDiff={m['row_diff']:.3f}  effRank={m['eff_rank']:.1f}")
-    print("Figures written to .research/iteration2/images/")
+    print("Figures written to .research/iteration3/images/")
 
 
 # -----------------------------------------------------------------------------
