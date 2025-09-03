@@ -14,6 +14,35 @@ from torch.utils.data import DataLoader, Subset
 from torchvision import models, datasets, transforms
 
 # -------------------------------------------------------------------------
+# Compatibility patch – older libraries expect
+# `pytorch_lightning.utilities.distributed` which was
+# removed in Lightning ≥2.0.  We create a lightweight shim
+# that re-exports the new symbols so third-party code such
+# as *taming-transformers* keeps working with modern PL.
+# -------------------------------------------------------------------------
+import sys, types
+try:
+    import pytorch_lightning as pl  # only import if available
+    # Only create the alias if it does not already exist
+    if 'pytorch_lightning.utilities.distributed' not in sys.modules:
+        try:
+            # PL ≥1.7 moved helpers to `utilities.rank_zero`.
+            from pytorch_lightning.utilities import rank_zero as _rank_zero_mod  # type: ignore
+            _dist_stub = types.ModuleType('pytorch_lightning.utilities.distributed')
+            # expose the common helpers accessed by taming-transformers
+            for _attr in ('rank_zero_only', 'rank_zero_debug', 'rank_zero_info', 'rank_zero_warn'):
+                if hasattr(_rank_zero_mod, _attr):
+                    setattr(_dist_stub, _attr, getattr(_rank_zero_mod, _attr))
+            # register shim so normal `import` succeeds
+            sys.modules['pytorch_lightning.utilities.distributed'] = _dist_stub
+        except ModuleNotFoundError:
+            # very old PL (<<1.5)… nothing to patch
+            pass
+except ImportError:
+    # PL missing – it will be installed via requirements; no action here
+    pass
+
+# -------------------------------------------------------------------------
 # Configuration helpers
 # -------------------------------------------------------------------------
 CFG_PATH = Path(__file__).resolve().parent.parent / 'config' / 'config.yaml'
@@ -27,6 +56,7 @@ DATA_DIR = Path(__file__).resolve().parent.parent / 'data'
 # VQ-GAN – frozen encoder/decoder
 # -------------------------------------------------------------------------
 from taming.models.vqgan import VQModel
+
 
 def build_vqgan(device: torch.device = DEVICE) -> VQModel:
     """Load the pre-trained VQ-GAN (frozen)."""
@@ -214,7 +244,7 @@ def train_stream(method: str, budget: int, seed: int, device: torch.device = DEV
         model.train()
         for img, lbl in loader:
             if method == 'HATEM':
-                tok = vq.encode(img.to(device))['indices']           # (B,4,4)
+                tok = vq.encode(img.to(device))["indices"]           # (B,4,4)
                 for t, l in zip(tok, lbl):
                     buf.add(t, l.item())
             else:
