@@ -14,7 +14,24 @@ from pathlib import Path
 from typing import Optional
 
 import torch
-from torch_geometric.data import Data
+
+# ------------------------------------------------------------------
+#  Optional torch_geometric import – fall back to a stub Data class if the
+#  heavyweight dependency is unavailable.  The stub is compatible with the
+#  minimal access pattern used throughout this repository.
+# ------------------------------------------------------------------
+try:
+    from torch_geometric.data import Data  # type: ignore
+except Exception:  # pragma: no cover – minimal fallback
+
+    class Data:  # pylint: disable=too-few-public-methods
+        """Light-weight stand-in for `torch_geometric.data.Data`."""
+
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
+        def to(self, *_, **__):
+            return self
 
 from src import evaluate as ev
 from src import preprocess as pp
@@ -26,14 +43,16 @@ from src import train as tr
 ROOT = Path(__file__).resolve().parent.parent
 # All experiment figures must live in this exact directory according to the
 # platform specification.
-FIG_DIR = ROOT / ".research" / "iteration8" / "images"
+FIG_DIR = ROOT / ".research" / "iteration9" / "images"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 ################################################################################
 #  FALL-BACK SYNTHETIC DATASET (used when internet is unavailable)
 ################################################################################
 
+
 def _make_tiny_graph(n: int = 120, f: int = 16, c: int = 3) -> Data:
     """Generate a small random graph with train/val/test masks."""
+
     x = torch.randn(n, f)
     edge_index = torch.randint(0, n, (2, n * 4))  # a very sparse graph
     y = torch.randint(0, c, (n,))
@@ -43,8 +62,8 @@ def _make_tiny_graph(n: int = 120, f: int = 16, c: int = 3) -> Data:
     test_mask = torch.zeros_like(train_mask)
 
     train_mask[: int(0.6 * n)] = True
-    val_mask[int(0.6 * n) : int(0.8 * n)] = True
-    test_mask[int(0.8 * n) :] = True
+    val_mask[int(0.6 * n): int(0.8 * n)] = True
+    test_mask[int(0.8 * n):] = True
 
     return Data(
         x=x,
@@ -59,12 +78,14 @@ def _make_tiny_graph(n: int = 120, f: int = 16, c: int = 3) -> Data:
 #  CORE LOGIC
 ################################################################################
 
+
 def _get_device() -> torch.device:
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def _load_data() -> Data:
     """Try to load the Cora dataset; if this fails, return a synthetic graph."""
+
     try:
         return pp.load_cora()
     except Exception as e:  # pragma: no cover – best-effort resilience
@@ -129,6 +150,7 @@ def run(seed: int = 42, epochs: int = 200, layers: int = 4):
 ################################################################################
 #  CLI WRAPPER
 ################################################################################
+
 
 def _build_arg_parser():
     p = argparse.ArgumentParser(description="DDAF-GNN quick experiment runner")

@@ -1,4 +1,5 @@
-@@
--torch-spline-conv# "  "
-+torch-spline-conv  # picked automatically (e.g. 0.2.1+pt22cu118)
-@@
+# Minimal dependency set – heavy torch_geometric wheels are replaced by
+# lightweight in-code stubs to keep the CI runtime small.
+
+torch>=2.0
+numpy>=1.24
