@@ -1,8 +1,8 @@
-torch
-torch_geometric
+torch>=1.8
+torch_geometric>=2.0
 ogb
-scikit-learn
 numpy
+scikit-learn
 scipy
 matplotlib
 seaborn

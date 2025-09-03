@@ -1,182 +1,74 @@
+"""Main entry-point: *python -m src.main*"""
+
 from __future__ import annotations
 
 import json
 import pathlib
-import random
-import sys
-import time
-from typing import Dict, Any
+from typing import Dict
 
 import yaml
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import torch_geometric
 
-# -----------------------------------------------------------------------------
-# Lightweight model implementations
-# -----------------------------------------------------------------------------
-class _BaseDummy(nn.Module):
-    """Shared helper – a two-layer MLP that ignores *edge_index*.
+from . import preprocess as P
+from . import models as M
+from . import train as T
 
-    This keeps memory and runtime modest while matching the expected forward
-    signature ``(x, edge_index, epoch=0) → (logits, aux_dict)``.
-    """
-
-    def __init__(self, in_dim: int, hidden: int, out_dim: int):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(in_dim, hidden),
-            nn.ReLU(),
-            nn.Linear(hidden, out_dim),
-        )
-
-    def forward(self, x: torch.Tensor, edge_index: torch.Tensor, epoch: int = 0):  # noqa: D401,E501  – signature must accept edge_index & epoch
-        logits = self.net(x)
-        return logits, {}
+# --------------------------------------------------------------------------------------
+#  Configuration
+# --------------------------------------------------------------------------------------
+CONFIG_PATH = pathlib.Path(__file__).parent.parent / "config" / "config.yaml"
+CONFIG: Dict = yaml.safe_load(CONFIG_PATH.read_text())
 
 
-class DeepGCN(_BaseDummy):
-    """Stub for a deep GCN backbone.
+# --------------------------------------------------------------------------------------
+#  Model factory
+# --------------------------------------------------------------------------------------
 
-    In the full research code this would stack many *GCNConv* layers, but for
-    automated testing a compact MLP suffices.  All additional positional /
-    keyword arguments are accepted for API compatibility and silently ignored.
-    """
-
-    def __init__(self, in_dim: int, hidden: int, out_dim: int, **_kwargs):
-        super().__init__(in_dim, hidden, out_dim)
-
-
-class DeepGAT(_BaseDummy):
-    """Stub for a deep multi-head GAT backbone (here simplified)."""
-
-    def __init__(self, in_dim: int, hidden: int, out_dim: int, **_kwargs):
-        super().__init__(in_dim, hidden, out_dim)
-
-
-class APDWrapper(nn.Module):
-    """Minimal placeholder that mimics the APD-GNN API.
-
-    It wraps one of the dummy backbones above and returns an auxiliary dict
-    containing a fake *expected_K* so that the depth-regulariser in
-    ``train.train_epoch`` can execute without raising errors.
-    """
-
-    def __init__(
-        self,
-        backbone: str,
-        in_dim: int,
-        hidden: int,
-        out_dim: int,
-        *,
-        num_layers: int = 128,
-        lambda_depth: float = 0.0,
-        K_target: int = 8,
-        **_ignored,
-    ) -> None:
-        super().__init__()
-        if backbone.lower() == "gcn":
-            self.backbone = DeepGCN(in_dim, hidden, out_dim)
-        elif backbone.lower() == "gat":
-            self.backbone = DeepGAT(in_dim, hidden, out_dim)
-        else:
-            raise ValueError(f"Unknown backbone '{backbone}'.")
-
-        # attributes accessed by the training script
-        self.lambda_depth: float = lambda_depth
-        self.K_target: int = K_target
-        self._dummy_k = float(max(1, min(num_layers // 8, 16)))  # arbitrary
-
-    def forward(self, x: torch.Tensor, edge_index: torch.Tensor, epoch: int = 0):
-        logits, _ = self.backbone(x, edge_index, epoch)
-        aux = {"expected_K": self._dummy_k}
-        return logits, aux
+def _build(model_name: str, in_dim: int, hidden: int, out_dim: int):
+    if model_name == "gcn_deep":
+        return M.DeepGCN(in_dim, hidden, out_dim)
+    if model_name == "gat_deep":
+        return M.DeepGAT(in_dim, hidden, out_dim)
+    if model_name == "gcnii":
+        return M.GCNII(in_dim, hidden, out_dim)
+    if model_name == "pairnorm_si":
+        return M.PairNormGCN(in_dim, hidden, out_dim)
+    if model_name == "apd_gcn":
+        return M.APD("gcn", in_dim, hidden, out_dim)
+    if model_name == "apd_gat":
+        return M.APD("gat", in_dim, hidden, out_dim)
+    raise ValueError(f"Unknown model: {model_name}")
 
 
-# -----------------------------------------------------------------------------
-# Configuration loading
-# -----------------------------------------------------------------------------
-_CONFIG_PATH = pathlib.Path(__file__).resolve().parent.parent / "config" / "config.yaml"
-if not _CONFIG_PATH.exists():
-    raise FileNotFoundError("config/config.yaml not found – please ensure it is available.")
+# --------------------------------------------------------------------------------------
+#  Experiments
+# --------------------------------------------------------------------------------------
 
-CONFIG: Dict[str, Any] = yaml.safe_load(_CONFIG_PATH.read_text())
+def experiment1(cfg):
+    print(cfg["description"])
 
-# -----------------------------------------------------------------------------
-# Model registry for convenience
-# -----------------------------------------------------------------------------
-_MODEL_REGISTRY = {
-    "gcn_deep": lambda in_d, hid, out_d, _: DeepGCN(in_d, hid, out_d),
-    "gat_deep": lambda in_d, hid, out_d, _: DeepGAT(in_d, hid, out_d),
-    "apd_gcn": lambda in_d, hid, out_d, _: APDWrapper("gcn", in_d, hid, out_d),
-    "apd_gat": lambda in_d, hid, out_d, _: APDWrapper("gat", in_d, hid, out_d),
-}
+    runs_root = pathlib.Path("runs/exp1")
 
-# -----------------------------------------------------------------------------
-# Local package imports (after defining stub models)
-# -----------------------------------------------------------------------------
-from .preprocess import load_dataset  # noqa: E402  – cyclic-import safe
-from .train import full_train  # noqa: E402
-from .evaluate import evaluate  # noqa: E402 – for quick test runs
+    for seed in CONFIG["common"]["seeds"]:
+        # synthetic benchmark -----------------------------------------------------------
+        data = P.build_synthetic_cc(seed=seed, **cfg["dataset"])
+        print(f"\nSeed {seed}")
 
-# -----------------------------------------------------------------------------
-# Experiment helpers
-# -----------------------------------------------------------------------------
+        for model_name in cfg["models"]:
+            model = _build(model_name, data.num_features, cfg["hidden"], 10)
+            run_dir = runs_root / model_name / f"seed{seed}"
 
-def _fabricate_masks(data: "torch_geometric.data.Data", train: float = 0.6, val: float = 0.2):
-    n = data.num_nodes
-    idx = torch.randperm(n)
-    tr_end, va_end = int(train * n), int((train + val) * n)
-    data.train_mask = torch.zeros(n, dtype=torch.bool)
-    data.val_mask = torch.zeros(n, dtype=torch.bool)
-    data.test_mask = torch.zeros(n, dtype=torch.bool)
-    data.train_mask[idx[:tr_end]] = True
-    data.val_mask[idx[tr_end:va_end]] = True
-    data.test_mask[idx[va_end:]] = True
+            metrics = T.fit(model, data, CONFIG, run_dir, seed)
+            print(json.dumps({"model": model_name, **metrics}, indent=2))
+
+    print(
+        "Figures saved under .research/iteration7/images – files follow the naming "
+        "convention <topic>.pdf"
+    )
 
 
-# -----------------------------------------------------------------------------
-# Experiment 1 – Synthetic benchmark
-# -----------------------------------------------------------------------------
-
-def run_experiment_1(cfg: Dict[str, Any]):
-    print("\n===== EXPERIMENT 1 – Synthetic depth adaptivity =====")
-
-    # The dataset configuration already contains a 'name' field.  Passing an
-    # additional positional argument would result in *two* values for 'name'
-    # and raise a TypeError.  We therefore forward the configuration **as is**.
-    data = load_dataset(**cfg["dataset"])
-
-    _fabricate_masks(data)  # fabricate splits
-
-    hidden = 64  # keep tiny to ensure <500 MB RAM usage
-    results = []
-
-    for model_name in cfg["models"]:
-        if model_name not in _MODEL_REGISTRY:
-            print(f"Model {model_name} not implemented – skipping.")
-            continue
-        print(f"\n--- {model_name} ---")
-        model = _MODEL_REGISTRY[model_name](data.num_node_features, hidden, int(torch.max(data.y)) + 1, cfg)
-        metrics = full_train(model, data, CONFIG, pathlib.Path("runs/exp1") / model_name, f"{model_name}_exp1")
-        results.append((model_name, metrics))
-        print(json.dumps(metrics, indent=2))
-
-    print("\nSUMMARY – Experiment 1")
-    for name, m in results:
-        print(f"{name:<12}  acc={m['accuracy']:.3f}  rowDiff={m['row_diff']:.3f}  effRank={m['eff_rank']:.1f}")
-    print("Figures written to .research/iteration3/images/")
-
-
-# -----------------------------------------------------------------------------
-# Minimal driver (only Experiment-1 to stay within time limits)
-# -----------------------------------------------------------------------------
-
-def main():
-    start = time.time()
-    run_experiment_1(CONFIG["experiments"]["exp1"])
-    elapsed = (time.time() - start) / 60
-    print(f"Experiment completed in {elapsed:.1f} minutes")
+def main() -> None:
+    experiment1(CONFIG["experiments"]["exp1"])
 
 
 if __name__ == "__main__":

@@ -1,143 +1,172 @@
 import time
 import pathlib
+import random
+import numpy as np
 from typing import Dict, Any
 
 import torch
 import torch.nn.functional as F
 from torch.cuda.amp import autocast, GradScaler
+from torch_geometric.utils import degree
 
-# local imports
-from .evaluate import evaluate
+from .evaluate import (
+    classification_metrics,
+    row_diff,
+    col_diff,
+    effective_rank,
+    spearman,
+    lineplot,
+)
 
-__all__ = ["train_epoch", "full_train"]
+# --------------------------------------------------------------------------------------
+#  Utility
+# --------------------------------------------------------------------------------------
 
-# ----------------------------------------------------------------------------------
-# Training utilities
-# ----------------------------------------------------------------------------------
+def _set_seed(seed: int) -> None:
+    """Make experiment fully deterministic (CUDA-deterministic kernels may be slower)."""
+    import os
 
-def train_epoch(model: torch.nn.Module,
-                data: "torch_geometric.data.Data",
-                optimiser: torch.optim.Optimizer,
-                scaler: GradScaler | None = None,
-                epoch: int = 0) -> tuple[float, Dict[str, Any]]:
-    """Run a single optimisation step (full-batch).
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
 
-    The function is AMP-aware: pass an instantiated ``GradScaler`` to train
-    in fp16; pass ``None`` for standard fp32 training.
-    """
-
-    model.train()
-    optimiser.zero_grad(set_to_none=True)
-
-    with autocast(enabled=scaler is not None):
-        out, aux = model(data.x, data.edge_index, epoch=epoch)
-        loss = F.cross_entropy(out[data.train_mask], data.y[data.train_mask])
-
-        # depth regulariser for APD-GNN (ignored by vanilla backbones)
-        if hasattr(model, "lambda_depth"):
-            depth_penalty = (aux.get("expected_K", 0.0) - model.K_target) ** 2
-            loss = loss + model.lambda_depth * depth_penalty
-
-    if scaler is None:
-        loss.backward()
-        optimiser.step()
-    else:
-        scaler.scale(loss).backward()
-        scaler.step(optimiser)
-        scaler.update()
-
-    return loss.item(), aux
+    # torch.use_deterministic_algorithms is available from 1.8
+    torch.use_deterministic_algorithms(True, warn_only=True)
 
 
-# ----------------------------------------------------------------------------------
-# Full training loop with early stopping & figure generation
-# ----------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+#  Single-run training routine
+# --------------------------------------------------------------------------------------
 
-def full_train(model: torch.nn.Module,
-               data: "torch_geometric.data.Data",
-               cfg: Dict[str, Any],
-               run_dir: pathlib.Path,
-               run_tag: str) -> Dict[str, float]:
-    """Train *model* on *data* according to *cfg* and return final test metrics."""
+def fit(
+    model: torch.nn.Module,
+    data,
+    cfg: Dict[str, Any],
+    run_dir: pathlib.Path,
+    seed: int = 0,
+) -> Dict[str, float]:
+    """Train *model* on *data* according to *cfg* and return a dictionary of metrics."""
 
-    device = torch.device(cfg["common"].get("device", "cpu"))
-    if not torch.cuda.is_available() and device.type == "cuda":
-        print("CUDA requested but not available – falling back to CPU.")
-        device = torch.device("cpu")
+    _set_seed(seed)
+    device = torch.device(cfg["common"]["device"])
 
     data = data.to(device)
     model = model.to(device)
 
-    # ------------------------------------------------------------------
-    # Optimiser – make sure hyper-parameters are correct types
-    # ------------------------------------------------------------------
-    opt_conf = cfg["common"]["optimiser"]
-    opt_cls = getattr(torch.optim, opt_conf["name"])
+    optimiser = torch.optim.AdamW(
+        model.parameters(),
+        lr=0.005,
+        weight_decay=cfg["common"]["optimiser"]["weight_decay"],
+        eps=cfg["common"]["optimiser"]["eps"],
+    )
+    scaler = GradScaler(enabled=not cfg["common"]["fp16"])  # AMP disabled by default
 
-    lr_value = float(cfg.get("lr", cfg["common"]["lr_grid"][0]))
-    eps_value = float(opt_conf.get("eps", 1e-8))
-    wd_value = float(opt_conf.get("weight_decay", 0.0))
-
-    optimiser = opt_cls(model.parameters(), lr=lr_value, eps=eps_value, weight_decay=wd_value)
-
-    # ------------------------------------------------------------------
-    # AMP scaler – instantiate *only* when fp16 is requested
-    # ------------------------------------------------------------------
-    scaler: GradScaler | None
-    if cfg["common"].get("fp16", False):
-        scaler = GradScaler(enabled=True)
-    else:
-        scaler = None
-
-    loss_hist, acc_hist = [], []
     best_val, best_state, patience = 0.0, None, 0
-    start_time = time.time()
+    loss_hist, val_hist = [], []
+    print_every = cfg["common"]["print_every"]
 
     for epoch in range(cfg["common"]["epochs"]):
-        loss, _ = train_epoch(model, data, optimiser, scaler, epoch)
+        model.train()
+        optimiser.zero_grad(set_to_none=True)
 
-        if epoch % 10 == 0:
-            metrics = evaluate(model, data)
-            loss_hist.append(loss)
-            acc_hist.append(metrics["accuracy"])
+        with autocast(enabled=cfg["common"]["fp16"]):
+            if hasattr(model, "L"):
+                # APD-GNN branch ---------------------------------------------------------
+                logits, h, k_exp = model(data.x, data.edge_index, epoch)
+                loss_cls = F.cross_entropy(logits[data.train_mask], data.y[data.train_mask])
+                loss_reg = model.lambda_depth * (k_exp.mean() - model.k_target).pow(2)
+                loss = loss_cls + loss_reg
+            else:
+                # vanilla GNN -----------------------------------------------------------
+                logits, h = model(data.x, data.edge_index)
+                loss = F.cross_entropy(logits[data.train_mask], data.y[data.train_mask])
 
-            # early stopping on accuracy (proxy for val)
-            if metrics["accuracy"] > best_val:
-                best_val = metrics["accuracy"]
-                best_state = {k: v.clone() for k, v in model.state_dict().items()}
-                patience = 0
+        scaler.scale(loss).backward()
+        scaler.step(optimiser)
+        scaler.update()
+
+        # ------------------------ validation -----------------------------------------
+        if epoch % print_every == 0:
+            model.eval()
+            with torch.no_grad():
+                val_logits, *_ = model(data.x, data.edge_index)
+                val_acc = classification_metrics(
+                    val_logits[data.val_mask], data.y[data.val_mask]
+                )["accuracy"]
+
+            loss_hist.append(loss.item())
+            val_hist.append(val_acc)
+
+            if val_acc > best_val:
+                best_val, best_state, patience = val_acc, model.state_dict(), 0
             else:
                 patience += 1
 
             if patience > cfg["common"]["early_stop_patience"]:
-                print("Early stopping triggered at epoch", epoch)
                 break
 
+    # Restore best model ----------------------------------------------------------------
     if best_state is not None:
         model.load_state_dict(best_state)
 
-    final_metrics = evaluate(model, data)
-
-    # ------------------------------------------------------------------
-    # Save training curves under the mandated image directory
-    # ------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------
+    #  Diagnostics – save learning curves
+    # -----------------------------------------------------------------------------------
     run_dir.mkdir(parents=True, exist_ok=True)
-    from .evaluate import save_lineplot
+    epochs_axis = list(range(0, len(loss_hist) * print_every, print_every))
 
-    img_root = pathlib.Path(".research/iteration5/images")
+    lineplot(
+        epochs_axis,
+        {"train_loss": loss_hist},
+        xlabel="epoch",
+        ylabel="loss",
+        title=f"Training loss – seed {seed}",
+        fname="training_loss.pdf",
+    )
+    lineplot(
+        epochs_axis,
+        {"val_acc": val_hist},
+        xlabel="epoch",
+        ylabel="accuracy",
+        title=f"Validation accuracy – seed {seed}",
+        fname="accuracy.pdf",
+    )
 
-    xs = list(range(0, len(loss_hist) * 10, 10))
-    save_lineplot(xs, {"loss": loss_hist},
-                  "Epoch", "Loss",
-                  f"Training loss – {run_tag}",
-                  str(img_root / f"training_loss_{run_tag}.pdf"))
+    # -----------------------------------------------------------------------------------
+    #  Final evaluation on the test split
+    # -----------------------------------------------------------------------------------
+    model.eval()
+    with torch.no_grad():
+        if hasattr(model, "L"):
+            logits, h_final, k_final = model(data.x, data.edge_index, epoch=999)
+        else:
+            logits, h_final = model(data.x, data.edge_index)
 
-    save_lineplot(xs, {"accuracy": acc_hist},
-                  "Epoch", "Accuracy",
-                  f"Accuracy – {run_tag}",
-                  str(img_root / f"accuracy_{run_tag}.pdf"))
+    metrics: Dict[str, float] = classification_metrics(
+        logits[data.test_mask], data.y[data.test_mask]
+    )
 
-    elapsed = (time.time() - start_time) / 60
-    print(f"Run {run_tag} finished in {elapsed:.1f} min – best acc {best_val:.3f}")
+    # Structural/oversmoothing metrics --------------------------------------------------
+    metrics.update(
+        {
+            "row_diff": row_diff(h_final),
+            "col_diff": col_diff(h_final),
+            "eff_rank": effective_rank(h_final),
+        }
+    )
 
-    return final_metrics
+    if hasattr(model, "L"):
+        deg = degree(data.edge_index[0], num_nodes=data.num_nodes)
+        metrics.update(
+            {
+                "mean_K": k_final.mean().item(),
+                "var_K": k_final.var().item(),
+                "spearman": spearman(k_final, deg),
+            }
+        )
+
+    # Persist checkpoint and metrics ----------------------------------------------------
+    torch.save({"state_dict": model.state_dict(), "metrics": metrics}, run_dir / "checkpoint.pt")
+
+    return metrics
