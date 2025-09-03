@@ -65,11 +65,15 @@ def fit(
     data = data.to(device)
     model = model.to(device)
 
+    # ------------------------------------------------------------------
+    #  Optimiser – make sure numeric hyper-params are proper floats
+    # ------------------------------------------------------------------
+    opt_cfg = cfg["common"]["optimiser"]
     optimiser = torch.optim.AdamW(
         model.parameters(),
         lr=0.005,
-        weight_decay=cfg["common"]["optimiser"]["weight_decay"],
-        eps=cfg["common"]["optimiser"]["eps"],
+        weight_decay=float(opt_cfg.get("weight_decay", 0.0)),
+        eps=float(opt_cfg.get("eps", 1e-8)),
     )
     scaler = GradScaler(enabled=not cfg["common"]["fp16"])  # AMP disabled by default
 
