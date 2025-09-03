@@ -1,0 +1,13 @@
+=== pip install start Wed Sep  3 12:01:17 UTC 2025 ===
+Collecting git+https://github.com/CompVis/taming-transformers.git (from -r requirements.txt (line 9))
+  Cloning https://github.com/CompVis/taming-transformers.git to /tmp/pip-req-build-8l7wuayh
+  Resolved https://github.com/CompVis/taming-transformers.git to commit 3ba01b241669f5ade541ce990f7650a3b8f65318
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting git+https://github.com/HATEM-project/hatem-cl.git (from -r requirements.txt (line 10))
+  Cloning https://github.com/HATEM-project/hatem-cl.git to /tmp/pip-req-build-_eak1zt6
+=== experiment start Wed Sep  3 12:01:26 UTC 2025 ===
