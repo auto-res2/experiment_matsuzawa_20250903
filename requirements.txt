@@ -1,1 +1,15 @@
-# Please list the required python packages.
+torch
+torch_geometric
+torch_scatter
+torch_sparse
+numpy
+scipy
+networkx
+matplotlib
+seaborn
+ogb
+optuna
+tqdm
+requests
+ptflops
+torchinfo
