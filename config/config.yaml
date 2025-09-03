@@ -1,31 +1,25 @@
-environment:
-  python_required: 3.10.*
-  pinned_wheels:
-    torch: torch==2.1.2
-    torchvision: torchvision==0.16.2
-    numpy: numpy==1.26.4
-    tqdm: tqdm==4.66.2
-    fvcore: fvcore==0.1.5.post20221221
-    torchmetrics: torchmetrics==1.3.2
-    matplotlib: matplotlib==3.8.4
-    seaborn: seaborn==0.13.2
-    yaml: PyYAML==6.0.1  # ensure availability before parsing
-
 dataset:
   name: Split-CIFAR100
   url: https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz
-  num_tasks: 20
+  tasks: 20
   classes_per_task: 5
-  seed_order: 0
-  mean: [0.5071, 0.4867, 0.4408]
-  std: [0.2675, 0.2565, 0.2761]
-
+  permutation_seed: 0
+  mean:
+    - 0.5071
+    - 0.4867
+    - 0.4408
+  std:
+    - 0.2675
+    - 0.2565
+    - 0.2761
 hyper:
   epochs_per_task: 10
   batch: 128
   lr: 0.05
   momentum: 0.9
   weight_decay: 0.0005
-
 memory_budget:
   bytes: 1048576
+quick_ci:
+  enabled: false
+  tasks: 2

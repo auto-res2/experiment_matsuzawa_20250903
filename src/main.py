@@ -1,111 +1,120 @@
-"""src/main.py – orchestrates Experiment-1 using the refactored modules"""
+"""
+main.py – reproducible entry-point that orchestrates the experiment.
+It loads the YAML config, runs unit-tests, trains all methods and finally
+creates the accuracy figure.  Execute with
+
+    python -m src.main
+"""
 from __future__ import annotations
-import sys, subprocess, importlib, json, time
+
+import sys, subprocess, importlib, os, time, json
 from pathlib import Path
-from typing import Dict
 
-# ----------------------------------------------------------------------
-# 0.  Ensure YAML is available *before* we attempt to import it ---------
-# ----------------------------------------------------------------------
-try:
-    import yaml  # type: ignore
-except ModuleNotFoundError:  # PyYAML not yet installed – install it on the fly
-    print('[setup] installing PyYAML≃6.0.1')
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'PyYAML==6.0.1'])
-    yaml = importlib.import_module('yaml')  # noqa: E305
+import yaml
 
-# ----------------------------------------------------------------------
-# 1.  Load configuration                                                 
-# ----------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parent  # /project/src
-CFG_PATH = ROOT.parent / 'config' / 'config.yaml'
-CFG: Dict = yaml.safe_load(CFG_PATH.read_text())
-
-# ----------------------------------------------------------------------
-# 2.  Environment guard & wheel bootstrap (unchanged logic)              
-# ----------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# 0.  ENVIRONMENT GUARD --------------------------------------------------------
 REQ_MAJOR, REQ_MINOR = 3, 10
-# Allow any Python version >= 3.10 instead of strictly pinning to 3.10.x.
-if sys.version_info < (REQ_MAJOR, REQ_MINOR):
-    raise RuntimeError(f"Python ≥{REQ_MAJOR}.{REQ_MINOR}.0 required, found {sys.version}")
+if sys.version_info[:2] != (REQ_MAJOR, REQ_MINOR):
+    raise RuntimeError(f"Python {REQ_MAJOR}.{REQ_MINOR}.x required – found {sys.version}")
 
-for mod, wheel in CFG['environment']['pinned_wheels'].items():
+# optional: auto-install pinned CUDA wheels for CI -----------------------------
+WHEELS = {
+    'torch': 'torch==2.1.2+cu122',
+    'torchvision': 'torchvision==0.16.2+cu122',
+    'numpy': 'numpy==1.26.4',
+    'tqdm': 'tqdm==4.66.2',
+    'fvcore': 'fvcore==0.1.5.post20221221',
+    'torchmetrics': 'torchmetrics==1.3.2',
+    'matplotlib': 'matplotlib==3.8.4',
+    'seaborn': 'seaborn==0.13.2',
+    'pyyaml': 'pyyaml==6.0.1'
+}
+for mod, wheel in WHEELS.items():
     try:
         importlib.import_module(mod)
     except ImportError:
-        print(f"[setup] installing pinned wheel {wheel}")
-        subprocess.check_call([
-            sys.executable,
-            '-m',
-            'pip',
-            'install',
-            wheel,
-            '--extra-index-url',
-            'https://download.pytorch.org/whl/cu122',
-        ])
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', wheel, '--extra-index-url', 'https://download.pytorch.org/whl/cu122'])
 
-# now heavy imports are safe -------------------------------------------
-import torch  # noqa: E402  pylint: disable=wrong-import-position
+# -----------------------------------------------------------------------------
+# 1.  PATHS --------------------------------------------------------------------
+ROOT = Path(__file__).resolve().parent.parent
+RUN_DIR = ROOT / 'runs'
+RUN_DIR.mkdir(exist_ok=True)
 
+# -----------------------------------------------------------------------------
+# 2.  LOAD CONFIG --------------------------------------------------------------
+CFG_PATH = ROOT / 'config' / 'config.yaml'
+with open(CFG_PATH, 'r') as fh:
+    CFG = yaml.safe_load(fh)
+
+# allow quick-CI override via env var -----------------------------------------
+if os.getenv('QUICK_CI') == '1':
+    CFG['quick_ci']['enabled'] = True
+
+# -----------------------------------------------------------------------------
+# 3.  IMPORT INTERNAL MODULES --------------------------------------------------
 from .train import (
     JEMB,
     Reservoir,
     InfLoRA,
-    run_method,
     run_unit_tests,
+    run_method,
 )
-from .evaluate import plot_curves
+from .evaluate import plot_accuracy
 
-RUNS_DIR = ROOT.parent / 'runs'
-RUNS_DIR.mkdir(parents=True, exist_ok=True)
+# -----------------------------------------------------------------------------
+DESC = f"""
+Experiment-1  –  Bug-free End-to-End Benchmark (CI Gate)
+Dataset : {CFG['dataset']['name']}  (tasks = {CFG['dataset']['tasks']})
+Budget  : {CFG['memory_budget']['bytes'] // (1 << 20)} MB (adapter + buffer)
+Seed    : 42{'  QUICK-CI' if CFG['quick_ci']['enabled'] else ''}
+Models  : JEMB-dynamic, Reservoir, InfLoRA
+Metrics : per-task A_T curve, bytes_A, bytes_B
+"""
 
-DESCRIPTION = (
-    """
-Experiment-1  –  Correct-Task End-to-End Benchmark\n"
-    "Dataset : Split-CIFAR100 (20 × 5 classes)\n"
-    "Budget  : 1 MB (joint adapter + buffer)    Seed : 42\n"
-    "Models  : JEMB, Reservoir, InfLoRA\n"
-    "Metrics : per-task average accuracy, bytes_adapter, bytes_buffer\n"""
-)
-
+# -----------------------------------------------------------------------------
+# 4.  MAIN ---------------------------------------------------------------------
 
 def main():
-    print('\n' + DESCRIPTION + '\n')
-    run_unit_tests()
+    print(DESC)
+    run_unit_tests()  # fast sanity checks
     start = time.time()
 
-    logs: Dict[str, TaskLog] = {}
-    results = []
+    METHODS = {
+        'JEMB': lambda led, mp: JEMB(led, mp),
+        'Reservoir': lambda led, mp: Reservoir(led, mp),
+        'InfLoRA': lambda led, mp: InfLoRA(led, mp),
+    }
 
-    for name, ctor in [
-        ('JEMB', lambda led: JEMB(led)),
-        ('Reservoir', lambda led: Reservoir(led)),
-        ('InfLoRA', lambda led: InfLoRA(led)),
-    ]:
-        res, lg = run_method(name, ctor, CFG, seed=42)
-        results.append(res)
-        logs[name] = lg
+    all_logs = {}
+    summary = []
+    for name, ctor in METHODS.items():
+        s, log = run_method(name, ctor, CFG)
+        all_logs[name] = log
+        summary.append(s)
 
-    # -------------------- sanity gates --------------------------------
-    if results[0]['A_T'] < 30:
-        raise RuntimeError('ci_final_acc() gate failed – JEMB accuracy below 30 %')
-    if max(logs['JEMB'].B) == 0 or len(set(logs['JEMB'].B)) < 2:
-        raise RuntimeError('controller_allocates_buffer() failed – buffer never used')
-    if not 45 <= results[1]['A_T'] <= 65:
-        raise RuntimeError('reservoir_in_range() failed – baseline sanity')
+    # — CI gates ---------------------------------------------------------
+    if summary[0]['A_T'] < 30 or summary[0]['A_T'] < summary[2]['A_T']:
+        raise RuntimeError('finalAcc gate failed')
 
-    # -------------------- persist & plots ------------------------------
+    if max(all_logs['JEMB'].B) == 0 or len(set(all_logs['JEMB'].B)) < 4:
+        raise RuntimeError('controller_allocates_buffer gate failed')
+
+    if not 45 <= summary[1]['A_T'] <= 65 and not CFG['quick_ci']['enabled']:
+        raise RuntimeError('reservoir_sanity gate failed')
+
     out = {
-        'description': DESCRIPTION,
-        'per_task': {k: {'acc': v.acc, 'bytesA': v.A, 'bytesB': v.B} for k, v in logs.items()},
-        'summary': results,
+        'description': DESC,
+        'summary': summary,
+        'per_task': {k: vars(v) for k, v in all_logs.items()},
         'wall_clock_s': round(time.time() - start, 2),
     }
-    (RUNS_DIR / 'run_ci.json').write_text(json.dumps(out, indent=2))
-    print('\n[results]\n', json.dumps(results, indent=2))
+    (RUN_DIR / 'run_ci.json').write_text(json.dumps(out, indent=2))
+    print('\n[results]\n', json.dumps(summary, indent=2))
     print('[saved] runs/run_ci.json')
 
-    plot_curves(logs)
+    plot_accuracy(all_logs)
 
 
 if __name__ == '__main__':
