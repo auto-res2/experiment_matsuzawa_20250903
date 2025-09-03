@@ -1,10 +1,10 @@
+from __future__ import annotations
 """
 evaluate.py
 ~~~~~~~~~~~
 Contains simple helper utilities for evaluation & visualisation so that the
 core *train.py* stays focused.
 """
-from __future__ import annotations
 import pathlib
 from typing import List
 import matplotlib
@@ -12,7 +12,8 @@ matplotlib.use("Agg")  # headless backend
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-FIG_DIR = pathlib.Path(__file__).resolve().parent.parent / ".research" / "iteration1" / "images"
+# All experiment figures must be saved under this directory (see instructions)
+FIG_DIR = pathlib.Path(__file__).resolve().parent.parent / ".research" / "iteration2" / "images"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -21,7 +22,7 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 # -----------------------------------------------------------------------------
 
 def save_training_curves(losses: List[float], val_scores: List[float], run_name: str) -> None:
-    """Save loss & val-F1 curves into *.pdf* inside the required path."""
+    """Save loss & val-F1 curves for a single run."""
     fig, ax1 = plt.subplots(figsize=(5, 3))
     ax2 = ax1.twinx()
 
@@ -41,4 +42,5 @@ def save_training_curves(losses: List[float], val_scores: List[float], run_name:
     out_path = FIG_DIR / f"training_loss_{run_name}.pdf"
     fig.savefig(out_path, bbox_inches="tight")
     plt.close(fig)
+    # Show relative path wrt the root .research directory for concise logging
     print(f"Figure saved – {out_path.relative_to(FIG_DIR.parent.parent)}")
