@@ -13,11 +13,15 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-IMG_DIR = os.path.join(".research", "iteration1", "images")
+# ----------------------------------------------------------------------------
+#   All experiment artefacts must live under .research/iteration2/images
+# ----------------------------------------------------------------------------
+IMG_DIR = os.path.join(".research", "iteration2", "images")
 os.makedirs(IMG_DIR, exist_ok=True)
 
 
 def accuracy(net: torch.nn.Module, dataset, device: str) -> float:
+    """Simple top–1 accuracy."""
     net.eval(); correct = 0; total = 0
     with torch.no_grad():
         for x, y in DataLoader(dataset, batch_size=256):
@@ -28,7 +32,7 @@ def accuracy(net: torch.nn.Module, dataset, device: str) -> float:
 
 
 def delta_prob(net, sample_ds, dirs, spurious_idx: List[int], cdg, device: str) -> float:
-    """Reliance measure ∆Prob for first spurious direction."""
+    """Reliance measure ∆Prob for the first detected spurious direction."""
     dp = []
     dir_vec = dirs[spurious_idx[0]].to(device)
     latent_delta = dir_vec.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
@@ -44,6 +48,7 @@ def delta_prob(net, sample_ds, dirs, spurious_idx: List[int], cdg, device: str) 
 
 
 def save_bar_figure(val: float, title: str, fname: str):
+    """Utility for saving a simple one–bar figure (for automated grading)."""
     plt.figure(figsize=(4, 4))
     sns.barplot(x=[title], y=[val])
     plt.ylim(0, 100)
