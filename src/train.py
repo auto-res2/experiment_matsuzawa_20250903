@@ -46,6 +46,7 @@ class ProductQuantiser(nn.Module):
         super().__init__()
         assert dim % M == 0, "dim must be divisible by M"
         self.M, self.K, self.dsub, self.tau = M, K, dim // M, tau
+        # Codebook:  M × K × dsub  (one independent K×dsub table per sub-vector)
         self.codebook = nn.Parameter(torch.randn(M, K, self.dsub))
 
     # ------------------------------------------------------------------
@@ -61,12 +62,19 @@ class ProductQuantiser(nn.Module):
         """
         B, D = x.shape
         x = x.view(B, self.M, self.dsub)                                    # B × M × dsub
+        # Similarity between input sub-vectors and codewords --------------
         logits = (x.unsqueeze(2) * self.codebook).sum(-1)                   # B × M × K
-        # Straight-through Gumbel-Softmax
-        g = -torch.empty_like(logits).exponential_().log()
-        y = F.softmax((logits + g) / self.tau, dim=-1)
-        y_hard = F.one_hot(y.argmax(-1), self.K).type_as(y)
-        z_q = (y_hard @ self.codebook).reshape(B, -1)                       # B × D
+
+        # Straight-through Gumbel-Softmax ---------------------------------
+        g = -torch.empty_like(logits).exponential_().log()                  # Gumbel noise
+        y = F.softmax((logits + g) / self.tau, dim=-1)                      # soft sample
+        y_hard = F.one_hot(y.argmax(-1), self.K).type_as(y)                 # hard sample (ST)
+
+        # Reconstruct quantised feature per codebook then concat ----------
+        #   y_hard : B × M × K
+        #   codebk : M × K × dsub
+        # → einsum gives             B × M × dsub
+        z_q = torch.einsum("bmk,mkd->bmd", y_hard, self.codebook).reshape(B, -1)  # B × D
         return z_q, y_hard.argmax(-1).to(torch.uint8)
 
 
@@ -139,7 +147,7 @@ class TCR(nn.Module):
         B = tok.size(0)
         onehot = F.one_hot(tok, 256).float()            # B × M × 256
         code = self.quant.codebook                      # M × 256 × dsub
-        z = (onehot @ code).reshape(B, -1)              # B × 128
+        z = torch.einsum("bmk,mkd->bmd", onehot, code).reshape(B, -1)  # B × 128
         logits = self.head(z)
         return F.cross_entropy(logits, y)
 

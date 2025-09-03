@@ -1,6 +1,6 @@
 """src/evaluate.py
 Evaluation, statistical analysis & plotting utilities.
-All plots are written under `.research/iteration8/images/` as required.
+All plots are written under `.research/iteration9/images/` as required.
 """
 from __future__ import annotations
 
@@ -18,8 +18,8 @@ import statsmodels.stats.anova as sm_anova
 # ---------------------------------------------------------------------
 # directory for figures (created on first import)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# NOTE: During the refactor all images must now live under iteration8
-IMAGES_DIR = PROJECT_ROOT / ".research" / "iteration8" / "images"
+# NOTE: Updated per refactor – all images must now live under iteration9
+IMAGES_DIR = PROJECT_ROOT / ".research" / "iteration9" / "images"
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
 sns.set(style="whitegrid")
