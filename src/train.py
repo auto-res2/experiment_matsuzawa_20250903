@@ -101,8 +101,17 @@ class TCRModel(nn.Module):
     # Forward paths
     # -------------------------------------------------------------------------
     def _encode_img(self, x: torch.Tensor) -> torch.Tensor:  # (B,3,H,W) → (B,128)
-        feat = self.backbone.forward_features(x)            # (B,seq,feat)
-        feat = feat.transpose(1, 2)                         # (B,feat,seq)
+        """Backbone + adapter with support for both token and feature-map backbones."""
+        feat = self.backbone.forward_features(x)
+        if feat.dim() == 3:                  # (B, seq, C)  e.g. ViT
+            feat = feat.transpose(1, 2)      # (B, C, seq)
+        elif feat.dim() == 4:                # (B, C, H, W) e.g. MobileNetV3
+            # pool spatial dims → length-1 sequence so that Conv1d still works
+            feat = F.adaptive_avg_pool2d(feat, 1)  # (B, C, 1, 1)
+            feat = feat.view(feat.size(0), feat.size(1), 1)  # (B, C, 1)
+        else:
+            raise ValueError(f"Unexpected backbone feature shape {feat.shape} .")
+
         adapted = self.adapter(feat).squeeze(-1)            # (B,128)
         return adapted
 
