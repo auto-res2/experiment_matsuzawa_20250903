@@ -1,0 +1,13 @@
+=== pip install start Wed Sep  3 04:37:18 UTC 2025 ===
+Looking in indexes: https://pypi.org/simple, https://download.pytorch.org/whl/cu118
+Looking in links: https://data.pyg.org/whl/torch-2.2.0+cu118
+Collecting torch==2.2.0+cu118 (from -r requirements.txt (line 9))
+  Downloading https://download.pytorch.org/whl/cu118/torch-2.2.0%2Bcu118-cp311-cp311-linux_x86_64.whl (811.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 811.7/811.7 MB 27.0 MB/s  0:00:11
+Collecting torchvision==0.17.0+cu118 (from -r requirements.txt (line 10))
+  Downloading https://download.pytorch.org/whl/cu118/torchvision-0.17.0%2Bcu118-cp311-cp311-linux_x86_64.whl (6.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.2/6.2 MB 153.7 MB/s  0:00:00
+Collecting torchaudio==2.2.0+cu118 (from -r requirements.txt (line 11))
+  Downloading https://download.pytorch.org/whl/cu118/torchaudio-2.2.0%2Bcu118-cp311-cp311-linux_x86_64.whl (3.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 173.9 MB/s  0:00:00
+=== experiment start Wed Sep  3 04:37:34 UTC 2025 ===
