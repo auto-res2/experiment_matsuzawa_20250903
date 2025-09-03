@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Data loading & preprocessing utilities."""
 from __future__ import annotations
-import tarfile, urllib.request as urlreq, random
+import tarfile, urllib.request as urlreq
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -18,23 +18,42 @@ DATA_DIR = ROOT / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 # -----------------------------------------------------------------------------
+#  Utility helpers
+# -----------------------------------------------------------------------------
+
+def _find_metadata_parent() -> Path | None:
+    """Return the directory that contains `metadata.csv` (if any)."""
+    for p in DATA_DIR.rglob("metadata.csv"):
+        return p.parent
+    return None
+
+# -----------------------------------------------------------------------------
 #  Dataset classes
 # -----------------------------------------------------------------------------
 
 class WaterbirdsDataset(Dataset):
-    """Stanford Waterbirds dataset (pre-processed 224×224)."""
-    base_dir = DATA_DIR / "waterbirds"
+    """Stanford Waterbirds dataset (pre-processed 224×224).
+
+    The original archive extracts into a directory called
+    `waterbird_complete95_forest2water2`.  Earlier versions of this code
+    assumed the path `data/waterbirds/…`, which resulted in
+    FileNotFoundError at runtime.  We now robustly locate (or download &
+    extract) the dataset and remember the correct base directory.
+    """
+
+    _URL = "https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz"
 
     def __init__(self, split: str, transform):
         assert split in {"train", "val", "test"}
         self.transform = transform
-        self._ensure_download()
+        self.base_dir: Path = self._ensure_available()
+
         meta = pd.read_csv(self.base_dir / "metadata.csv")
         split_idx = {"train": 0, "val": 1, "test": 2}[split]
-        self.samples = meta[meta["split"] == split_idx]
-        self.img_paths = self.samples["img_filename"].tolist()
-        self.labels = self.samples["y"].values.astype(np.int64)
-        self.groups = self.samples["place"].values.astype(np.int64)  # land=0, water=1
+        samples = meta[meta["split"] == split_idx]
+        self.img_paths = samples["img_filename"].tolist()
+        self.labels    = samples["y"].values.astype(np.int64)
+        self.groups    = samples["place"].values.astype(np.int64)  # land=0, water=1
 
     # ------------------------------------------------------------------
     #  standard Dataset stuff
@@ -51,25 +70,33 @@ class WaterbirdsDataset(Dataset):
         return img, self.labels[idx], self.groups[idx]
 
     # ------------------------------------------------------------------
-    #  helper
+    #  download / extract helper
     # ------------------------------------------------------------------
     @classmethod
-    def _ensure_download(cls):
-        if (cls.base_dir / "metadata.csv").exists():
-            return
+    def _ensure_available(cls) -> Path:
+        """Make sure the dataset is present and return its base directory."""
+        found = _find_metadata_parent()
+        if found is not None:
+            return found
+
+        # dataset missing – download & extract
         print("Downloading Waterbirds dataset …")
         tar_path = DATA_DIR / "waterbirds.tar.gz"
-        url = "https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz"
         try:
-            urlreq.urlretrieve(url, tar_path)
+            urlreq.urlretrieve(cls._URL, tar_path)
             with tarfile.open(tar_path, "r:gz") as tar:
                 tar.extractall(DATA_DIR)
         except Exception as e:
-            raise RuntimeError("Failed to download Waterbirds dataset") from e
+            raise RuntimeError("Failed to download or extract the Waterbirds dataset") from e
         finally:
             if tar_path.exists():
                 tar_path.unlink(missing_ok=True)
         print("Waterbirds download complete.")
+
+        found = _find_metadata_parent()
+        if found is None:
+            raise RuntimeError("Waterbirds dataset extraction failed – `metadata.csv` not found.")
+        return found
 
 # -----------------------------------------------------------------------------
 #  CelebA single-attribute (binary) dataset
@@ -127,9 +154,9 @@ class MiniImageNet9(Dataset):
 def get_transforms(img_size: int, *, train: bool):
     if train:
         aug = tvf.Compose([
-            tvf.ToPILImage() if train else tvf.Lambda(lambda x: x),
+            tvf.ToPILImage(),
             tvf.Resize(int(img_size * 256 / 224)),
-            tvf.RandomResizedCrop(img_size) if train else tvf.CenterCrop(img_size),
+            tvf.RandomResizedCrop(img_size),
             tvf.RandomHorizontalFlip(),
             tvf.ToTensor(),
             tvf.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
