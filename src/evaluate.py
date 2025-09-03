@@ -1,4 +1,3 @@
-"""src/evaluate.py – evaluation utilities (plots, metrics, etc.)"""
 from __future__ import annotations
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -7,7 +6,7 @@ from typing import Dict
 from .train import TaskLog
 
 # hard-coded figure directory requested by the specification
-FIG_DIR = Path('.research/iteration14/images')
+FIG_DIR = Path('.research/iteration15/images')  # ← updated to iteration15
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 

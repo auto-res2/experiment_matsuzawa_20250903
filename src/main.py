@@ -4,7 +4,15 @@ import sys, subprocess, importlib, json, time
 from pathlib import Path
 from typing import Dict
 
-import yaml
+# ----------------------------------------------------------------------
+# 0.  Ensure YAML is available *before* we attempt to import it ---------
+# ----------------------------------------------------------------------
+try:
+    import yaml  # type: ignore
+except ModuleNotFoundError:  # PyYAML not yet installed – install it on the fly
+    print('[setup] installing PyYAML≃6.0.1')
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'PyYAML==6.0.1'])
+    yaml = importlib.import_module('yaml')  # noqa: E305
 
 # ----------------------------------------------------------------------
 # 1.  Load configuration                                                 
@@ -65,7 +73,7 @@ def main():
     run_unit_tests()
     start = time.time()
 
-    logs = {}
+    logs: Dict[str, TaskLog] = {}
     results = []
 
     for name, ctor in [
