@@ -250,13 +250,19 @@ class PCCMTrainer:
                 sims = outs.logits_per_image  # [B, |A|]
             all_sims.append(sims.float().cpu())
             all_labels.append(y)
-        S = torch.cat(all_sims)  # (N, |A|)
-        Y = torch.cat(all_labels).float()
+        S = torch.cat(all_sims)  # (N, |A|)  – on CPU
+        Y = torch.cat(all_labels).cpu()  # (N,)
+
+        # Convert labels once to NumPy for repeated reuse
+        Y_np = Y.numpy()
         C_scores: List[float] = []
         for j in range(S.shape[1]):
             sj = S[:, j]
-            corr = abs(np.corrcoef(sj, Y)[0, 1])
-            mi = mutual_info_score(Y, pd.qcut(sj, q=10, duplicates="drop"))
+            sj_np = sj.numpy()
+            # Pearson correlation (absolute value)
+            corr = abs(np.corrcoef(sj_np, Y_np)[0, 1])
+            # Mutual information – need discrete inputs. Use pandas qcut on sj.
+            mi = mutual_info_score(Y_np, pd.qcut(sj_np, q=10, duplicates="drop"))
             C_scores.append(corr - mi)
         C_scores = np.asarray(C_scores)
         sel = np.where(C_scores > np.percentile(C_scores, 90))[0]  # top-10 % as spurious
