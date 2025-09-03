@@ -48,7 +48,10 @@ torch.set_float32_matmul_precision("high")
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
 CACHE_DIR = ROOT / "checkpoints"
-FIG_DIR = ROOT / ".research" / "iteration4" / "images"  # <- as per spec
+# ------------------------------------------------------------------
+#  All experiment figures must be stored in this folder as per spec
+# ------------------------------------------------------------------
+FIG_DIR = ROOT / ".research" / "iteration5" / "images"
 LOG_DIR = ROOT / "logs"
 
 for d in [DATA_DIR, CACHE_DIR, FIG_DIR, LOG_DIR]:

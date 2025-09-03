@@ -1,8 +1,30 @@
-torch>=2.1.0
-torch-scatter
-torch-sparse
-torch-geometric
-ogb
+# ------------------------------
+#  Deep-learning stack (CUDA11.8)
+# ------------------------------
+# Pytorch & vision/audio (pre-built CUDA wheels)
+--extra-index-url https://download.pytorch.org/whl/cu118
+
+# We pin the PyTorch version to one that has pre-compiled PyG binaries
+# available on pyg.org so that we can avoid compiling from source.
+torch==2.2.0+cu118
+torchvision==0.17.0+cu118
+torchaudio==2.2.0+cu118
+
+# ---------------------------------------------------
+#  PyG & associated CUDA extensions (binary wheels)
+# ---------------------------------------------------
+# All wheels are fetched from the official PyG wheelhouse.
+-f https://data.pyg.org/whl/torch-2.2.0+cu118
+pyg_lib==0.4.0
+torch-scatter==2.1.2
+torch-sparse==0.6.18
+torch-cluster==1.6.3
+torch-spline-conv==1.2.2
+torch-geometric==2.5.3
+
+# ------------------------------
+#  Numerical / utility packages
+# ------------------------------
 numpy
 pandas
 scipy
