@@ -272,8 +272,19 @@ class PCCMTrainer:
     # 2) Counterfactual synthesis (coarse full-image in-paint for speed)
     # ---------------------------------------------------------------------
     def _gen_counterfactual_batch(self, x: torch.Tensor, attr_idx: torch.Tensor) -> torch.Tensor:
-        # Convert indices tensor to Python ints and craft negative prompt list
-        neg_prompt = [PROMPT_BANK[int(i)].replace("a photo of ", "remove ") for i in attr_idx.tolist()]
+        """Generate a batch of counterfactual images via Stable Diffusion in-painting.
+
+        StableDiffusionInpaintPipeline requires the *types* of `prompt` and
+        `negative_prompt` to match (both str or both list). The earlier
+        implementation supplied a *list* of negative prompts together with a
+        *string* prompt, triggering a TypeError. We now concatenate the list of
+        negative prompts into a single comma-separated string so that both
+        arguments are plain strings.
+        """
+        # Build a single negative-prompt string.
+        neg_prompt_list = [PROMPT_BANK[int(i)].replace("a photo of ", "remove ") for i in attr_idx.tolist()]
+        negative_prompt = ", ".join(neg_prompt_list) if neg_prompt_list else ""
+
         cf_imgs = []
         # Denormalise once for PIL conversion
         x_vis = self._unnormalize(x).clamp(0, 1)
@@ -281,7 +292,7 @@ class PCCMTrainer:
             for img in x_vis:
                 pil = T.ToPILImage()(img.cpu())
                 mask = Image.new("L", pil.size, color=255)  # white mask ⇒ full image
-                out = self.inp_pipe(prompt="", negative_prompt=neg_prompt, image=pil, mask_image=mask).images[0]
+                out = self.inp_pipe(prompt="", negative_prompt=negative_prompt, image=pil, mask_image=mask).images[0]
                 cf_imgs.append(_val_tf(out))
         return torch.stack(cf_imgs).to(DEVICE)
 
