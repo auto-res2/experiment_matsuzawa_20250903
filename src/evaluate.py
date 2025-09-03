@@ -4,8 +4,8 @@ from typing import Dict
 import matplotlib.pyplot as plt
 
 # Where camera-ready figures must go -----------------------------------------
-# (updated to iteration11 as per repository policy)
-FIG_DIR = Path(".research/iteration11/images")
+# NOTE: repository policy update – all images are now stored under iteration12
+FIG_DIR = Path(".research/iteration12/images")
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 ###############################################################################
