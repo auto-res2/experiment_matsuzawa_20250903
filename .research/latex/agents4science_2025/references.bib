@@ -5,3 +5,733 @@
   publisher = {GitHub},
   url       = {https://github.com/airas-org/airas}
 }
+
+% ===========================================
+% REQUIRED CITATIONS
+% These papers must be cited in the manuscript
+% ===========================================
+
+@article{author-year-improving,
+ title = {Improving Breadth-Wise Backpropagation in Graph Neural Networks Helps Learning Long-Range Dependencies.}
+}
+
+@article{cai-2020-graphnorm,
+ abstract = {Normalization is known to help the optimization of deep neural networks.
+Curiously, different architectures require specialized normalization methods.
+In this paper, we study what normalization is effective for Graph Neural
+Networks (GNNs). First, we adapt and evaluate the existing methods from other
+domains to GNNs. Faster convergence is achieved with InstanceNorm compared to
+BatchNorm and LayerNorm. We provide an explanation by showing that InstanceNorm
+serves as a preconditioner for GNNs, but such preconditioning effect is weaker
+with BatchNorm due to the heavy batch noise in graph datasets. Second, we show
+that the shift operation in InstanceNorm results in an expressiveness
+degradation of GNNs for highly regular graphs. We address this issue by
+proposing GraphNorm with a learnable shift. Empirically, GNNs with GraphNorm
+converge faster compared to GNNs using other normalization. GraphNorm also
+improves the generalization of GNNs, achieving better performance on graph
+classification benchmarks.},
+ arxiv_url = {https://arxiv.org/pdf/2009.03294v3.pdf},
+ author = {Tianle Cai and Shengjie Luo and Keyulu Xu and Di He and Tie-Yan Liu and Liwei Wang},
+ title = {GraphNorm: A Principled Approach to Accelerating Graph Neural Network Training},
+ year = {2020}
+}
+
+@article{cheng-2023-gnndelete,
+ abstract = {Graph unlearning, which involves deleting graph elements such as nodes, node
+labels, and relationships from a trained graph neural network (GNN) model, is
+crucial for real-world applications where data elements may become irrelevant,
+inaccurate, or privacy-sensitive. However, existing methods for graph
+unlearning either deteriorate model weights shared across all nodes or fail to
+effectively delete edges due to their strong dependence on local graph
+neighborhoods. To address these limitations, we introduce GNNDelete, a novel
+model-agnostic layer-wise operator that optimizes two critical properties,
+namely, Deleted Edge Consistency and Neighborhood Influence, for graph
+unlearning. Deleted Edge Consistency ensures that the influence of deleted
+elements is removed from both model weights and neighboring representations,
+while Neighborhood Influence guarantees that the remaining model knowledge is
+preserved after deletion. GNNDelete updates representations to delete nodes and
+edges from the model while retaining the rest of the learned knowledge. We
+conduct experiments on seven real-world graphs, showing that GNNDelete
+outperforms existing approaches by up to 38.8% (AUC) on edge, node, and node
+feature deletion tasks, and 32.2% on distinguishing deleted edges from
+non-deleted ones. Additionally, GNNDelete is efficient, taking 12.3x less time
+and 9.3x less space than retraining GNN from scratch on WordNet18.},
+ arxiv_url = {https://arxiv.org/pdf/2302.13406v1.pdf},
+ author = {Jiali Cheng and George Dasoulas and Huan He and Chirag Agarwal and Marinka Zitnik},
+ github_url = {https://github.com/mims-harvard/GNNDelete},
+ title = {GNNDelete: A General Strategy for Unlearning in Graph Neural Networks},
+ year = {2023}
+}
+
+@article{eliasof-2024-granola,
+ abstract = {In recent years, significant efforts have been made to refine the design of
+Graph Neural Network (GNN) layers, aiming to overcome diverse challenges, such
+as limited expressive power and oversmoothing. Despite their widespread
+adoption, the incorporation of off-the-shelf normalization layers like
+BatchNorm or InstanceNorm within a GNN architecture may not effectively capture
+the unique characteristics of graph-structured data, potentially reducing the
+expressive power of the overall architecture. Moreover, existing graph-specific
+normalization layers often struggle to offer substantial and consistent
+benefits. In this paper, we propose GRANOLA, a novel graph-adaptive
+normalization layer. Unlike existing normalization layers, GRANOLA normalizes
+node features by adapting to the specific characteristics of the graph,
+particularly by generating expressive representations of its neighborhood
+structure, obtained by leveraging the propagation of Random Node Features (RNF)
+in the graph. We present theoretical results that support our design choices.
+Our extensive empirical evaluation of various graph benchmarks underscores the
+superior performance of GRANOLA over existing normalization techniques.
+Furthermore, GRANOLA emerges as the top-performing method among all baselines
+within the same time complexity of Message Passing Neural Networks (MPNNs).},
+ arxiv_url = {https://arxiv.org/pdf/2404.13344v2.pdf},
+ author = {Moshe Eliasof and Beatrice Bevilacqua and Carola-Bibiane Schönlieb and Haggai Maron},
+ github_url = {https://github.com/MosheEliasof/GRANOLA},
+ title = {GRANOLA: Adaptive Normalization for Graph Neural Networks},
+ year = {2024}
+}
+
+@article{epping-2024-graph,
+ abstract = {Graph neural networks (GNNs) have emerged as powerful tools for processing
+relational data in applications. However, GNNs suffer from the problem of
+oversmoothing, the property that the features of all nodes exponentially
+converge to the same vector over layers, prohibiting the design of deep GNNs.
+In this work we study oversmoothing in graph convolutional networks (GCNs) by
+using their Gaussian process (GP) equivalence in the limit of infinitely many
+hidden features. By generalizing methods from conventional deep neural networks
+(DNNs), we can describe the distribution of features at the output layer of
+deep GCNs in terms of a GP: as expected, we find that typical parameter choices
+from the literature lead to oversmoothing. The theory, however, allows us to
+identify a new, non-oversmoothing phase: if the initial weights of the network
+have sufficiently large variance, GCNs do not oversmooth, and node features
+remain informative even at large depth. We demonstrate the validity of this
+prediction in finite-size GCNs by training a linear classifier on their output.
+Moreover, using the linearization of the GCN GP, we generalize the concept of
+propagation depth of information from DNNs to GCNs. This propagation depth
+diverges at the transition between the oversmoothing and non-oversmoothing
+phase. We test the predictions of our approach and find good agreement with
+finite-size GCNs. Initializing GCNs near the transition to the
+non-oversmoothing phase, we obtain networks which are both deep and expressive.},
+ arxiv_url = {https://arxiv.org/pdf/2406.02269v2.pdf},
+ author = {Bastian Epping and Alexandre René and Moritz Helias and Michael T. Schaub},
+ github_url = {https://github.com/bepping/non-oversmoothing-gcns},
+ journal = {Advances in Neural Information Processing Systems 37 (NeurIPS
+  2024)},
+ title = {Graph Neural Networks Do Not Always Oversmooth},
+ year = {2024}
+}
+
+@article{guo-2023-contranorm,
+ abstract = {Oversmoothing is a common phenomenon in a wide range of Graph Neural Networks
+(GNNs) and Transformers, where performance worsens as the number of layers
+increases. Instead of characterizing oversmoothing from the view of complete
+collapse in which representations converge to a single point, we dive into a
+more general perspective of dimensional collapse in which representations lie
+in a narrow cone. Accordingly, inspired by the effectiveness of contrastive
+learning in preventing dimensional collapse, we propose a novel normalization
+layer called ContraNorm. Intuitively, ContraNorm implicitly shatters
+representations in the embedding space, leading to a more uniform distribution
+and a slighter dimensional collapse. On the theoretical analysis, we prove that
+ContraNorm can alleviate both complete collapse and dimensional collapse under
+certain conditions. Our proposed normalization layer can be easily integrated
+into GNNs and Transformers with negligible parameter overhead. Experiments on
+various real-world datasets demonstrate the effectiveness of our proposed
+ContraNorm. Our implementation is available at
+https://github.com/PKU-ML/ContraNorm.},
+ arxiv_url = {https://arxiv.org/pdf/2303.06562v2.pdf},
+ author = {Xiaojun Guo and Yifei Wang and Tianqi Du and Yisen Wang},
+ github_url = {https://github.com/PKU-ML/ContraNorm},
+ title = {ContraNorm: A Contrastive Learning Perspective on Oversmoothing and Beyond},
+ year = {2023}
+}
+
+@article{gutteridge-2023-drew,
+ abstract = {Message passing neural networks (MPNNs) have been shown to suffer from the
+phenomenon of over-squashing that causes poor performance for tasks relying on
+long-range interactions. This can be largely attributed to message passing only
+occurring locally, over a node's immediate neighbours. Rewiring approaches
+attempting to make graphs 'more connected', and supposedly better suited to
+long-range tasks, often lose the inductive bias provided by distance on the
+graph since they make distant nodes communicate instantly at every layer. In
+this paper we propose a framework, applicable to any MPNN architecture, that
+performs a layer-dependent rewiring to ensure gradual densification of the
+graph. We also propose a delay mechanism that permits skip connections between
+nodes depending on the layer and their mutual distance. We validate our
+approach on several long-range tasks and show that it outperforms graph
+Transformers and multi-hop MPNNs.},
+ arxiv_url = {https://arxiv.org/pdf/2305.08018v2.pdf},
+ author = {Benjamin Gutteridge and Xiaowen Dong and Michael Bronstein and Francesco Di Giovanni},
+ github_url = {https://github.com/BenGutteridge/DRew},
+ title = {DRew: Dynamically Rewired Message Passing with Delay},
+ year = {2023}
+}
+
+@article{jaiswal-2022-old,
+ abstract = {Despite the enormous success of Graph Convolutional Networks (GCNs) in
+modeling graph-structured data, most of the current GCNs are shallow due to the
+notoriously challenging problems of over-smoothening and information squashing
+along with conventional difficulty caused by vanishing gradients and
+over-fitting. Previous works have been primarily focused on the study of
+over-smoothening and over-squashing phenomena in training deep GCNs.
+Surprisingly, in comparison with CNNs/RNNs, very limited attention has been
+given to understanding how healthy gradient flow can benefit the trainability
+of deep GCNs. In this paper, firstly, we provide a new perspective of gradient
+flow to understand the substandard performance of deep GCNs and hypothesize
+that by facilitating healthy gradient flow, we can significantly improve their
+trainability, as well as achieve state-of-the-art (SOTA) level performance from
+vanilla-GCNs. Next, we argue that blindly adopting the Glorot initialization
+for GCNs is not optimal, and derive a topology-aware isometric initialization
+scheme for vanilla-GCNs based on the principles of isometry. Additionally,
+contrary to ad-hoc addition of skip-connections, we propose to use
+gradient-guided dynamic rewiring of vanilla-GCNs} with skip connections. Our
+dynamic rewiring method uses the gradient flow within each layer during
+training to introduce on-demand skip-connections adaptively. We provide
+extensive empirical evidence across multiple datasets that our methods improve
+gradient flow in deep vanilla-GCNs and significantly boost their performance to
+comfortably compete and outperform many fancy state-of-the-art methods. Codes
+are available at: https://github.com/VITA-Group/GradientGCN.},
+ arxiv_url = {https://arxiv.org/pdf/2210.08122v1.pdf},
+ author = {Ajay Jaiswal and Peihao Wang and Tianlong Chen and Justin F. Rousseau and Ying Ding and Zhangyang Wang},
+ github_url = {https://github.com/VITA-Group/GradientGCN},
+ title = {Old can be Gold: Better Gradient Flow can Make Vanilla-GCNs Great Again},
+ year = {2022}
+}
+
+@article{nguyen-2022-revisiting,
+ abstract = {Graph Neural Networks (GNNs) had been demonstrated to be inherently
+susceptible to the problems of over-smoothing and over-squashing. These issues
+prohibit the ability of GNNs to model complex graph interactions by limiting
+their effectiveness in taking into account distant information. Our study
+reveals the key connection between the local graph geometry and the occurrence
+of both of these issues, thereby providing a unified framework for studying
+them at a local scale using the Ollivier-Ricci curvature. Specifically, we
+demonstrate that over-smoothing is linked to positive graph curvature while
+over-squashing is linked to negative graph curvature. Based on our theory, we
+propose the Batch Ollivier-Ricci Flow, a novel rewiring algorithm capable of
+simultaneously addressing both over-smoothing and over-squashing.},
+ arxiv_url = {https://arxiv.org/pdf/2211.15779v3.pdf},
+ author = {Khang Nguyen and Hieu Nong and Vinh Nguyen and Nhat Ho and Stanley Osher and Tan Nguyen},
+ title = {Revisiting Over-smoothing and Over-squashing Using Ollivier-Ricci Curvature},
+ year = {2022}
+}
+
+@article{papp-2021-dropgnn,
+ abstract = {This paper studies Dropout Graph Neural Networks (DropGNNs), a new approach
+that aims to overcome the limitations of standard GNN frameworks. In DropGNNs,
+we execute multiple runs of a GNN on the input graph, with some of the nodes
+randomly and independently dropped in each of these runs. Then, we combine the
+results of these runs to obtain the final result. We prove that DropGNNs can
+distinguish various graph neighborhoods that cannot be separated by message
+passing GNNs. We derive theoretical bounds for the number of runs required to
+ensure a reliable distribution of dropouts, and we prove several properties
+regarding the expressive capabilities and limits of DropGNNs. We experimentally
+validate our theoretical findings on expressiveness. Furthermore, we show that
+DropGNNs perform competitively on established GNN benchmarks.},
+ arxiv_url = {https://arxiv.org/pdf/2111.06283v1.pdf},
+ author = {Pál András Papp and Karolis Martinkus and Lukas Faber and Roger Wattenhofer},
+ github_url = {https://github.com/KarolisMart/DropGNN},
+ title = {DropGNN: Random Dropouts Increase the Expressiveness of Graph Neural Networks},
+ year = {2021}
+}
+
+@article{rong-2019-dropedge,
+ abstract = {\emph{Over-fitting} and \emph{over-smoothing} are two main obstacles of
+developing deep Graph Convolutional Networks (GCNs) for node classification. In
+particular, over-fitting weakens the generalization ability on small dataset,
+while over-smoothing impedes model training by isolating output representations
+from the input features with the increase in network depth. This paper proposes
+DropEdge, a novel and flexible technique to alleviate both issues. At its core,
+DropEdge randomly removes a certain number of edges from the input graph at
+each training epoch, acting like a data augmenter and also a message passing
+reducer. Furthermore, we theoretically demonstrate that DropEdge either reduces
+the convergence speed of over-smoothing or relieves the information loss caused
+by it. More importantly, our DropEdge is a general skill that can be equipped
+with many other backbone models (e.g. GCN, ResGCN, GraphSAGE, and JKNet) for
+enhanced performance. Extensive experiments on several benchmarks verify that
+DropEdge consistently improves the performance on a variety of both shallow and
+deep GCNs. The effect of DropEdge on preventing over-smoothing is empirically
+visualized and validated as well. Codes are released
+on~\url{https://github.com/DropEdge/DropEdge}.},
+ arxiv_url = {https://arxiv.org/pdf/1907.10903v4.pdf},
+ author = {Yu Rong and Wenbing Huang and Tingyang Xu and Junzhou Huang},
+ github_url = {https://github.com/DropEdge/DropEdge},
+ title = {DropEdge: Towards Deep Graph Convolutional Networks on Node Classification},
+ year = {2019}
+}
+
+@article{schlichtkrull-2020-interpreting,
+ abstract = {Graph neural networks (GNNs) have become a popular approach to integrating
+structural inductive biases into NLP models. However, there has been little
+work on interpreting them, and specifically on understanding which parts of the
+graphs (e.g. syntactic trees or co-reference structures) contribute to a
+prediction. In this work, we introduce a post-hoc method for interpreting the
+predictions of GNNs which identifies unnecessary edges. Given a trained GNN
+model, we learn a simple classifier that, for every edge in every layer,
+predicts if that edge can be dropped. We demonstrate that such a classifier can
+be trained in a fully differentiable fashion, employing stochastic gates and
+encouraging sparsity through the expected $L_0$ norm. We use our technique as
+an attribution method to analyze GNN models for two tasks -- question answering
+and semantic role labeling -- providing insights into the information flow in
+these models. We show that we can drop a large proportion of edges without
+deteriorating the performance of the model, while we can analyse the remaining
+edges for interpreting model predictions.},
+ arxiv_url = {https://arxiv.org/pdf/2010.00577v3.pdf},
+ author = {Michael Sejr Schlichtkrull and Nicola De Cao and Ivan Titov},
+ github_url = {https://github.com/MichSchli/GraphMask},
+ title = {Interpreting Graph Neural Networks for NLP With Differentiable Edge Masking},
+ year = {2020}
+}
+
+@article{wu-2022-non,
+ abstract = {Oversmoothing is a central challenge of building more powerful Graph Neural
+Networks (GNNs). While previous works have only demonstrated that oversmoothing
+is inevitable when the number of graph convolutions tends to infinity, in this
+paper, we precisely characterize the mechanism behind the phenomenon via a
+non-asymptotic analysis. Specifically, we distinguish between two different
+effects when applying graph convolutions -- an undesirable mixing effect that
+homogenizes node representations in different classes, and a desirable
+denoising effect that homogenizes node representations in the same class. By
+quantifying these two effects on random graphs sampled from the Contextual
+Stochastic Block Model (CSBM), we show that oversmoothing happens once the
+mixing effect starts to dominate the denoising effect, and the number of layers
+required for this transition is $O(\log N/\log (\log N))$ for sufficiently
+dense graphs with $N$ nodes. We also extend our analysis to study the effects
+of Personalized PageRank (PPR), or equivalently, the effects of initial
+residual connections on oversmoothing. Our results suggest that while PPR
+mitigates oversmoothing at deeper layers, PPR-based architectures still achieve
+their best performance at a shallow depth and are outperformed by the graph
+convolution approach on certain graphs. Finally, we support our theoretical
+results with numerical experiments, which further suggest that the
+oversmoothing phenomenon observed in practice can be magnified by the
+difficulty of optimizing deep GNN models.},
+ arxiv_url = {https://arxiv.org/pdf/2212.10701v2.pdf},
+ author = {Xinyi Wu and Zhengdao Chen and William Wang and Ali Jadbabaie},
+ title = {A Non-Asymptotic Analysis of Oversmoothing in Graph Neural Networks},
+ year = {2022}
+}
+
+@article{wu-2023-demystifying,
+ abstract = {Oversmoothing in Graph Neural Networks (GNNs) refers to the phenomenon where
+increasing network depth leads to homogeneous node representations. While
+previous work has established that Graph Convolutional Networks (GCNs)
+exponentially lose expressive power, it remains controversial whether the graph
+attention mechanism can mitigate oversmoothing. In this work, we provide a
+definitive answer to this question through a rigorous mathematical analysis, by
+viewing attention-based GNNs as nonlinear time-varying dynamical systems and
+incorporating tools and techniques from the theory of products of inhomogeneous
+matrices and the joint spectral radius. We establish that, contrary to popular
+belief, the graph attention mechanism cannot prevent oversmoothing and loses
+expressive power exponentially. The proposed framework extends the existing
+results on oversmoothing for symmetric GCNs to a significantly broader class of
+GNN models, including random walk GCNs, Graph Attention Networks (GATs) and
+(graph) transformers. In particular, our analysis accounts for asymmetric,
+state-dependent and time-varying aggregation operators and a wide range of
+common nonlinear activation functions, such as ReLU, LeakyReLU, GELU and SiLU.},
+ arxiv_url = {https://arxiv.org/pdf/2305.16102v4.pdf},
+ author = {Xinyi Wu and Amir Ajorlou and Zihui Wu and Ali Jadbabaie},
+ title = {Demystifying Oversmoothing in Attention-Based Graph Neural Networks},
+ year = {2023}
+}
+
+@article{xu-2021-optimization,
+ abstract = {Graph Neural Networks (GNNs) have been studied through the lens of expressive
+power and generalization. However, their optimization properties are less well
+understood. We take the first step towards analyzing GNN training by studying
+the gradient dynamics of GNNs. First, we analyze linearized GNNs and prove that
+despite the non-convexity of training, convergence to a global minimum at a
+linear rate is guaranteed under mild assumptions that we validate on real-world
+graphs. Second, we study what may affect the GNNs' training speed. Our results
+show that the training of GNNs is implicitly accelerated by skip connections,
+more depth, and/or a good label distribution. Empirical results confirm that
+our theoretical results for linearized GNNs align with the training behavior of
+nonlinear GNNs. Our results provide the first theoretical support for the
+success of GNNs with skip connections in terms of optimization, and suggest
+that deep GNNs with skip connections would be promising in practice.},
+ arxiv_url = {https://arxiv.org/pdf/2105.04550v2.pdf},
+ author = {Keyulu Xu and Mozhi Zhang and Stefanie Jegelka and Kenji Kawaguchi},
+ title = {Optimization of Graph Neural Networks: Implicit Acceleration by Skip Connections and More Depth},
+ year = {2021}
+}
+
+@article{zhang-2021-node,
+ abstract = {Recent works reveal that feature or label smoothing lies at the core of Graph
+Neural Networks (GNNs). Concretely, they show feature smoothing combined with
+simple linear regression achieves comparable performance with the carefully
+designed GNNs, and a simple MLP model with label smoothing of its prediction
+can outperform the vanilla GCN. Though an interesting finding, smoothing has
+not been well understood, especially regarding how to control the extent of
+smoothness. Intuitively, too small or too large smoothing iterations may cause
+under-smoothing or over-smoothing and can lead to sub-optimal performance.
+Moreover, the extent of smoothness is node-specific, depending on its degree
+and local structure. To this end, we propose a novel algorithm called
+node-dependent local smoothing (NDLS), which aims to control the smoothness of
+every node by setting a node-specific smoothing iteration. Specifically, NDLS
+computes influence scores based on the adjacency matrix and selects the
+iteration number by setting a threshold on the scores. Once selected, the
+iteration number can be applied to both feature smoothing and label smoothing.
+Experimental results demonstrate that NDLS enjoys high accuracy --
+state-of-the-art performance on node classifications tasks, flexibility -- can
+be incorporated with any models, scalability and efficiency -- can support
+large scale graphs with fast training.},
+ arxiv_url = {https://arxiv.org/pdf/2110.14377v1.pdf},
+ author = {Wentao Zhang and Mingyu Yang and Zeang Sheng and Yang Li and Wen Ouyang and Yangyu Tao and Zhi Yang and Bin Cui},
+ github_url = {https://github.com/zwt233/NDLS},
+ journal = {NeurIPS 2021},
+ title = {Node Dependent Local Smoothing for Scalable Graph Learning},
+ year = {2021}
+}
+
+@article{zhao-2019-pairnorm,
+ abstract = {The performance of graph neural nets (GNNs) is known to gradually decrease
+with increasing number of layers. This decay is partly attributed to
+oversmoothing, where repeated graph convolutions eventually make node
+embeddings indistinguishable. We take a closer look at two different
+interpretations, aiming to quantify oversmoothing. Our main contribution is
+PairNorm, a novel normalization layer that is based on a careful analysis of
+the graph convolution operator, which prevents all node embeddings from
+becoming too similar. What is more, PairNorm is fast, easy to implement without
+any change to network architecture nor any additional parameters, and is
+broadly applicable to any GNN. Experiments on real-world graphs demonstrate
+that PairNorm makes deeper GCN, GAT, and SGC models more robust against
+oversmoothing, and significantly boosts performance for a new problem setting
+that benefits from deeper GNNs. Code is available at
+https://github.com/LingxiaoShawn/PairNorm.},
+ arxiv_url = {https://arxiv.org/pdf/1909.12223v2.pdf},
+ author = {Lingxiao Zhao and Leman Akoglu},
+ github_url = {https://github.com/LingxiaoShawn/PairNorm},
+ title = {PairNorm: Tackling Oversmoothing in GNNs},
+ year = {2019}
+}
+
+@article{zhou-2020-towards,
+ abstract = {Graph neural networks (GNNs), which learn the representation of a node by
+aggregating its neighbors, have become an effective computational tool in
+downstream applications. Over-smoothing is one of the key issues which limit
+the performance of GNNs as the number of layers increases. It is because the
+stacked aggregators would make node representations converge to
+indistinguishable vectors. Several attempts have been made to tackle the issue
+by bringing linked node pairs close and unlinked pairs distinct. However, they
+often ignore the intrinsic community structures and would result in sub-optimal
+performance. The representations of nodes within the same community/class need
+be similar to facilitate the classification, while different classes are
+expected to be separated in embedding space. To bridge the gap, we introduce
+two over-smoothing metrics and a novel technique, i.e., differentiable group
+normalization (DGN). It normalizes nodes within the same group independently to
+increase their smoothness, and separates node distributions among different
+groups to significantly alleviate the over-smoothing issue. Experiments on
+real-world datasets demonstrate that DGN makes GNN models more robust to
+over-smoothing and achieves better performance with deeper GNNs.},
+ arxiv_url = {https://arxiv.org/pdf/2006.06972v1.pdf},
+ author = {Kaixiong Zhou and Xiao Huang and Yuening Li and Daochen Zha and Rui Chen and Xia Hu},
+ title = {Towards Deeper Graph Neural Networks with Differentiable Group Normalization},
+ year = {2020}
+}
+
+@article{zhou-2023-deep,
+ abstract = {Graph Neural Networks (GNNs), a type of neural network that can learn from
+graph-structured data through neighborhood information aggregation, have shown
+superior performance in various downstream tasks. However, as the number of
+layers increases, node representations become indistinguishable, which is known
+as over-smoothing. To address this issue, many residual methods have emerged.
+In this paper, we focus on the over-smoothing issue and related residual
+methods. Firstly, we revisit over-smoothing from the perspective of overlapping
+neighborhood subgraphs, and based on this, we explain how residual methods can
+alleviate over-smoothing by integrating multiple orders neighborhood subgraphs
+to avoid the indistinguishability of the single high-order neighborhood
+subgraphs. Additionally, we reveal the drawbacks of previous residual methods,
+such as the lack of node adaptability and severe loss of high-order
+neighborhood subgraph information, and propose a
+\textbf{Posterior-Sampling-based, Node-Adaptive Residual module (PSNR)}. We
+theoretically demonstrate that PSNR can alleviate the drawbacks of previous
+residual methods. Furthermore, extensive experiments verify the superiority of
+the PSNR module in fully observed node classification and missing feature
+scenarios. Our code is available at https://github.com/jingbo02/PSNR-GNN.},
+ arxiv_url = {https://arxiv.org/pdf/2305.05368v3.pdf},
+ author = {Jingbo Zhou and Yixuan Du and Ruqiong Zhang and Jun Xia and Zhizhi Yu and Zelin Zang and Di Jin and Carl Yang and Rui Zhang and Stan Z. Li},
+ github_url = {https://github.com/jingbo02/PSNR-GNN},
+ title = {Deep Graph Neural Networks via Posteriori-Sampling-based Node-Adaptative Residual Module},
+ year = {2023}
+}
+
+% ===========================================
+% REFERENCE CANDIDATES
+% Additional reference papers for context
+% ===========================================
+
+@article{chen-2019-measuring,
+ abstract = {Graph Neural Networks (GNNs) have achieved promising performance on a wide
+range of graph-based tasks. Despite their success, one severe limitation of
+GNNs is the over-smoothing issue (indistinguishable representations of nodes in
+different classes). In this work, we present a systematic and quantitative
+study on the over-smoothing issue of GNNs. First, we introduce two quantitative
+metrics, MAD and MADGap, to measure the smoothness and over-smoothness of the
+graph nodes representations, respectively. Then, we verify that smoothing is
+the nature of GNNs and the critical factor leading to over-smoothness is the
+low information-to-noise ratio of the message received by the nodes, which is
+partially determined by the graph topology. Finally, we propose two methods to
+alleviate the over-smoothing issue from the topological view: (1) MADReg which
+adds a MADGap-based regularizer to the training objective;(2) AdaGraph which
+optimizes the graph topology based on the model predictions. Extensive
+experiments on 7 widely-used graph datasets with 10 typical GNN models show
+that the two proposed methods are effective for relieving the over-smoothing
+issue, thus improving the performance of various GNN models.},
+ arxiv_url = {https://arxiv.org/pdf/1909.03211v2.pdf},
+ author = {Deli Chen and Yankai Lin and Wei Li and Peng Li and Jie Zhou and Xu Sun},
+ title = {Measuring and relieving the over-smoothing problem for graph neural networks from the topological view},
+ year = {2019}
+}
+
+@article{duvenaud-2015-convolutional,
+ abstract = {We introduce a convolutional neural network that operates directly on graphs.
+These networks allow end-to-end learning of prediction pipelines whose inputs
+are graphs of arbitrary size and shape. The architecture we present generalizes
+standard molecular feature extraction methods based on circular fingerprints.
+We show that these data-driven features are more interpretable, and have better
+predictive performance on a variety of tasks.},
+ arxiv_url = {https://arxiv.org/pdf/1509.09292v2.pdf},
+ author = {David Duvenaud and Dougal Maclaurin and Jorge Aguilera-Iparraguirre and Rafael Gómez-Bombarelli and Timothy Hirzel and Alán Aspuru-Guzik and Ryan P. Adams},
+ title = {Convolutional networks on graphs for learning molecular finger-prints},
+ year = {2015}
+}
+
+@article{hamilton-2017-inductive,
+ abstract = {Low-dimensional embeddings of nodes in large graphs have proved extremely
+useful in a variety of prediction tasks, from content recommendation to
+identifying protein functions. However, most existing approaches require that
+all nodes in the graph are present during training of the embeddings; these
+previous approaches are inherently transductive and do not naturally generalize
+to unseen nodes. Here we present GraphSAGE, a general, inductive framework that
+leverages node feature information (e.g., text attributes) to efficiently
+generate node embeddings for previously unseen data. Instead of training
+individual embeddings for each node, we learn a function that generates
+embeddings by sampling and aggregating features from a node's local
+neighborhood. Our algorithm outperforms strong baselines on three inductive
+node-classification benchmarks: we classify the category of unseen nodes in
+evolving information graphs based on citation and Reddit post data, and we show
+that our algorithm generalizes to completely unseen graphs using a multi-graph
+dataset of protein-protein interactions.},
+ arxiv_url = {https://arxiv.org/pdf/1706.02216v4.pdf},
+ author = {William L. Hamilton and Rex Ying and Jure Leskovec},
+ title = {Inductive representation learning on large graphs},
+ year = {2017}
+}
+
+@article{kipf-2016-semi,
+ abstract = {We present a scalable approach for semi-supervised learning on
+graph-structured data that is based on an efficient variant of convolutional
+neural networks which operate directly on graphs. We motivate the choice of our
+convolutional architecture via a localized first-order approximation of
+spectral graph convolutions. Our model scales linearly in the number of graph
+edges and learns hidden layer representations that encode both local graph
+structure and features of nodes. In a number of experiments on citation
+networks and on a knowledge graph dataset we demonstrate that our approach
+outperforms related methods by a significant margin.},
+ arxiv_url = {https://arxiv.org/pdf/1609.02907v4.pdf},
+ author = {Thomas N. Kipf and Max Welling},
+ title = {Semi-supervised classiﬁcation with graph convolutional networks},
+ year = {2016}
+}
+
+@article{li-2015-gated,
+ abstract = {Graph-structured data appears frequently in domains including chemistry,
+natural language semantics, social networks, and knowledge bases. In this work,
+we study feature learning techniques for graph-structured inputs. Our starting
+point is previous work on Graph Neural Networks (Scarselli et al., 2009), which
+we modify to use gated recurrent units and modern optimization techniques and
+then extend to output sequences. The result is a flexible and broadly useful
+class of neural network models that has favorable inductive biases relative to
+purely sequence-based models (e.g., LSTMs) when the problem is
+graph-structured. We demonstrate the capabilities on some simple AI (bAbI) and
+graph algorithm learning tasks. We then show it achieves state-of-the-art
+performance on a problem from program verification, in which subgraphs need to
+be matched to abstract data structures.},
+ arxiv_url = {https://arxiv.org/pdf/1511.05493v4.pdf},
+ author = {Yujia Li and Daniel Tarlow and Marc Brockschmidt and Richard Zemel},
+ title = {Gated graph sequence neural networks},
+ year = {2015}
+}
+
+@article{li-2018-deeper,
+ abstract = {Many interesting problems in machine learning are being revisited with new
+deep learning tools. For graph-based semisupervised learning, a recent
+important development is graph convolutional networks (GCNs), which nicely
+integrate local vertex features and graph topology in the convolutional layers.
+Although the GCN model compares favorably with other state-of-the-art methods,
+its mechanisms are not clear and it still requires a considerable amount of
+labeled data for validation and model selection. In this paper, we develop
+deeper insights into the GCN model and address its fundamental limits. First,
+we show that the graph convolution of the GCN model is actually a special form
+of Laplacian smoothing, which is the key reason why GCNs work, but it also
+brings potential concerns of over-smoothing with many convolutional layers.
+Second, to overcome the limits of the GCN model with shallow architectures, we
+propose both co-training and self-training approaches to train GCNs. Our
+approaches significantly improve GCNs in learning with very few labels, and
+exempt them from requiring additional labels for validation. Extensive
+experiments on benchmarks have verified our theory and proposals.},
+ arxiv_url = {https://arxiv.org/pdf/1801.07606v1.pdf},
+ author = {Qimai Li and Zhichao Han and Xiao-Ming Wu},
+ title = {Deeper insights into graph convolutional networks for semi-supervised learning},
+ year = {2018}
+}
+
+@article{li-2019-specae,
+ abstract = {Anomaly detection aims to distinguish observations that are rare and
+different from the majority. While most existing algorithms assume that
+instances are i.i.d., in many practical scenarios, links describing
+instance-to-instance dependencies and interactions are available. Such systems
+are called attributed networks. Anomaly detection in attributed networks has
+various applications such as monitoring suspicious accounts in social media and
+financial fraud in transaction networks. However, it remains a challenging task
+since the definition of anomaly becomes more complicated and topological
+structures are heterogeneous with nodal attributes. In this paper, we propose a
+spectral convolution and deconvolution based framework -- SpecAE, to project
+the attributed network into a tailored space to detect global and community
+anomalies. SpecAE leverages Laplacian sharpening to amplify the distances
+between representations of anomalies and the ones of the majority. The learned
+representations along with reconstruction errors are combined with a density
+estimation model to perform the detection. They are trained jointly as an
+end-to-end framework. Experiments on real-world datasets demonstrate the
+effectiveness of SpecAE.},
+ arxiv_url = {https://arxiv.org/pdf/1908.03849v3.pdf},
+ author = {Yuening Li and Xiao Huang and Jundong Li and Mengnan Du and Na Zou},
+ title = {Specae: Spectral autoencoder for anomaly detection in attributed networks},
+ year = {2019}
+}
+
+@article{nt-2019-revisiting,
+ abstract = {Graph neural networks have become one of the most important techniques to
+solve machine learning problems on graph-structured data. Recent work on vertex
+classification proposed deep and distributed learning models to achieve high
+performance and scalability. However, we find that the feature vectors of
+benchmark datasets are already quite informative for the classification task,
+and the graph structure only provides a means to denoise the data. In this
+paper, we develop a theoretical framework based on graph signal processing for
+analyzing graph neural networks. Our results indicate that graph neural
+networks only perform low-pass filtering on feature vectors and do not have the
+non-linear manifold learning property. We further investigate their resilience
+to feature noise and propose some insights on GCN-based graph neural network
+design.},
+ arxiv_url = {https://arxiv.org/pdf/1905.09550v2.pdf},
+ author = {Hoang NT and Takanori Maehara},
+ title = {Revisiting graph neural networks: All we have is low-pass ﬁlters},
+ year = {2019}
+}
+
+@article{velikovi-2017-graph,
+ abstract = {We present graph attention networks (GATs), novel neural network
+architectures that operate on graph-structured data, leveraging masked
+self-attentional layers to address the shortcomings of prior methods based on
+graph convolutions or their approximations. By stacking layers in which nodes
+are able to attend over their neighborhoods' features, we enable (implicitly)
+specifying different weights to different nodes in a neighborhood, without
+requiring any kind of costly matrix operation (such as inversion) or depending
+on knowing the graph structure upfront. In this way, we address several key
+challenges of spectral-based graph neural networks simultaneously, and make our
+model readily applicable to inductive as well as transductive problems. Our GAT
+models have achieved or matched state-of-the-art results across four
+established transductive and inductive graph benchmarks: the Cora, Citeseer and
+Pubmed citation network datasets, as well as a protein-protein interaction
+dataset (wherein test graphs remain unseen during training).},
+ arxiv_url = {https://arxiv.org/pdf/1710.10903v3.pdf},
+ author = {Petar Veličković and Guillem Cucurull and Arantxa Casanova and Adriana Romero and Pietro Liò and Yoshua Bengio},
+ title = {Graph attention networks},
+ year = {2017}
+}
+
+@article{wu-2019-comprehensive,
+ abstract = {Deep learning has revolutionized many machine learning tasks in recent years,
+ranging from image classification and video processing to speech recognition
+and natural language understanding. The data in these tasks are typically
+represented in the Euclidean space. However, there is an increasing number of
+applications where data are generated from non-Euclidean domains and are
+represented as graphs with complex relationships and interdependency between
+objects. The complexity of graph data has imposed significant challenges on
+existing machine learning algorithms. Recently, many studies on extending deep
+learning approaches for graph data have emerged. In this survey, we provide a
+comprehensive overview of graph neural networks (GNNs) in data mining and
+machine learning fields. We propose a new taxonomy to divide the
+state-of-the-art graph neural networks into four categories, namely recurrent
+graph neural networks, convolutional graph neural networks, graph autoencoders,
+and spatial-temporal graph neural networks. We further discuss the applications
+of graph neural networks across various domains and summarize the open source
+codes, benchmark data sets, and model evaluation of graph neural networks.
+Finally, we propose potential research directions in this rapidly growing
+field.},
+ arxiv_url = {https://arxiv.org/pdf/1901.00596v4.pdf},
+ author = {Zonghan Wu and Shirui Pan and Fengwen Chen and Guodong Long and Chengqi Zhang and Philip S. Yu},
+ doi = {10.1109/TNNLS.2020.2978386},
+ title = {A comprehensive survey on graph neural networks},
+ year = {2019}
+}
+
+@article{wu-2019-simplifying,
+ abstract = {Graph Convolutional Networks (GCNs) and their variants have experienced
+significant attention and have become the de facto methods for learning graph
+representations. GCNs derive inspiration primarily from recent deep learning
+approaches, and as a result, may inherit unnecessary complexity and redundant
+computation. In this paper, we reduce this excess complexity through
+successively removing nonlinearities and collapsing weight matrices between
+consecutive layers. We theoretically analyze the resulting linear model and
+show that it corresponds to a fixed low-pass filter followed by a linear
+classifier. Notably, our experimental evaluation demonstrates that these
+simplifications do not negatively impact accuracy in many downstream
+applications. Moreover, the resulting model scales to larger datasets, is
+naturally interpretable, and yields up to two orders of magnitude speedup over
+FastGCN.},
+ arxiv_url = {https://arxiv.org/pdf/1902.07153v2.pdf},
+ author = {Felix Wu and Tianyi Zhang and Amauri Holanda de Souza Jr. and Christopher Fifty and Tao Yu and Kilian Q. Weinberger},
+ title = {Simplifying graph convolutional networks},
+ year = {2019}
+}
+
+@article{xu-2018-how,
+ abstract = {Graph Neural Networks (GNNs) are an effective framework for representation
+learning of graphs. GNNs follow a neighborhood aggregation scheme, where the
+representation vector of a node is computed by recursively aggregating and
+transforming representation vectors of its neighboring nodes. Many GNN variants
+have been proposed and have achieved state-of-the-art results on both node and
+graph classification tasks. However, despite GNNs revolutionizing graph
+representation learning, there is limited understanding of their
+representational properties and limitations. Here, we present a theoretical
+framework for analyzing the expressive power of GNNs to capture different graph
+structures. Our results characterize the discriminative power of popular GNN
+variants, such as Graph Convolutional Networks and GraphSAGE, and show that
+they cannot learn to distinguish certain simple graph structures. We then
+develop a simple architecture that is provably the most expressive among the
+class of GNNs and is as powerful as the Weisfeiler-Lehman graph isomorphism
+test. We empirically validate our theoretical findings on a number of graph
+classification benchmarks, and demonstrate that our model achieves
+state-of-the-art performance.},
+ arxiv_url = {https://arxiv.org/pdf/1810.00826v3.pdf},
+ author = {Keyulu Xu and Weihua Hu and Jure Leskovec and Stefanie Jegelka},
+ title = {How powerful are graph neural networks?},
+ year = {2018}
+}
+
+@article{zhou-2019-auto,
+ abstract = {Graph neural networks (GNN) has been successfully applied to operate on the
+graph-structured data. Given a specific scenario, rich human expertise and
+tremendous laborious trials are usually required to identify a suitable GNN
+architecture. It is because the performance of a GNN architecture is
+significantly affected by the choice of graph convolution components, such as
+aggregate function and hidden dimension. Neural architecture search (NAS) has
+shown its potential in discovering effective deep architectures for learning
+tasks in image and language modeling. However, existing NAS algorithms cannot
+be directly applied to the GNN search problem. First, the search space of GNN
+is different from the ones in existing NAS work. Second, the representation
+learning capacity of GNN architecture changes obviously with slight
+architecture modifications. It affects the search efficiency of traditional
+search methods. Third, widely used techniques in NAS such as parameter sharing
+might become unstable in GNN.
+  To bridge the gap, we propose the automated graph neural networks (AGNN)
+framework, which aims to find an optimal GNN architecture within a predefined
+search space. A reinforcement learning based controller is designed to greedily
+validate architectures via small steps. AGNN has a novel parameter sharing
+strategy that enables homogeneous architectures to share parameters, based on a
+carefully-designed homogeneity definition. Experiments on real-world benchmark
+datasets demonstrate that the GNN architecture identified by AGNN achieves the
+best performance, comparing with existing handcrafted models and tradistional
+search methods.},
+ arxiv_url = {https://arxiv.org/pdf/1909.03184v2.pdf},
+ author = {Kaixiong Zhou and Qingquan Song and Xiao Huang and Xia Hu},
+ title = {Auto-gnn: Neural architecture search of graph neural networks},
+ year = {2019}
+}
