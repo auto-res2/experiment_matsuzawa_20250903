@@ -1,11 +1,11 @@
 # ------------------------------
 #  Deep-learning stack (CUDA11.8)
 # ------------------------------
-# Pytorch & vision/audio (pre-built CUDA wheels)
 --extra-index-url https://download.pytorch.org/whl/cu118
 
-# We pin the PyTorch version to one that has pre-compiled PyG binaries
-# available on pyg.org so that we can avoid compiling from source.
+# We pin the PyTorch version to one with pre-compiled CUDA wheels.
+# These wheels are fully compatible with the Tesla T4 GPU available
+# on the execution platform.
 torch==2.2.0+cu118
 torchvision==0.17.0+cu118
 torchaudio==2.2.0+cu118
@@ -13,13 +13,17 @@ torchaudio==2.2.0+cu118
 # ---------------------------------------------------
 #  PyG & associated CUDA extensions (binary wheels)
 # ---------------------------------------------------
-# All wheels are fetched from the official PyG wheelhouse.
+# All wheels are fetched from the official PyG wheelhouse.  We refrain
+# from hard-pinning the low-level extension versions because their wheel
+# names include a local version suffix such as "+pt22cu118" which causes
+# strict equality checks to fail resolution.  Leaving the version open
+# lets pip pick the matching wheel automatically.
 -f https://data.pyg.org/whl/torch-2.2.0+cu118
-pyg_lib==0.4.0
-torch-scatter==2.1.2
-torch-sparse==0.6.18
-torch-cluster==1.6.3
-torch-spline-conv==1.2.2
+pyg-lib          # picked automatically (e.g. 0.4.0+pt22cu118)
+torch-scatter    # "  "
+torch-sparse     # "  "
+torch-cluster    # "  "
+torch-spline-conv# "  "
 torch-geometric==2.5.3
 
 # ------------------------------

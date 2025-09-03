@@ -51,7 +51,7 @@ CACHE_DIR = ROOT / "checkpoints"
 # ------------------------------------------------------------------
 #  All experiment figures must be stored in this folder as per spec
 # ------------------------------------------------------------------
-FIG_DIR = ROOT / ".research" / "iteration5" / "images"
+FIG_DIR = ROOT / ".research" / "iteration6" / "images"  # <<<< updated as per spec
 LOG_DIR = ROOT / "logs"
 
 for d in [DATA_DIR, CACHE_DIR, FIG_DIR, LOG_DIR]:
@@ -62,6 +62,7 @@ SEEDS = [11, 13, 17, 19, 23, 29, 31, 37, 41, 43]
 ################################################################################
 #  EXPERIMENT 1 – DEPTH SCALABILITY
 ################################################################################
+
 
 def exp1_depth_scalability():
     print("\n==================  EXPERIMENT 1  –  DEPTH-SCALABILITY  ==================")
