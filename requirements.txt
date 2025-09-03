@@ -5,7 +5,4 @@ torch
 torchvision
 matplotlib
 advertorch
-mammoth @ git+https://github.com/aimagelab/mammoth.git
-adaptive-quantization-modules @ git+https://github.com/pclucas14/adaptive-quantization-modules.git
-rar @ git+https://github.com/YaqianZhang/RepeatedAugmentedRehearsal.git
-taming-transformers @ git+https://github.com/CompVis/taming-transformers.git
+taming-transformers

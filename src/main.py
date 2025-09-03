@@ -1,8 +1,8 @@
 """
 main.py – project entry-point that orchestrates the experimental workflow
 """
-import time, yaml
 from pathlib import Path
+import time, yaml
 
 from src.evaluate import experiment1
 
@@ -13,8 +13,8 @@ CONFIG_PATH = Path(__file__).resolve().parent.parent / 'config' / 'config.yaml'
 with open(CONFIG_PATH, 'r') as f:
     CFG = yaml.safe_load(f)
 
-# ensure plot directory exists
-Path('.research/iteration2/images').mkdir(parents=True, exist_ok=True)
+# ensure plot directory exists (iteration *3* as per new spec)
+Path('.research/iteration3/images').mkdir(parents=True, exist_ok=True)
 
 # -------------------------------------------------------------------------
 # Main
