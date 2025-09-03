@@ -1,11 +1,11 @@
 """
 train.py – model definitions, algorithms and the generic training loop
-The module is self-contained except for utility helpers that live inside this
-file to avoid circular imports.  Nothing is written to disk dynamically; every
-symbol is imported in the normal, static way.
+The module is self-contained; utility helpers (set_seed, timing) are re-declared
+here to avoid missing-import issues when the package is executed via
+`python -m src.main`.
 """
 from __future__ import annotations
-import json, time
+import json, time, random, contextlib, numpy as np
 from pathlib import Path
 from typing import Dict
 
@@ -16,7 +16,32 @@ import timm
 from torchvision.models import (ResNet50_Weights, resnet50)
 
 from .preprocess import get_loaders
-from .utils import set_seed, timing
+
+################################################################################
+# ─── LIGHTWEIGHT UTILS (replaces missing src.utils) ───────────────────────────
+################################################################################
+
+def set_seed(seed: int) -> None:
+    """Seed Python, NumPy and PyTorch for (best-effort) determinism."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    # Deterministic algorithms *may* reduce performance but ensure CI stability
+    try:
+        torch.use_deterministic_algorithms(True, warn_only=True)
+    except AttributeError:  # older torch fallback
+        pass
+    torch.backends.cudnn.allow_tf32 = False
+
+@contextlib.contextmanager
+def timing(msg: str):
+    """Context manager that prints elapsed wall-clock time when exiting."""
+    t0 = time.perf_counter()
+    yield
+    t1 = time.perf_counter()
+    print(f"[TIMER] {msg}: {t1 - t0:.2f}s", flush=True)
 
 ################################################################################
 # ─── CONFIGURATION ────────────────────────────────────────────────────────────
@@ -195,7 +220,7 @@ class Trainer:
                     if self.scaler is None:
                         loss = self.alg.update(x, y)
                     else:
-                        with torch.cuda.amp.autocast():
+                        with torch.cuda.amp.autocast(enabled=True):
                             loss = self.alg.update(x, y)
 
                 val_acc = self._accuracy(self.loaders["val"])
