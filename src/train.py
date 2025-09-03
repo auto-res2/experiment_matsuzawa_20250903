@@ -139,18 +139,28 @@ class TCRModel(nn.Module):
     # Replay buffer  (very small & simple reservoir sampling)
     # -------------------------------------------------------------------------
     def maybe_store(self, token_indices: torch.Tensor, labels: torch.Tensor):
+        """Add (token_indices, labels) to replay buffer using reservoir sampling.
+
+        Important: All tensors are kept on the *same device* as the registered
+        buffers to avoid device-mismatch errors when concatenating.
+        """
         assert token_indices.ndim == 2
+        device = self.replay_tokens.device
+        token_indices = token_indices.to(device=device, dtype=torch.uint8)
+        labels        = labels.to(device=device)
+
         bytes_per_sample = token_indices.size(1)            # uint8 = 1 Byte
-        for tok, lbl in zip(token_indices.cpu(), labels.cpu()):
+        for tok, lbl in zip(token_indices, labels):
             if (self.replay_tokens.numel() + bytes_per_sample) < self.buffer_max_bytes:
+                # grow buffer --------------------------------------------------
                 self.replay_tokens = torch.cat([
-                    self.replay_tokens, tok.unsqueeze(0).to(torch.uint8)
+                    self.replay_tokens, tok.unsqueeze(0)
                 ])
                 self.replay_labels = torch.cat([
                     self.replay_labels, lbl.unsqueeze(0)
                 ])
             else:
-                # reservoir replacement ------------------------------------------------
+                # reservoir replacement ---------------------------------------
                 j = random.randint(0, len(self.replay_tokens) - 1)
                 self.replay_tokens[j] = tok
                 self.replay_labels[j] = lbl
@@ -198,7 +208,7 @@ class Trainer:
         for _ in range(passes):
             for x, y in loader:
                 x, y = x.cuda(non_blocking=True), y.cuda(non_blocking=True)
-                with autocast():
+                with autocast(device_type='cuda'):
                     if cur:
                         loss, toks = self.model.forward_current(x, y)
                     else:
@@ -209,7 +219,7 @@ class Trainer:
                 self.opt.zero_grad(set_to_none=True)
                 if cur:
                     # only store when training on *current* samples
-                    self.model.maybe_store(toks, y)
+                    self.model.maybe_store(toks.detach(), y.detach())
 
     # ---------------------------------------------------------------------
     # Public API -----------------------------------------------------------
