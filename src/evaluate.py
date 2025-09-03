@@ -9,7 +9,7 @@ from scipy.stats import spearmanr
 from sklearn.metrics import accuracy_score, f1_score
 
 # All figures must be stored under the dedicated research folder -----------------------
-IMG_DIR = pathlib.Path(".research/iteration11/images")
+IMG_DIR = pathlib.Path(".research/iteration12/images")
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
 sns.set(style="whitegrid")
@@ -26,7 +26,7 @@ def lineplot(
     title: str,
     fname: str,
 ) -> None:
-    """Save a PDF line plot under .research/iteration11/images/<fname>."""
+    """Save a PDF line plot under .research/iteration12/images/<fname>."""
     plt.figure(figsize=(6, 4))
     for label, series in ys.items():
         plt.plot(xs, series, label=label)
