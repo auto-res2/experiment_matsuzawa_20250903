@@ -5,7 +5,6 @@ budgets:
   medium: 524288
   large: 1048576
 
-# dataset meta-data kept for future extensions
 datasets:
   CIFAR100:
     url: "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
@@ -30,4 +29,4 @@ optim:
 
 batch: 128
 vqgan_ckpt: "vqgan_imagenet_f16_16384"
-plots: ".research/iteration3/images"
+plots: ".research/iteration5/images"

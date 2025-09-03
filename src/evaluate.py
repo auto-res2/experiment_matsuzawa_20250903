@@ -1,6 +1,7 @@
 from __future__ import annotations
 """
 evaluate.py – evaluation routines and plotting utilities
+(modified: save all images into .research/iteration5/images as required)
 """
 import os
 import statistics as st
@@ -20,7 +21,7 @@ with open(CFG_PATH, 'r') as f:
 # -------------------------------------------------------------------------
 # Plot directory (all experiment images must go here)
 # -------------------------------------------------------------------------
-PLOT_DIR = Path('.research/iteration3/images')
+PLOT_DIR = Path('.research/iteration5/images')  # << changed from iteration3 → iteration5
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
 # -------------------------------------------------------------------------
