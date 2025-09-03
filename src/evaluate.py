@@ -1,11 +1,7 @@
 """src/evaluate.py
-Utilities for computing metrics and model evaluation.
-The original implementation required the heavyweight ``torch_geometric``
-package to obtain the ``Data`` class that is *only* used for static type
-annotations.  To keep the dependency list minimal and avoid large binary
-wheels, we replicate the graceful-degradation strategy used throughout the
-code-base: attempt to import the real class first and fall back to a very
-light-weight stub when the import fails.
+Evaluation utilities – accuracy metrics, over-smoothing indicators and a
+convenience wrapper that returns a dictionary with statistics for each
+split as well as APSD, row-diff and col-diff.
 """
 from __future__ import annotations
 
@@ -14,43 +10,15 @@ from typing import Dict
 import torch
 import torch.nn.functional as F
 
-# -----------------------------------------------------------------------------
-#  Optional torch-geometric dependency (see ``src/train.py`` for details)
-# -----------------------------------------------------------------------------
-try:
-    from torch_geometric.data import Data  # type: ignore
-except Exception:  # pragma: no cover – lightweight stub
+from .preprocess import DEVICE
 
-    class Data:  # pylint: disable=too-few-public-methods
-        """Minimal stand-in for ``torch_geometric.data.Data`` used only for
-        type annotations and the ``.to(device)`` helper.
-        """
-
-        def __init__(self, **kwargs):
-            self.__dict__.update(kwargs)
-
-        # Preserve the interface expected by the rest of the code base
-        def to(self, device: torch.device | str, **kwargs):  # noqa: D401
-            """Move all tensor attributes **in-place** to *device*.
-
-            The original stub was a no-op which resulted in tensors remaining
-            on the CPU even when the model resided on the GPU, ultimately
-            leading to a device-mismatch runtime error.  We now iterate over
-            all attributes and move those that are ``torch.Tensor``s so that
-            the behaviour matches the real ``torch_geometric.data.Data``
-            implementation closely enough for our use-case.
-            """
-            for k, v in self.__dict__.items():
-                if torch.is_tensor(v):
-                    self.__dict__[k] = v.to(device, **kwargs)
-            return self
-
-################################################################################
-#  METRIC PRIMITIVES
-################################################################################
+# ----------------------------------------------------------------------------
+#  METRICS
+# ----------------------------------------------------------------------------
 
 def accuracy(logits: torch.Tensor, labels: torch.Tensor) -> float:
-    return (logits.argmax(dim=-1) == labels).float().mean().item() * 100
+    """Return classification accuracy in percent."""
+    return (logits.argmax(dim=-1) == labels).float().mean().item() * 100.0
 
 
 def row_diff(z: torch.Tensor) -> float:
@@ -64,26 +32,23 @@ def col_diff(z: torch.Tensor) -> float:
 
 
 def apsd(z: torch.Tensor) -> float:
-    z = z - z.mean(0, keepdim=True)
-    s = torch.linalg.svdvals(z)
-    return s.mean().item()
+    z = z.detach() - z.mean(0, keepdim=True)
+    return torch.linalg.svdvals(z).mean().item()
 
-################################################################################
-#  FULL EVALUATION ROUTINE
-################################################################################
+
+# ----------------------------------------------------------------------------
+#  EVALUATION WRAPPER
+# ----------------------------------------------------------------------------
 
 @torch.no_grad()
-def evaluate(model, data: Data) -> Dict[str, float]:
+def evaluate(model, data) -> Dict[str, float]:
+    """Return dict with accuracy for train/val/test & smoothing metrics."""
     model.eval()
-    logits, _ = model(data.x, data.edge_index)
-    out: Dict[str, float] = {}
-    for split in ["train", "val", "test"]:
-        mask = getattr(data, f"{split}_mask")
-        out[f"acc_{split}"] = accuracy(logits[mask], data.y[mask])
+    logits, h = model(data.x, data.edge_index)
 
-    # Representation statistics on *all* nodes
-    _, h = model(data.x, data.edge_index)
-    out["row_diff"] = row_diff(h)
-    out["col_diff"] = col_diff(h)
-    out["apsd"] = apsd(h)
-    return out
+    res = {
+        split: accuracy(logits[getattr(data, f"{split}_mask")], data.y[getattr(data, f"{split}_mask")])
+        for split in ("train", "val", "test")
+    }
+    res.update({"row": row_diff(h), "col": col_diff(h), "apsd": apsd(h)})
+    return res
