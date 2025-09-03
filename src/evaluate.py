@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # ---------------------------------------------------------------------------
-#   All figures for *this* iteration must be stored under .research/iteration8
+#   All figures for *this* iteration must be stored under .research/iteration9
 # ---------------------------------------------------------------------------
-IMG_DIR = Path(".research/iteration8/images")
+IMG_DIR = Path(".research/iteration9/images")
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
 
