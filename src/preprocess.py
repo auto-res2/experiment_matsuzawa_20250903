@@ -48,8 +48,12 @@ class WaterbirdsDataset(Dataset):
         if not HF_AVAILABLE:
             raise RuntimeError("huggingface-datasets missing – install to use Waterbirds.")
         ds = load_dataset("grodino/waterbirds", split=split, cache_dir=root)
+
+        # The official dataset uses the singular key "label" – fall back to that
+        # if the pluralised variant is absent. This keeps backward-compatibility
+        # with any older cached versions that might still expose "labels".
+        self.labels = ds["labels"] if "labels" in ds.column_names else ds["label"]
         self.images = ds["image"]
-        self.labels = ds["labels"]
         # group label (bird × background) for worst-group accuracy
         self.groups = list(zip(ds["y"], ds["place"]))
         self.transform = transform or ImageTransformEval

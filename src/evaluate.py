@@ -55,12 +55,16 @@ def evaluate_model(model, loader: DataLoader) -> Dict[str, float]:
 # -----------------------------------------------------------------------------
 
 def save_bar(values: Dict[str, float], title: str, fname: Path):
-    """Save a bar plot to .research/iteration4/images/<fname>. Directory is
-    created if needed.
+    """Save a bar plot under the required directory structure.
+
+    All figures must live inside .research/iteration5/images according to the
+    execution rules. This helper guarantees the directory is created and the
+    provided filename is redirected there while keeping the original basename.
     """
-    out_dir = Path(".research/iteration4/images")
+
+    out_dir = Path(".research/iteration5/images")
     out_dir.mkdir(parents=True, exist_ok=True)
-    fname = out_dir / fname.name
+    fname = out_dir / fname.name  # enforce location but keep caller-specified name
 
     sns.set(style="whitegrid")
     keys, vals = list(values.keys()), list(values.values())
