@@ -1,7 +1,8 @@
+[UPDATED]
 from __future__ import annotations
 """
 evaluate.py – evaluation metrics & visualisation helpers
-All plots are saved into .research/iteration24/images to comply with the
+All plots are saved into .research/iteration25/images as per the
 updated project specification.
 """
 import pathlib
@@ -17,16 +18,15 @@ from sklearn.metrics import accuracy_score, f1_score
 sns.set(style="whitegrid")
 
 # ---------------------------------------------------------------------------
-#  Global output directory for all figures (UPDATED TO iteration24)           
+#  Global output directory for all figures (UPDATED TO iteration25)           
 # ---------------------------------------------------------------------------
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
-IMAGES_DIR = PROJECT_ROOT / ".research" / "iteration24" / "images"
+IMAGES_DIR = PROJECT_ROOT / ".research" / "iteration25" / "images"
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
 ###############################################################################
 #  Metrics                                                                    #
 ###############################################################################
-
 
 def cls_metrics(logits: torch.Tensor, y: torch.Tensor) -> Dict[str, float]:
     pred = logits.argmax(dim=-1).cpu().numpy()
