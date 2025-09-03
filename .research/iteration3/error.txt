@@ -1,0 +1,48 @@
+Generating train split:   0%|          | 0/4795 [00:00<?, ? examples/s]Generating train split:  44%|████▍     | 2100/4795 [00:00<00:00, 20364.89 examples/s]Generating train split:  94%|█████████▍| 4500/4795 [00:00<00:00, 22204.15 examples/s]Generating train split: 100%|██████████| 4795/4795 [00:00<00:00, 21766.18 examples/s]
+Generating validation split:   0%|          | 0/1199 [00:00<?, ? examples/s]Generating validation split: 100%|██████████| 1199/1199 [00:00<00:00, 21120.46 examples/s]
+Generating test split:   0%|          | 0/5794 [00:00<?, ? examples/s]Generating test split:  41%|████▏     | 2400/5794 [00:00<00:00, 22828.58 examples/s]Generating test split:  86%|████████▋ | 5000/5794 [00:00<00:00, 24404.08 examples/s]Generating test split: 100%|██████████| 5794/5794 [00:00<00:00, 24460.84 examples/s]
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:209: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  self.scaler = amp.GradScaler(enabled=AMP_ENABLED)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00, 15.14it/s]
+Cannot initialize model with low cpu memory usage because `accelerate` was not found in the environment. Defaulting to `low_cpu_mem_usage=False`. It is strongly recommended to install `accelerate` for faster and less memory-intense model loading. You can do so with: 
+```
+pip install accelerate
+```
+.
+Fetching 13 files:   0%|          | 0/13 [00:00<?, ?it/s]Fetching 13 files:  31%|███       | 4/13 [00:00<00:00, 30.38it/s]Fetching 13 files:  31%|███       | 4/13 [00:17<00:00, 30.38it/s]Fetching 13 files:  38%|███▊      | 5/13 [00:29<01:02,  7.79s/it]Fetching 13 files:  85%|████████▍ | 11/13 [00:45<00:08,  4.18s/it]Fetching 13 files: 100%|██████████| 13/13 [00:45<00:00,  3.47s/it]
+Loading pipeline components...:   0%|          | 0/6 [00:00<?, ?it/s]Loading pipeline components...:  33%|███▎      | 2/6 [00:00<00:01,  2.34it/s]Loading pipeline components...:  50%|█████     | 3/6 [00:01<00:01,  2.89it/s]`torch_dtype` is deprecated! Use `dtype` instead!
+Loading pipeline components...:  83%|████████▎ | 5/6 [00:01<00:00,  3.17it/s]Loading pipeline components...: 100%|██████████| 6/6 [00:01<00:00,  3.59it/s]
+  0%|          | 0/15 [00:00<?, ?it/s]                                      Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 62, in <module>
+    main()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 57, in main
+    run_exp1_waterbirds()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 37, in run_exp1_waterbirds
+    trainer.fit(train_dl, val_dl, epochs=30)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 294, in fit
+    spurious_attr_idx = self._mine_spurious_attrs(train_dl)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 234, in _mine_spurious_attrs
+    inputs = self.clip_proc(text=PROMPT_BANK, images=x, return_tensors="pt", padding=True).to(DEVICE)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/transformers/models/clip/processing_clip.py", line 109, in __call__
+    image_features = self.image_processor(images, return_tensors=return_tensors, **image_processor_kwargs)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/transformers/image_processing_utils.py", line 51, in __call__
+    return self.preprocess(images, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/transformers/models/clip/image_processing_clip.py", line 328, in preprocess
+    image = self.resize(image=image, size=size, resample=resample, input_data_format=input_data_format)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/transformers/models/clip/image_processing_clip.py", line 193, in resize
+    return resize(
+           ^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/transformers/image_transforms.py", line 373, in resize
+    do_rescale = _rescale_for_pil_conversion(image)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/transformers/image_transforms.py", line 155, in _rescale_for_pil_conversion
+    raise ValueError(
+ValueError: The image to be converted to a PIL image contains values outside the range [0, 1], got [-2.1179039478302, 1.2979522943496704] which cannot be converted to uint8.
