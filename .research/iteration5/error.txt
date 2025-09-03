@@ -1,0 +1,57 @@
+Generating train split:   0%|          | 0/4795 [00:00<?, ? examples/s]Generating train split:  46%|████▌     | 2200/4795 [00:00<00:00, 21357.76 examples/s]Generating train split:  98%|█████████▊| 4700/4795 [00:00<00:00, 22700.76 examples/s]Generating train split: 100%|██████████| 4795/4795 [00:00<00:00, 22254.43 examples/s]
+Generating validation split:   0%|          | 0/1199 [00:00<?, ? examples/s]Generating validation split: 100%|██████████| 1199/1199 [00:00<00:00, 20992.44 examples/s]
+Generating test split:   0%|          | 0/5794 [00:00<?, ? examples/s]Generating test split:  40%|███▉      | 2300/5794 [00:00<00:00, 22410.78 examples/s]Generating test split:  86%|████████▋ | 5000/5794 [00:00<00:00, 24687.99 examples/s]Generating test split: 100%|██████████| 5794/5794 [00:00<00:00, 24634.16 examples/s]
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:213: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  self.scaler = amp.GradScaler(enabled=AMP_ENABLED)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00,  8.23it/s]Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00,  8.22it/s]
+Cannot initialize model with low cpu memory usage because `accelerate` was not found in the environment. Defaulting to `low_cpu_mem_usage=False`. It is strongly recommended to install `accelerate` for faster and less memory-intense model loading. You can do so with: 
+```
+pip install accelerate
+```
+.
+Fetching 13 files:   0%|          | 0/13 [00:00<?, ?it/s]Fetching 13 files:  23%|██▎       | 3/13 [00:00<00:00, 15.21it/s]Fetching 13 files:  23%|██▎       | 3/13 [00:13<00:00, 15.21it/s]Fetching 13 files:  38%|███▊      | 5/13 [00:26<00:51,  6.39s/it]Fetching 13 files:  85%|████████▍ | 11/13 [00:40<00:07,  3.71s/it]Fetching 13 files: 100%|██████████| 13/13 [00:40<00:00,  3.14s/it]
+Loading pipeline components...:   0%|          | 0/6 [00:00<?, ?it/s]Loading pipeline components...:  33%|███▎      | 2/6 [00:00<00:00, 14.17it/s]`torch_dtype` is deprecated! Use `dtype` instead!
+Loading pipeline components...:  83%|████████▎ | 5/6 [00:00<00:00,  6.88it/s]Loading pipeline components...: 100%|██████████| 6/6 [00:01<00:00,  3.03it/s]Loading pipeline components...: 100%|██████████| 6/6 [00:01<00:00,  3.79it/s]
+  0%|          | 0/15 [00:00<?, ?it/s]It looks like you are trying to rescale already rescaled images. If the input images have pixel values between 0 and 1, set `do_rescale=False` to avoid rescaling them again.
+  7%|▋         | 1/15 [00:20<04:47, 20.56s/it] 13%|█▎        | 2/15 [00:22<02:03,  9.50s/it] 20%|██        | 3/15 [00:23<01:09,  5.81s/it] 27%|██▋       | 4/15 [00:25<00:44,  4.08s/it] 33%|███▎      | 5/15 [00:26<00:31,  3.12s/it] 40%|████      | 6/15 [00:28<00:22,  2.54s/it] 47%|████▋     | 7/15 [00:29<00:17,  2.18s/it] 53%|█████▎    | 8/15 [00:30<00:13,  1.93s/it] 60%|██████    | 9/15 [00:32<00:10,  1.77s/it] 67%|██████▋   | 10/15 [00:33<00:08,  1.66s/it] 73%|███████▎  | 11/15 [00:35<00:06,  1.58s/it] 80%|████████  | 12/15 [00:36<00:04,  1.52s/it] 87%|████████▋ | 13/15 [00:37<00:02,  1.48s/it] 93%|█████████▎| 14/15 [00:39<00:01,  1.46s/it]100%|██████████| 15/15 [00:40<00:00,  1.44s/it]                                               Epoch 0:   0%|          | 0/15 [00:00<?, ?it/s]huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+Epoch 0:   0%|          | 0/15 [00:03<?, ?it/s]
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 62, in <module>
+    main()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 57, in main
+    run_exp1_waterbirds()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 37, in run_exp1_waterbirds
+    trainer.fit(train_dl, val_dl, epochs=30)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 323, in fit
+    x_cf = self._gen_counterfactual_batch(x, spurious_attr_idx)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 284, in _gen_counterfactual_batch
+    out = self.inp_pipe(prompt="", negative_prompt=neg_prompt, image=pil, mask_image=mask).images[0]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/diffusers/pipelines/stable_diffusion/pipeline_stable_diffusion_inpaint.py", line 1112, in __call__
+    prompt_embeds, negative_prompt_embeds = self.encode_prompt(
+                                            ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/diffusers/pipelines/stable_diffusion/pipeline_stable_diffusion_inpaint.py", line 439, in encode_prompt
+    raise TypeError(
+TypeError: `negative_prompt` should be the same type to `prompt`, but got <class 'list'> != <class 'str'>.
