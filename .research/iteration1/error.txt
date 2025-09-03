@@ -1,0 +1,26 @@
+  0%|          | 0.00/169M [00:00<?, ?B/s]  1%|          | 1.84M/169M [00:00<00:09, 17.7MB/s]  8%|▊         | 13.3M/169M [00:00<00:02, 73.8MB/s] 15%|█▍        | 24.6M/169M [00:00<00:01, 91.5MB/s] 21%|██▏       | 35.9M/169M [00:00<00:01, 100MB/s]  28%|██▊       | 47.4M/169M [00:00<00:01, 105MB/s] 35%|███▍      | 58.6M/169M [00:00<00:01, 107MB/s] 41%|████▏     | 70.0M/169M [00:00<00:00, 110MB/s] 48%|████▊     | 81.5M/169M [00:00<00:00, 111MB/s] 55%|█████▍    | 92.6M/169M [00:00<00:00, 111MB/s] 62%|██████▏   | 104M/169M [00:01<00:00, 112MB/s]  68%|██████▊   | 115M/169M [00:01<00:00, 112MB/s] 75%|███████▍  | 126M/169M [00:01<00:00, 112MB/s] 82%|████████▏ | 138M/169M [00:01<00:00, 113MB/s] 88%|████████▊ | 149M/169M [00:01<00:00, 113MB/s] 95%|█████████▌| 161M/169M [00:01<00:00, 113MB/s]100%|██████████| 169M/169M [00:01<00:00, 107MB/s]
+Cannot initialize model with low cpu memory usage because `accelerate` was not found in the environment. Defaulting to `low_cpu_mem_usage=False`. It is strongly recommended to install `accelerate` for faster and less memory-intense model loading. You can do so with: 
+```
+pip install accelerate
+```
+.
+Fetching 13 files:   0%|          | 0/13 [00:00<?, ?it/s]Fetching 13 files:   8%|▊         | 1/13 [00:00<00:01,  6.15it/s]Fetching 13 files:  38%|███▊      | 5/13 [00:09<00:15,  1.96s/it]Fetching 13 files:  85%|████████▍ | 11/13 [00:28<00:05,  2.79s/it]Fetching 13 files: 100%|██████████| 13/13 [00:28<00:00,  2.21s/it]
+Loading pipeline components...:   0%|          | 0/6 [00:00<?, ?it/s]`torch_dtype` is deprecated! Use `dtype` instead!
+Loading pipeline components...:  33%|███▎      | 2/6 [00:00<00:00,  9.43it/s]An error occurred while trying to fetch /home/runner/.cache/huggingface/hub/models--CompVis--stable-diffusion-v1-1/snapshots/574555a657f0c8d6e970a02c7e095e9d4220dcbf/unet: Error no file named diffusion_pytorch_model.safetensors found in directory /home/runner/.cache/huggingface/hub/models--CompVis--stable-diffusion-v1-1/snapshots/574555a657f0c8d6e970a02c7e095e9d4220dcbf/unet.
+Defaulting to unsafe serialization. Pass `allow_pickle=False` to raise an error instead.
+Loading pipeline components...:  83%|████████▎ | 5/6 [00:01<00:00,  4.55it/s]An error occurred while trying to fetch /home/runner/.cache/huggingface/hub/models--CompVis--stable-diffusion-v1-1/snapshots/574555a657f0c8d6e970a02c7e095e9d4220dcbf/vae: Error no file named diffusion_pytorch_model.safetensors found in directory /home/runner/.cache/huggingface/hub/models--CompVis--stable-diffusion-v1-1/snapshots/574555a657f0c8d6e970a02c7e095e9d4220dcbf/vae.
+Defaulting to unsafe serialization. Pass `allow_pickle=False` to raise an error instead.
+Loading pipeline components...: 100%|██████████| 6/6 [00:01<00:00,  4.49it/s]Loading pipeline components...: 100%|██████████| 6/6 [00:01<00:00,  4.75it/s]
+You have disabled the safety checker for <class 'diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.StableDiffusionPipeline'> by passing `safety_checker=None`. Ensure that you abide to the conditions of the Stable Diffusion license and do not expose unfiltered results in services or applications open to the public. Both the diffusers team and Hugging Face strongly recommend to keep the safety filter enabled in all public facing circumstances, disabling it only for use-cases that involve analyzing network behavior or auditing its results. For more information, please have a look at https://github.com/huggingface/diffusers/pull/254 .
+Traceback (most recent call last):
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 45, in main
+    trainer = Trainer(cfg, device="cuda" if torch.cuda.is_available() else "cpu")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 198, in __init__
+    self.gen = FrozenGenerator(cfg, device)  # frozen diffusion generator
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 100, in __init__
+    self.pipe.enable_model_cpu_offload()
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/diffusers/pipelines/pipeline_utils.py", line 1185, in enable_model_cpu_offload
+    raise ImportError("`enable_model_cpu_offload` requires `accelerate v0.17.0` or higher.")
+ImportError: `enable_model_cpu_offload` requires `accelerate v0.17.0` or higher.
