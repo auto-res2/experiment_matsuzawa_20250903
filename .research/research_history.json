@@ -6,5 +6,82 @@
     "DropEdge GNN",
     "PairNorm oversmoothing",
     "residual GNN smoothing"
+  ],
+  "research_study_list": [
+    {
+      "title": "A Non-Asymptotic Analysis of Oversmoothing in Graph Neural Networks"
+    },
+    {
+      "title": "On Provable Benefits of Depth in Training Graph Convolutional Networks"
+    },
+    {
+      "title": "Towards Deeper Graph Neural Networks with Differentiable Group Normalization"
+    },
+    {
+      "title": "Graph Neural Networks Do Not Always Oversmooth"
+    },
+    {
+      "title": "PairNorm: Tackling Oversmoothing in GNNs"
+    },
+    {
+      "title": "Towards Deeper Graph Neural Networks with Differentiable Group Normalization"
+    },
+    {
+      "title": "A Non-Asymptotic Analysis of Oversmoothing in Graph Neural Networks"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "PairNorm: Tackling Oversmoothing in GNNs"
+    },
+    {
+      "title": "DropEdge: Towards Deep Graph Convolutional Networks on Node Classification"
+    },
+    {
+      "title": "DropGNN: Random Dropouts Increase the Expressiveness of Graph Neural Networks"
+    },
+    {
+      "title": "DropGNN: Random Dropouts Increase the Expressiveness of Graph Neural Networks"
+    },
+    {
+      "title": "GNNDelete: A General Strategy for Unlearning in Graph Neural Networks"
+    },
+    {
+      "title": "Interpreting Graph Neural Networks for NLP With Differentiable Edge Masking"
+    },
+    {
+      "title": "PairNorm: Tackling Oversmoothing in GNNs"
+    },
+    {
+      "title": "ContraNorm: A Contrastive Learning Perspective on Oversmoothing and Beyond"
+    },
+    {
+      "title": "Towards Deeper Graph Neural Networks with Differentiable Group Normalization"
+    },
+    {
+      "title": "A Non-Asymptotic Analysis of Oversmoothing in Graph Neural Networks"
+    },
+    {
+      "title": "Not too little, not too much: a theoretical analysis of graph (over)smoothing"
+    },
+    {
+      "title": "Deep Graph Neural Networks via Posteriori-Sampling-based Node-Adaptative Residual Module"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "Not too little, not too much: a theoretical analysis of graph (over)smoothing"
+    },
+    {
+      "title": "Graph Neural Networks with Adaptive Residual"
+    }
   ]
 }
