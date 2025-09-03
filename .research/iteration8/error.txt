@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 22, in <module>
+    artefacts = run_waterbirds_experiment(seed, CFG)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 217, in run_waterbirds_experiment
+    ds_train_full, ds_val, ds_test, tf_ssl = prepare_waterbirds_datasets(cfg)
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/preprocess.py", line 80, in prepare_waterbirds_datasets
+    download(wb_cfg["url"], tar_path, wb_cfg["sha256"])
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/preprocess.py", line 45, in download
+    raise RuntimeError(f"[FATAL] download failed SHA-256 check for {url}")
+RuntimeError: [FATAL] download failed SHA-256 check for https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz
