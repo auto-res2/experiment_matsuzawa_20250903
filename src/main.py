@@ -24,9 +24,9 @@ from .preprocess import cifar_stream, ROOT as _ROOT  # project root as seen in p
 ROOT = _ROOT  # use the same ROOT definition
 RUNS = ROOT / "runs"
 # ------------------------------------------------------------------
-#   ALL experiment figures must live in .research/iteration7/images
+#   ALL experiment figures must live in .research/iteration8/images
 # ------------------------------------------------------------------
-FIGDIR = ROOT / ".research" / "iteration7" / "images"
+FIGDIR = ROOT / ".research" / "iteration8" / "images"
 for d in (RUNS, FIGDIR):
     d.mkdir(parents=True, exist_ok=True)
 
@@ -73,20 +73,36 @@ optim:
   epochs: 5
 """
 
-# Create default config if missing or empty --------------------------------
-if (not CFG_PATH.exists()) or (CFG_PATH.read_text().strip() == ""):
+# -------------------------------------------------------------------------
+# Helper – write default YAML (used from multiple places)
+# -------------------------------------------------------------------------
+
+def _write_default_yaml():
+    """Write the default YAML configuration to *CFG_PATH*."""
     CFG_PATH.parent.mkdir(parents=True, exist_ok=True)
     git_hash = shutil.which("git") and os.popen("git rev-parse --short HEAD").read().strip()
     CFG_PATH.write_text(_DEFAULT_YAML.format(git=git_hash))
     print(f"[config] default YAML written → {CFG_PATH}")
 
+# Create default config if it doesn't exist --------------------------------
+if not CFG_PATH.exists():
+    _write_default_yaml()
+
 # Load configuration ------------------------------------------------------
 with open(CFG_PATH) as f:
-    loaded = yaml.safe_load(f) or {}
+    loaded = yaml.safe_load(f)
+
+# If the YAML file is empty (e.g. comment-only) or invalid, regenerate it --
+if not loaded:
+    print(f"[config] {CFG_PATH} is empty or invalid – regenerating default template.")
+    _write_default_yaml()
+    with open(CFG_PATH) as f:
+        loaded = yaml.safe_load(f)
 
 if not loaded:
+    # Should never happen, but guard defensively.
     raise RuntimeError(
-        f"Config file {CFG_PATH} is empty or invalid – please populate it with valid YAML."
+        f"Config file {CFG_PATH} could not be loaded – please ensure it contains valid YAML."
     )
 
 CFG = SimpleNamespace(**loaded)
