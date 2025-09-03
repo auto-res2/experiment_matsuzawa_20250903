@@ -1,0 +1,44 @@
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.cora.x
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.cora.tx
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.cora.allx
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.cora.y
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.cora.ty
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.cora.ally
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.cora.graph
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.cora.test.index
+Processing...
+Done!
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.citeseer.x
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.citeseer.tx
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.citeseer.allx
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.citeseer.y
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.citeseer.ty
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.citeseer.ally
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.citeseer.graph
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.citeseer.test.index
+Processing...
+Done!
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.pubmed.x
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.pubmed.tx
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.pubmed.allx
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.pubmed.y
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.pubmed.ty
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.pubmed.ally
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.pubmed.graph
+Downloading https://github.com/kimiyoung/planetoid/raw/master/data/ind.pubmed.test.index
+Processing...
+Done!
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 150, in <module>
+    main()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 145, in main
+    experiment1(device)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 50, in experiment1
+    ds = load_dataset(dname, DATA_ROOT)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/preprocess.py", line 32, in load_dataset
+    ds = WikipediaNetwork(root, name, geom_gcn_split=True)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: WikipediaNetwork.__init__() got an unexpected keyword argument 'geom_gcn_split'
