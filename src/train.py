@@ -129,8 +129,16 @@ class TCR(nn.Module):
         self.k = k  # tokens per sample
         self.residual_bytes = residual_bytes
         self.max_bytes = 5 * 1024 * 1024                # 5 MiB allowed memory
-        self.register_buffer("tok_buf", torch.empty(0, k, dtype=torch.uint8), persistent=False)
-        self.register_buffer("lbl_buf", torch.empty(0, dtype=torch.long), persistent=False)
+
+        # -----------------------------------------------------------------
+        # IMPORTANT: Buffers live PERMANENTLY on **CPU** memory so that
+        #            GPU VRAM stays within the tight 5 MiB budget enforced
+        #            by the Jetson-Nano scenario.  We therefore store them
+        #            as *plain* attributes (NOT as registered buffers)
+        #            which prevents automatic `.to()`/`.cuda()` migration.
+        # -----------------------------------------------------------------
+        self.tok_buf: torch.Tensor = torch.empty(0, k, dtype=torch.uint8, device="cpu")
+        self.lbl_buf: torch.Tensor = torch.empty(0, dtype=torch.long, device="cpu")
 
     # ------------- forward paths -----------------------------------------
     def encode(self, x: torch.Tensor) -> torch.Tensor:
@@ -156,18 +164,27 @@ class TCR(nn.Module):
         return n * self.k  # token = 1 byte (uint8)
 
     def store(self, tok: torch.Tensor, lbl: torch.Tensor) -> None:
-        """Reservoir-sampling insertion under a fixed byte budget."""
-        for t, l in zip(tok.cpu(), lbl.cpu()):
+        """Reservoir-sampling insertion under a fixed byte budget.
+        The incoming *tok* & *lbl* tensors are on **CPU** already.  The
+        internal buffers are therefore kept on CPU, eliminating expensive
+        device transfers when concatenating.
+        """
+        # Ensure CPU (safety-net – inexpensive when already on host)
+        tok = tok.cpu()
+        lbl = lbl.cpu()
+
+        for t, l in zip(tok, lbl):
             if self._bytes(len(self.tok_buf) + 1) < self.max_bytes:
                 # still room → append
                 self.tok_buf = torch.cat((self.tok_buf, t.unsqueeze(0)), dim=0)
                 self.lbl_buf = torch.cat((self.lbl_buf, l.unsqueeze(0)), dim=0)
             else:
-                j = random.randrange(len(self.tok_buf))  # reservoir replace
+                # reservoir replacement ----------------------------------
+                j = random.randrange(len(self.tok_buf))
                 self.tok_buf[j] = t
                 self.lbl_buf[j] = l
 
     def sample(self, bs: int):
         assert len(self.tok_buf) > 0, "Buffer empty – cannot sample"
-        idx = torch.randint(0, len(self.tok_buf), (bs,), device=self.tok_buf.device)
+        idx = torch.randint(0, len(self.tok_buf), (bs,), device="cpu")
         return self.tok_buf[idx].long(), self.lbl_buf[idx]
