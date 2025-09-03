@@ -1,0 +1,22 @@
+  Running command git clone --filter=blob:none --quiet https://github.com/ExplainableML/aqm /tmp/pip-req-build-f66kzh__
+  fatal: could not read Username for 'https://github.com': No such device or address
+  error: subprocess-exited-with-error
+  
+  × git clone --filter=blob:none --quiet https://github.com/ExplainableML/aqm /tmp/pip-req-build-f66kzh__ did not run successfully.
+  │ exit code: 128
+  ╰─> See above for output.
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+error: subprocess-exited-with-error
+
+× git clone --filter=blob:none --quiet https://github.com/ExplainableML/aqm /tmp/pip-req-build-f66kzh__ did not run successfully.
+│ exit code: 128
+╰─> See above for output.
+
+note: This error originates from a subprocess, and is likely not a problem with pip.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 20, in <module>
+    import torch
+ModuleNotFoundError: No module named 'torch'
