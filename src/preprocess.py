@@ -1,232 +1,120 @@
+"""src/preprocess.py – data downloading / preprocessing utilties"""
 from __future__ import annotations
-"""
-preprocess.py – data download / preparation utilities
-"""
-import hashlib
-import os
-import pathlib
-import random
-import tarfile
-import time
-import urllib.error
-import urllib.request
-from typing import Any, Dict, Optional
+import random, tarfile, shutil
+from pathlib import Path
+from typing import Tuple, Dict, Any
 
-from PIL import Image
+import torch
 from torch.utils.data import Dataset
-from torchvision import datasets
+from torchvision import transforms
 
-DATA_ROOT = pathlib.Path("data")
+# Pandas & PIL are only needed here, keep them local to avoid global import cost
+import pandas as pd
+from PIL import Image
+
+DATA_ROOT = Path("data")
 DATA_ROOT.mkdir(exist_ok=True)
 
-# ----------------------------------------------------------------------------
-#                Download helpers
-# ----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+#                           GENERIC HELPERS
+# ---------------------------------------------------------------------------
 
-_CHUNK_SIZE = 1 << 20  # 1 MiB – balance between I/O and memory
-_MAX_RETRIES = 3  # network can be flaky; retry a couple of times
-
-
-def _md5(path: pathlib.Path) -> str:
-    """Compute the MD5 hash of *path* in a streaming fashion."""
-    m = hashlib.md5()
-    with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(_CHUNK_SIZE), b""):
-            m.update(chunk)
-    return m.hexdigest()
+def sha256sum(fp: Path, chunk: int = 1 << 16) -> str:
+    import hashlib
+    h = hashlib.sha256()
+    with fp.open("rb") as f:
+        for blk in iter(lambda: f.read(chunk), b""):
+            h.update(blk)
+    return h.hexdigest()
 
 
-def _download_once(url: str, dst: pathlib.Path):
-    """Internal helper that performs a single download attempt."""
-    if "drive.google.com" in url or "uc?export=download" in url:
-        try:
-            import gdown
-        except ImportError as exc:
-            raise RuntimeError(
-                "gdown required for Google-Drive download: pip install gdown"
-            ) from exc
-        gdown.download(url, str(dst), quiet=False)
-    else:
-        urllib.request.urlretrieve(url, dst)  # noqa: S310 – safe in this controlled context
-
-
-def download_url(url: str, dst: pathlib.Path, expected_md5: Optional[str] = None):
-    """Download *url* → *dst* (with optional MD5 integrity check).
-
-    The function makes up to `_MAX_RETRIES` attempts. If the expected MD5 fails
-    after all retries **and** the file looks plausibly complete (>1 MiB), a
-    warning is emitted and execution proceeds – downstream extraction will still
-    fail-fast if the archive is genuinely corrupted. This behaviour prevents the
-    entire pipeline from aborting due to transient network hiccups while still
-    guaranteeing correctness.
-    """
-
-    # Already present & valid ⇒ nothing to do.
-    if dst.exists() and (expected_md5 is None or _md5(dst) == expected_md5):
+def download(url: str, dst: Path, sha256: str | None = None, max_retry: int = 2):
+    """Light-weight robust downloader with SHA-256 verification."""
+    if dst.exists() and (sha256 is None or sha256sum(dst) == sha256):
         return
-
-    # Remove pre-existing partial file (if any).
     if dst.exists():
-        dst.unlink()
+        dst.unlink()  # corrupted file
+    import urllib.request
 
-    print(f"[DL] {url} → {dst}")
-    for attempt in range(1, _MAX_RETRIES + 1):
-        try:
-            _download_once(url, dst)
-        except (urllib.error.URLError, urllib.error.HTTPError) as err:
-            print(f"[WARN] Network error on attempt {attempt}/{_MAX_RETRIES}: {err}")
-            time.sleep(2)
-            continue
-
-        # Integrity check
-        if expected_md5 is None or _md5(dst) == expected_md5:
-            return  # ✅ success
-
-        # Hash mismatch – notify user
-        print(
-            f"[WARN] MD5 mismatch on attempt {attempt}/{_MAX_RETRIES} – retrying…"
-        )
-        # Delete the corrupted download *only* if we still have retries left.
-        if attempt < _MAX_RETRIES:
-            dst.unlink(missing_ok=True)
-        time.sleep(1)
-
-    # All retries exhausted – decide what to do next
-    if expected_md5 is not None and dst.exists():
-        if dst.stat().st_size < 1 << 20:  # <1 MiB is definitely not the dataset
-            raise RuntimeError("Download seems incomplete – aborting.")
-        # Large enough – might be that the reference MD5 changed upstream.
-        print(
-            "[WARN] Proceeding despite MD5 mismatch; downstream steps will validate the archive."
-        )
-    else:
-        raise RuntimeError(
-            "Failed to download after several attempts – check your network connection."
-        )
-
-# ----------------------------------------------------------------------------
-#                Dataset wrappers
-# ----------------------------------------------------------------------------
+    for k in range(max_retry):
+        print(f"[DL] {url} → {dst}   (attempt {k + 1}/{max_retry})")
+        urllib.request.urlretrieve(url, dst)
+        if sha256 is None or sha256sum(dst) == sha256:
+            return
+        print("[WARN] SHA-256 mismatch – retrying…")
+    raise RuntimeError(f"[FATAL] download failed SHA-256 check for {url}")
 
 
-class WaterbirdsDataset(Dataset):
-    """Robust loader for the Waterbirds dataset.
+# ---------------------------------------------------------------------------
+#                               WATERBIRDS
+# ---------------------------------------------------------------------------
+class WaterbirdsDS(Dataset):
+    """Torch Dataset wrapper around the Waterbirds CSV splits."""
 
-    The official archive (https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz)
-    contains a *metadata.csv* file with a `split` column (0=train, 1=val, 2=test).
-    Some mirrors additionally ship pre-filtered *train.csv/val.csv/test.csv* files.
-    This wrapper transparently supports **both** layouts so that downstream code
-    does not have to care which flavour is present on disk.
-    """
-
-    _SPLIT_MAP = {"train": 0, "val": 1, "test": 2}
-
-    def __init__(self, root: str, split: str, transform=None):
-        if split not in {"train", "val", "test"}:
-            raise ValueError("split must be one of 'train' | 'val' | 'test'")
-
-        self.transform = transform
-        self.base_dir = os.path.join(root, "waterbird_complete95_forest2water2")
-        if not os.path.isdir(self.base_dir):
-            raise FileNotFoundError("Waterbirds folder missing – did extraction succeed?")
-
-        # Prefer explicit split CSVs (if present).
-        csv_split_path = os.path.join(self.base_dir, f"{split}.csv")
-        if os.path.exists(csv_split_path):
-            meta_file = csv_split_path
-            split_df_key = None  # entire file already filtered
-        else:
-            # Fall back to the canonical metadata.csv
-            meta_file = os.path.join(self.base_dir, "metadata.csv")
-            if not os.path.exists(meta_file):
-                raise FileNotFoundError(
-                    "Waterbirds metadata CSV missing – the dataset archive may be corrupted."
-                )
-            split_df_key = self._SPLIT_MAP[split]
-
-        # ------------------------------------------------------------------
-        import pandas as pd  # local import to keep global deps minimal.
-
-        df = pd.read_csv(meta_file)
-        if split_df_key is not None:
-            if "split" not in df.columns:
-                raise KeyError("'split' column not found in metadata – unexpected format.")
-            df = df[df["split"] == split_df_key]
-
-        # Column name inconsistencies exist across versions; handle gracefully.
-        fname_col = (
-            "img_filename"
-            if "img_filename" in df.columns
-            else ("filename" if "filename" in df.columns else None)
-        )
-        if fname_col is None:
-            raise KeyError("Could not locate image filename column in metadata CSV.")
-
-        label_col = "y" if "y" in df.columns else "label"
-        if label_col not in df.columns:
-            raise KeyError("Could not locate label column in metadata CSV.")
-
-        self.samples = []
-        for fname, label in zip(df[fname_col], df[label_col]):
-            # The filename paths vary across dataset versions. Try a couple of
-            # reasonable candidates until an existing file is found. This makes
-            # the loader robust to upstream changes without requiring manual
-            # user intervention.
-            candidates = [
-                os.path.join(self.base_dir, fname),
-                os.path.join(self.base_dir, "CUB_200_2011", "images", fname),
-                os.path.join(self.base_dir, "images", fname),
-            ]
-            img_path: Optional[str] = next((p for p in candidates if os.path.exists(p)), None)
-            if img_path is None:
-                # Give a clear error message instead of failing later in __getitem__.
-                raise FileNotFoundError(
-                    f"None of the candidate paths exist for sample '{fname}'. Tried: {candidates}"
-                )
-            self.samples.append((img_path, int(label)))
-
-        if not self.samples:
-            raise RuntimeError(f"No samples found for split='{split}'.")
+    def __init__(self, root: Path, split: str, transform):
+        csv_path = root / f"waterbird_complete95_forest2water2/{split}.csv"
+        if not csv_path.exists():
+            raise RuntimeError("[DATA] Waterbirds CSV missing – extraction failed")
+        df = pd.read_csv(csv_path)
+        self.samples = [
+            (root / row["img_filename"], int(row["y"])) for _, row in df.iterrows()
+        ]
+        self.t = transform
 
     def __len__(self):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        path, y = self.samples[idx]
-        with Image.open(path) as img:
-            img = img.convert("RGB")
-        if self.transform:
-            img = self.transform(img)
-        return img, y
+        p, y = self.samples[idx]
+        x = Image.open(p).convert("RGB")
+        return self.t(x), y
 
 
-class CelebAMakeup(Dataset):
-    """CelebA binary classification (Heavy_Makeup)."""
+# ---------------------------------------------------------------------------
+#                               PREP ROUTINE
+# ---------------------------------------------------------------------------
 
-    def __init__(
-        self,
-        root: str,
-        split: str,
-        transform=None,
-        downsample: int | None = None,
-    ):
-        self.dataset = datasets.CelebA(
-            root,
-            split=split,
-            target_type=["attr"],
-            download=False,
-            transform=transform,
+def prepare_waterbirds_datasets(cfg: Dict[str, Any]):
+    wb_cfg = cfg["datasets"]["waterbirds"]
+    tar_path = DATA_ROOT / "waterbirds.tar.gz"
+    download(wb_cfg["url"], tar_path, wb_cfg["sha256"])
+
+    if not (DATA_ROOT / "waterbird_complete95_forest2water2").exists():
+        print("[INFO] extracting Waterbirds …")
+        with tarfile.open(tar_path) as t:
+            t.extractall(DATA_ROOT)
+
+    # Smoke-test – open 100 random images to catch corruption early
+    jpgs = list(
+        (DATA_ROOT / "waterbird_complete95_forest2water2" / "train" / "images").glob(
+            "*.jpg"
         )
-        self.indices = list(range(len(self.dataset)))
-        if downsample and split == "train":
-            random.shuffle(self.indices)
-            self.indices = self.indices[:downsample]
+    )
+    random.shuffle(jpgs)
+    for p in jpgs[:100]:
+        Image.open(p).convert("RGB")
 
-    def __len__(self):
-        return len(self.indices)
+    tf_ssl = transforms.Compose(
+        [
+            transforms.RandomResizedCrop(wb_cfg["img_size"], scale=(0.2, 1.0)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1),
+            transforms.RandomGrayscale(0.2),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ]
+    )
+    tf_eval = transforms.Compose(
+        [
+            transforms.Resize(256),
+            transforms.CenterCrop(wb_cfg["img_size"]),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ]
+    )
 
-    def __getitem__(self, idx):
-        real_idx = self.indices[idx]
-        x, attr = self.dataset[real_idx]
-        y = int(attr[30].item())  # Heavy_Makeup
-        return x, y
+    ds_train_full = WaterbirdsDS(DATA_ROOT, "train", tf_ssl)
+    ds_val = WaterbirdsDS(DATA_ROOT, "val", tf_eval)
+    ds_test = WaterbirdsDS(DATA_ROOT, "test", tf_eval)
+
+    return ds_train_full, ds_val, ds_test, tf_ssl

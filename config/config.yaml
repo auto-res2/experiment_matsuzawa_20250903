@@ -1,51 +1,45 @@
-global:
-  device: cuda
+env:
+  device: "cuda"
   num_workers: 4
+  max_vram_gb: 15.2
   print_every: 25
-  figure_dpi: 150
+  bf16: true
 
 datasets:
   waterbirds:
-    url: https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz
-    compressed_md5: 8d144fef749398972d1a3e0ad9f3a4c8
-    num_classes: 2
+    url: "https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz"
+    sha256: "b7c2d1e1417c7b7e7b4660c8036a034e497c2f4449f86e84fd4e15caaad51e96"
     img_size: 224
-  celeba:
-    url: https://drive.google.com/uc?export=download&id=1_ee_0u6VbaYkEOI3hQAcB-jR3lQq-v2V
-    gdrive: true
-    num_classes: 2
-    img_size: 224
-    downsample_train: 20000
-  color_mnist_rot:
-    github: https://github.com/Mateo-drr/ColorMNIST
-    rotation: 30
-    num_classes: 10
-    img_size: 28
-  imagenet_mini:
-    url: http://cs231n.stanford.edu/tiny-imagenet-200.zip
-    num_classes: 200
-    img_size: 224
+  colormnist_script: "https://raw.githubusercontent.com/Mateo-drr/ColorMNIST/master/colormnist.py"
+  cifar100:
+    url: "https://zenodo.org/record/10089977/files/cifar-100-python.tar.gz"
+    sha256: "999f2299bd3182c78c7d2b9bb24b2df4c733eebecba33ed3eec91298c9d4aba1"
 
-models:
-  resnet18_ssl:
-    type: byol
-    backbone: resnet18
-    epochs: 100
-    batch_size: 256
-    lr: 0.001
-  classifier_resnet18:
-    epochs: 200
-    batch_size: 128
-    lr: 0.0003
-    irm_lambda: 100.0
-    fourier_lambda: 0.5
+ssl:
+  epochs: 100
+  batch: 256
+  lr: 0.001
+
+lra:
+  rank: 8
+  amp_factor: 4.0
+
+riesz:
+  label_frac: 0.02
+  ridge: 0.001
 
 cdg:
-  # Using the lightweight CI model to avoid multi-gigabyte downloads.
-  base_model: hf-internal-testing/tiny-stable-diffusion-pipe
+  model_name: "stabilityai/sd-nano-1.1"
   lora_rank: 4
-  train_epochs: 10
-  train_batch: 4
+  epochs: 8
+  batch: 4
   lr: 0.0001
 
+invariant:
+  epochs: 150
+  batch: 128
+  lr: 0.0003
+  irm_lambda: 100.0
+  fourier_lambda: 0.5
 
+seeds: [0, 1, 2]
