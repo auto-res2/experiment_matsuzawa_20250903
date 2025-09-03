@@ -1,12 +1,36 @@
 """src/evaluate.py
 Utilities for computing metrics and model evaluation.
+The original implementation required the heavyweight ``torch_geometric``
+package to obtain the ``Data`` class that is *only* used for static type
+annotations.  To keep the dependency list minimal and avoid large binary
+wheels, we replicate the graceful-degradation strategy used throughout the
+code-base: attempt to import the real class first and fall back to a very
+light-weight stub when the import fails.
 """
 from __future__ import annotations
 from typing import Dict
 
 import torch
 import torch.nn.functional as F
-from torch_geometric.data import Data
+
+# -----------------------------------------------------------------------------
+#  Optional torch-geometric dependency (see ``src/train.py`` for details)
+# -----------------------------------------------------------------------------
+try:
+    from torch_geometric.data import Data  # type: ignore
+except Exception:  # pragma: no cover – lightweight stub
+
+    class Data:  # pylint: disable=too-few-public-methods
+        """Minimal stand-in for ``torch_geometric.data.Data`` used only for
+        type annotations and the ``.to(device)`` helper.
+        """
+
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
+        # Preserve the interface expected by the rest of the code base
+        def to(self, *_, **__):  # noqa: D401
+            return self
 
 ################################################################################
 #  METRIC PRIMITIVES
@@ -39,7 +63,7 @@ def apsd(z: torch.Tensor) -> float:
 def evaluate(model, data: Data) -> Dict[str, float]:
     model.eval()
     logits, _ = model(data.x, data.edge_index)
-    out = {}
+    out: Dict[str, float] = {}
     for split in ["train", "val", "test"]:
         mask = getattr(data, f"{split}_mask")
         out[f"acc_{split}"] = accuracy(logits[mask], data.y[mask])

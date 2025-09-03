@@ -1,10 +1,10 @@
 """src/main.py
-Entry-point for quick training & evaluation of the DDAF-GNN model.  The
-script purposely uses a very small number of layers/epochs so that it can be
-executed inside a continuous-integration environment within the allotted time
-budget.  If the canonical Cora dataset cannot be downloaded (e.g. no internet
-access), the script automatically falls back to a tiny synthetic graph so that
-unit tests can still succeed.
+Entry-point for quick training & evaluation of the DDAF-GNN model.  The script
+purposely uses a very small number of layers/epochs so that it can be executed
+inside a continuous-integration environment within the allotted time budget.
+If the canonical Cora dataset cannot be downloaded (e.g. no internet access),
+the script automatically falls back to a tiny synthetic graph so that unit
+tests can still succeed.
 """
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ try:
 except Exception:  # pragma: no cover – minimal fallback
 
     class Data:  # pylint: disable=too-few-public-methods
-        """Light-weight stand-in for `torch_geometric.data.Data`."""
+        """Light-weight stand-in for ``torch_geometric.data.Data``."""
 
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
@@ -43,7 +43,7 @@ from src import train as tr
 ROOT = Path(__file__).resolve().parent.parent
 # All experiment figures must live in this exact directory according to the
 # platform specification.
-FIG_DIR = ROOT / ".research" / "iteration9" / "images"
+FIG_DIR = ROOT / ".research" / "iteration10" / "images"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 ################################################################################
 #  FALL-BACK SYNTHETIC DATASET (used when internet is unavailable)
