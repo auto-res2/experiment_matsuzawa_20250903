@@ -1,3 +1,4 @@
+
 """
 train.py
 ~~~~~~~~
@@ -174,12 +175,32 @@ class Trainer:
 
     # .........................................................................
     def _split(self, part: str):
+        """Return indices for the requested split.
+
+        Supports both:
+          • OGB loaders – `get_idx_split()` returns dict with keys 'train'/'valid'/'test'.
+          • Planetoid / WikiNetwork loaders – boolean masks stored on the *Data* object.
+        """
+        # -------- OGB style --------------------------------------------------
         if hasattr(self.dataset, "get_idx_split"):
-            return self.dataset.get_idx_split()[part]
-        # Planetoid style – bool masks
-        mask_name = f"{part}_mask"
-        if hasattr(self.data, mask_name):
-            return self.data[mask_name].nonzero(as_tuple=False).view(-1)
+            split = self.dataset.get_idx_split()
+            # direct hit
+            if part in split:
+                return split[part]
+            # aliasing ('valid' ↔ 'val')
+            if part == "valid" and "val" in split:
+                return split["val"]
+
+        # -------- Mask style --------------------------------------------------
+        # Build list of candidate mask names (account for aliasing)
+        mask_candidates = [f"{part}_mask"]
+        if part == "valid":  # Planetoid uses 'val_mask'
+            mask_candidates.append("val_mask")
+        for mname in mask_candidates:
+            if hasattr(self.data, mname):
+                return getattr(self.data, mname).nonzero(as_tuple=False).view(-1)
+
+        # If we reach here, we could not resolve the split
         raise RuntimeError("Dataset does not contain recognised split information.")
 
     # ---------------------------------------------------------------------

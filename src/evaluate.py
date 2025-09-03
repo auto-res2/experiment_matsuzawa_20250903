@@ -10,10 +10,10 @@ from typing import List
 import matplotlib
 matplotlib.use("Agg")  # headless backend
 import matplotlib.pyplot as plt
-import seaborn as sns
+import seaborn as sns  # noqa: F401 – required for seaborn styling side-effects
 
 # All experiment figures must be saved under this directory (see instructions)
-FIG_DIR = pathlib.Path(__file__).resolve().parent.parent / ".research" / "iteration2" / "images"
+FIG_DIR = pathlib.Path(__file__).resolve().parent.parent / ".research" / "iteration3" / "images"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
