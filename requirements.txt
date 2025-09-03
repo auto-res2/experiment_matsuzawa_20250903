@@ -1,15 +1,1 @@
-torch
-torchvision
-timm
-numpy
-pandas
-matplotlib
-seaborn
-scikit-learn
-requests
-tqdm
-pillow
-ptflops
-pynvml
-einops
-wandb
+original

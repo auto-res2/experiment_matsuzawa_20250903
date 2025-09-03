@@ -12,7 +12,17 @@ from typing import List, Tuple, Dict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.cuda.amp import GradScaler, autocast
+
+# ---------------------------------------------------------------------------
+# AMP imports – handle both new (torch.amp) and legacy (torch.cuda.amp) APIs
+# ---------------------------------------------------------------------------
+try:  # PyTorch ≥ 2.1 – preferred modern path
+    from torch.amp import GradScaler, autocast  # type: ignore
+    _AMP_IS_MODERN = True
+except ImportError:  # Fallback – older PyTorch versions (< 2.1)
+    from torch.cuda.amp import GradScaler, autocast  # type: ignore
+    _AMP_IS_MODERN = False
+
 from einops import rearrange
 import timm
 
@@ -196,8 +206,21 @@ class Trainer:
         self.model  = model.cuda().train()
         self.opt    = torch.optim.AdamW(model.parameters(), lr=lr, betas=(0.9,0.999),
                                         weight_decay=weight_decay)
-        self.scaler = GradScaler()
+        # GradScaler – use new API when available, otherwise fall back
+        try:
+            self.scaler = GradScaler(device='cuda') if _AMP_IS_MODERN else GradScaler()
+        except TypeError:  # extra safeguard for very old versions
+            self.scaler = GradScaler()
         self.scheduler = BudgetScheduler()
+
+    # ---------------------------------------------------------------------
+    # AMP helper – create autocast ctx that works for both API variants
+    # ---------------------------------------------------------------------
+    def _autocast_ctx(self):
+        try:
+            return autocast(device_type='cuda')  # new API
+        except TypeError:  # legacy API has no device_type kwarg
+            return autocast()
 
     # ---------------------------------------------------------------------
     # current data passes --------------------------------------------------
@@ -208,7 +231,7 @@ class Trainer:
         for _ in range(passes):
             for x, y in loader:
                 x, y = x.cuda(non_blocking=True), y.cuda(non_blocking=True)
-                with autocast(device_type='cuda'):
+                with self._autocast_ctx():
                     if cur:
                         loss, toks = self.model.forward_current(x, y)
                     else:
