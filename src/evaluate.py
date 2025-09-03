@@ -1,9 +1,9 @@
 from __future__ import annotations
 """
 evaluate.py – evaluation routines and plotting utilities
-(modified: save all images into .research/iteration5/images as required)
+(Fixed): all figures are now stored under `.research/iteration6/images` as
+requested by the task description.
 """
-import os
 import statistics as st
 from pathlib import Path
 
@@ -14,18 +14,21 @@ import torch
 
 from .train import train_stream, sanity_single_task
 
+# -------------------------------------------------------------------------
+# Configuration ------------------------------------------------------------
+# -------------------------------------------------------------------------
 CFG_PATH = Path(__file__).resolve().parent.parent / 'config' / 'config.yaml'
-with open(CFG_PATH, 'r') as f:
-    CFG = yaml.safe_load(f)
+with open(CFG_PATH, 'r') as _f:
+    CFG = yaml.safe_load(_f)
 
 # -------------------------------------------------------------------------
-# Plot directory (all experiment images must go here)
+# Plot directory (all experiment images MUST go here) ----------------------
 # -------------------------------------------------------------------------
-PLOT_DIR = Path('.research/iteration5/images')  # << changed from iteration3 → iteration5
+PLOT_DIR = Path('.research/iteration6/images')
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
 # -------------------------------------------------------------------------
-# EXPERIMENT 1 – accuracy / forgetting trade-off (CIFAR-100)
+# EXPERIMENT 1 – accuracy / forgetting trade-off (CIFAR-100) --------------
 # -------------------------------------------------------------------------
 
 def experiment1():
@@ -36,7 +39,6 @@ def experiment1():
     # -------------------------------------------------------------
     if not torch.cuda.is_available():
         print('[SKIP] CUDA not available – heavy training routines are disabled in this environment.')
-        # create an empty placeholder figure so downstream steps never fail
         plt.figure(figsize=(2, 2))
         plt.text(0.5, 0.5, 'Skipped (no CUDA)', ha='center', va='center')
         placeholder = PLOT_DIR / 'training_accuracy.pdf'
@@ -47,7 +49,7 @@ def experiment1():
     device = CFG['device']
     sanity_single_task(device=device)
 
-    methods = ['HATEM', 'ER']  # abbreviated list for brevity
+    methods = ['HATEM', 'ER']  # abbreviated list for brevity in the template
     results = {m: [] for m in methods}
 
     for budget_name, bytes_ in CFG['budgets'].items():

@@ -29,4 +29,4 @@ optim:
 
 batch: 128
 vqgan_ckpt: "vqgan_imagenet_f16_16384"
-plots: ".research/iteration5/images"
+plots: ".research/iteration6/images"
