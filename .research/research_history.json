@@ -6,5 +6,82 @@
     "sparsity pruning continual learning",
     "online continual learning memory",
     "generative replay memory"
+  ],
+  "research_study_list": [
+    {
+      "title": "Continual Learning in Low-rank Orthogonal Subspaces"
+    },
+    {
+      "title": "Contextual Transformation Networks for Online Continual Learning"
+    },
+    {
+      "title": "Improving Task-free Continual Learning by Distributionally Robust Memory Evolution"
+    },
+    {
+      "title": "Improving Task-free Continual Learning by Distributionally Robust Memory Evolution"
+    },
+    {
+      "title": "SparCL: Sparse Continual Learning on the Edge"
+    },
+    {
+      "title": "Towards Backward-Compatible Continual Learning of Image Compression"
+    },
+    {
+      "title": "Online Learned Continual Compression with Adaptive Quantization Modules"
+    },
+    {
+      "title": "Layerwise Proximal Replay: A Proximal Point Method for Online Continual Learning"
+    },
+    {
+      "title": "EEC: Learning to Encode and Regenerate Images for Continual Learning"
+    },
+    {
+      "title": "Navigating Memory Construction by Global Pseudo-Task Simulation for Continual Learning"
+    },
+    {
+      "title": "SparCL: Sparse Continual Learning on the Edge"
+    },
+    {
+      "title": "NISPA: Neuro-Inspired Stability-Plasticity Adaptation for Continual Learning in Sparse Networks"
+    },
+    {
+      "title": "NISPA: Neuro-Inspired Stability-Plasticity Adaptation for Continual Learning in Sparse Networks"
+    },
+    {
+      "title": "Bayesian Structural Adaptation for Continual Learning"
+    },
+    {
+      "title": "Wide Neural Networks Forget Less Catastrophically"
+    },
+    {
+      "title": "Contextual Transformation Networks for Online Continual Learning"
+    },
+    {
+      "title": "Look-ahead Meta Learning for Continual Learning"
+    },
+    {
+      "title": "Look-ahead Meta Learning for Continual Learning"
+    },
+    {
+      "title": "Wandering within a world: Online contextualized few-shot learning"
+    },
+    {
+      "title": "Graph-Based Continual Learning"
+    },
+    {
+      "title": "Coherent Temporal Synthesis for Incremental Action Segmentation"
+    },
+    {
+      "title": "Associative Memories via Predictive Coding"
+    },
+    {
+      "title": "Kanerva++: Extending the Kanerva Machine With Differentiable, Locally Block Allocated Latent Memory"
+    },
+    {
+      "title": "Synthetic Experience Replay"
+    },
+    {
+      "title": "Incremental Learning of Structured Memory via Closed-Loop Transcription"
+    }
   ]
 }
