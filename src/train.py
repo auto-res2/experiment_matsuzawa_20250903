@@ -120,15 +120,30 @@ class DynamicHead(nn.Module):
 
     def __init__(self):
         super().__init__()
+        # Start with zero classes (allowed – 0×512 weight & 0-length bias)
         self.fc = nn.Linear(512, 0)
 
     # ------------------------------------------------------------------
     def expand(self, n_new: int):
-        W = torch.zeros(n_new, 512, device=self.fc.weight.device)
-        b = torch.zeros(n_new, device=self.fc.bias.device)
+        """Add `n_new` output neurons while preserving existing weights."""
+        if n_new <= 0:
+            return  # nothing to do
+
+        device = self.fc.weight.device
+        # --- create new parameters ------------------------------------------------
+        W = torch.empty(n_new, 512, device=device)
         nn.init.kaiming_uniform_(W, a=np.sqrt(5))
+        b = torch.zeros(n_new, device=device)
+
+        # --- concatenate with old parameters --------------------------------------
         self.fc.weight = nn.Parameter(torch.cat([self.fc.weight.data, W], 0))
         self.fc.bias = nn.Parameter(torch.cat([self.fc.bias.data, b], 0))
+
+        # --- update meta-information ---------------------------------------------
+        # PyTorch does *not* automatically update the cached `out_features` attr when
+        # the underlying parameters are replaced, so we must keep it in sync for
+        # correct introspection and unit-tests.
+        self.fc.out_features = self.fc.weight.size(0)
 
     # ------------------------------------------------------------------
     def forward(self, z):
@@ -377,6 +392,7 @@ class Log:
 
 
 # ------------------------------------------------------------------
+
 def run_method(name: str, ctor: Callable, cfg: Dict, device=DEVICE):
     """Train *one* method across the task stream; returns summary & log."""
 

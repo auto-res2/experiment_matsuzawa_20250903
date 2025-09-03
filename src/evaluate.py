@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 
 """
 evaluate.py – statistical analysis & visualisation utilities.
-All figures are saved to `.research/iteration23/images` as PDF so that
+All figures are saved to `.research/iteration24/images` as PDF so that
 reviewers find them in the predefined directory.
 """
 
 # permanent, reviewer-specified directory -------------------------------------
-FIG_DIR = Path('.research/iteration23/images')
+FIG_DIR = Path('.research/iteration24/images')
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 # -----------------------------------------------------------------------------
