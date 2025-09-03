@@ -1,0 +1,19 @@
+/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/torch/nn/init.py:582: UserWarning: Initializing zero-element tensors is a no-op
+  warnings.warn("Initializing zero-element tensors is a no-op")
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 131, in <module>
+    main()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 103, in main
+    s, log = run_method(name, ctor, CFG)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 422, in run_method
+    model.train_task(dl_tr, cfg['hyper']['epochs_per_task'], opt)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 295, in train_task
+    self._sync()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 260, in _sync
+    self.ledger.update(self.head.fc.weight.numel() + self.head.fc.bias.numel(), len(self.buf) * 3072)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 38, in update
+    raise RuntimeError('Memory cap exceeded – aborting (ledgerCap gate)')
+RuntimeError: Memory cap exceeded – aborting (ledgerCap gate)
