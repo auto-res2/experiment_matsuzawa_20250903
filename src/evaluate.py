@@ -15,9 +15,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # ----------------------------------------------------------------------------
-#   All experiment artefacts must live under .research/iteration5/images
+#   All experiment artefacts must live under .research/iteration6/images
 # ----------------------------------------------------------------------------
-IMG_DIR = os.path.join(".research", "iteration5", "images")
+IMG_DIR = os.path.join(".research", "iteration6", "images")
 os.makedirs(IMG_DIR, exist_ok=True)
 
 
