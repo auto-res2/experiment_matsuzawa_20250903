@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 29, in <module>
+    raise RuntimeError(f"Python {REQ_MAJOR}.{REQ_MINOR}.x required, found {sys.version}")
+RuntimeError: Python 3.10.x required, found 3.11.13 (main, Jun  4 2025, 04:12:12) [GCC 13.3.0]
