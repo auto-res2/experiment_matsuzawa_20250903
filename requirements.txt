@@ -6,4 +6,3 @@ torchmetrics
 matplotlib
 numpy
 pyyaml
-vq_vae_2_pytorch
