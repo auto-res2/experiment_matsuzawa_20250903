@@ -1,0 +1,46 @@
+common:
+  batch_size:
+    exp1: 64
+    exp2: 128
+  num_workers: 4
+  precision: fp16
+datasets:
+  waterbirds:
+    url: https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz
+    splits:
+    - 4795
+    - 1199
+    - 5794
+    img_size: 224
+  celeba:
+    url: https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
+    img_size: 224
+  mini_imagenet9:
+    hf_repo: timm/mini-imagenet
+    img_size: 64
+models:
+  vit_s16:
+    timm_id: vit_small_patch16_224.augreg_in21k
+    num_classes: 2
+  resnet18:
+    timm_id: resnet18
+    num_classes: 9
+optim:
+  vit:
+    lr: 0.0005
+    weight_decay: 0.05
+    epochs: 100
+  resnet:
+    lr: 0.1
+    weight_decay: 0.0005
+    epochs: 200
+    momentum: 0.9
+dcig:
+  loops: 2
+  saliency_every: 5
+  cf_per_image: 4
+  lora_rank: 4
+  lora_lr: 0.0001
+  lora_steps: 1000
+  lambda_irm: 1.0
+  lambda_cer: 0.2
