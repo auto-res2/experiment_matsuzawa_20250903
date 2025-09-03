@@ -1,0 +1,178 @@
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
+/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py:32: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=scaler is not None):
