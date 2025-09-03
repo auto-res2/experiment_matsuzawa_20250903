@@ -6,7 +6,7 @@ from typing import Dict
 from .train import TaskLog
 
 # hard-coded figure directory requested by the specification
-FIG_DIR = Path('.research/iteration16/images')  # ← updated to iteration16
+FIG_DIR = Path('.research/iteration17/images')  # ← updated to iteration17
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
