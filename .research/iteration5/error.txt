@@ -1,0 +1,26 @@
+Fetching 15 files:   0%|          | 0/15 [00:00<?, ?it/s]Fetching 15 files:  20%|██        | 3/15 [00:00<00:00, 19.10it/s]Fetching 15 files:  33%|███▎      | 5/15 [00:00<00:00, 16.05it/s]Fetching 15 files: 100%|██████████| 15/15 [00:00<00:00, 46.72it/s]
+Loading pipeline components...:   0%|          | 0/7 [00:00<?, ?it/s]`torch_dtype` is deprecated! Use `dtype` instead!
+An error occurred while trying to fetch /home/runner/.cache/huggingface/hub/models--hf-internal-testing--tiny-stable-diffusion-pipe/snapshots/3ee6c9f225f088ad5d35b624b6514b091e6a4849/vae: Error no file named diffusion_pytorch_model.safetensors found in directory /home/runner/.cache/huggingface/hub/models--hf-internal-testing--tiny-stable-diffusion-pipe/snapshots/3ee6c9f225f088ad5d35b624b6514b091e6a4849/vae.
+Defaulting to unsafe serialization. Pass `allow_pickle=False` to raise an error instead.
+Loading pipeline components...:  86%|████████▌ | 6/7 [00:00<00:00, 35.92it/s]An error occurred while trying to fetch /home/runner/.cache/huggingface/hub/models--hf-internal-testing--tiny-stable-diffusion-pipe/snapshots/3ee6c9f225f088ad5d35b624b6514b091e6a4849/unet: Error no file named diffusion_pytorch_model.safetensors found in directory /home/runner/.cache/huggingface/hub/models--hf-internal-testing--tiny-stable-diffusion-pipe/snapshots/3ee6c9f225f088ad5d35b624b6514b091e6a4849/unet.
+Defaulting to unsafe serialization. Pass `allow_pickle=False` to raise an error instead.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 27.66it/s]
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 152, in <module>
+    main()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 149, in main
+    run_single(s)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 89, in run_single
+    cdg = CDGPipeline(cdg_cfg, device)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 138, in __init__
+    peft_cfg = LoraConfig(r=cfg["lora_rank"], lora_alpha=cfg["lora_rank"] * 2,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 36, in __init__
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/peft/tuners/lora/config.py", line 595, in __post_init__
+    super().__post_init__()
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/peft/config.py", line 67, in __post_init__
+    raise ValueError(
+ValueError: Invalid task type: 'UNET'. Must be one of the following task types: SEQ_CLS, SEQ_2_SEQ_LM, CAUSAL_LM, TOKEN_CLS, QUESTION_ANS, FEATURE_EXTRACTION.
