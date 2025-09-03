@@ -10,7 +10,6 @@ timm>=0.9.10
 diffusers>=0.21
 peft
 lpips
-autoattack
 datasets
 pillow>=9.0
 xformers

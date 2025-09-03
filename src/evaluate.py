@@ -12,7 +12,9 @@ import matplotlib.pyplot as plt
 #  Paths
 # -----------------------------------------------------------------------------
 ROOT         = Path(__file__).resolve().parent.parent
-IMAGES_DIR   = ROOT / ".research" / "iteration1" / "images"
+# According to the new project specification all experiment figures must live
+# under `.research/iteration2/images`.
+IMAGES_DIR   = ROOT / ".research" / "iteration2" / "images"
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
 # -----------------------------------------------------------------------------
