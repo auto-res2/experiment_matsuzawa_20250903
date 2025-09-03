@@ -6,5 +6,82 @@
     "domain generalization image classification",
     "distributionally robust optimization",
     "invariant risk minimization"
+  ],
+  "research_study_list": [
+    {
+      "title": "A Causal Framework for Decomposing Spurious Variations"
+    },
+    {
+      "title": "Self-supervised Debiasing Using Low Rank Regularization"
+    },
+    {
+      "title": "Learning The Difference That Makes A Difference With Counterfactually-Augmented Data"
+    },
+    {
+      "title": "Causal Effect Regularization: Automated Detection and Removal of Spurious Correlations"
+    },
+    {
+      "title": "Counterfactual Invariance to Spurious Correlations in Text Classification"
+    },
+    {
+      "title": "Models Out of Line: A Fourier Lens on Distribution Shift Robustness"
+    },
+    {
+      "title": "On the Adversarial Robustness of Out-of-distribution Generalization Models"
+    },
+    {
+      "title": "OODRobustBench: a Benchmark and Large-Scale Analysis of Adversarial Robustness under Distribution Shift"
+    },
+    {
+      "title": "Towards neural networks that provably know when they don't know"
+    },
+    {
+      "title": "Certifiably Adversarially Robust Detection of Out-of-Distribution Data"
+    },
+    {
+      "title": "Domain Generalization by Learning and Removing Domain-specific Features"
+    },
+    {
+      "title": "Domain Generalization by Learning and Removing Domain-specific Features"
+    },
+    {
+      "title": "Domain Invariant Representation Learning with Domain Density Transformations"
+    },
+    {
+      "title": "In Search of Lost Domain Generalization"
+    },
+    {
+      "title": "Rethinking the Evaluation Protocol of Domain Generalization"
+    },
+    {
+      "title": "Non-convex Distributionally Robust Optimization: Non-asymptotic Analysis"
+    },
+    {
+      "title": "Outlier-Robust Wasserstein DRO"
+    },
+    {
+      "title": "Fast Bellman Updates for Wasserstein Distributionally Robust MDPs"
+    },
+    {
+      "title": "Outlier-Robust Distributionally Robust Optimization via Unbalanced Optimal Transport"
+    },
+    {
+      "title": "Scalable Distributional Robustness in a Class of Non-Convex Optimization with Guarantees"
+    },
+    {
+      "title": "Invariant Risk Minimization Is A Total Variation Model"
+    },
+    {
+      "title": "The Missing Invariance Principle found --  the Reciprocal Twin of Invariant Risk Minimization "
+    },
+    {
+      "title": "Sparse Invariant Risk Minimization"
+    },
+    {
+      "title": "Sparse Invariant Risk Minimization"
+    },
+    {
+      "title": "The Risks of Invariant Risk Minimization"
+    }
   ]
 }
