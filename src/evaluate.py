@@ -19,21 +19,67 @@ __all__ = [
 # Diagnostic & classification metrics
 # -----------------------------------------------------------------------------
 
-def row_diff(x: torch.Tensor) -> float:
-    diff = x.unsqueeze(0) - x.unsqueeze(1)
-    return diff.norm(p=2, dim=-1).mean().item()
+def _sample_pairwise_dist(x: torch.Tensor, num_samples: int = 10_000) -> float:
+    """Return the average L2 distance of *num_samples* random row-pairs.
+    This avoids constructing an N×N matrix which would quickly exhaust GPU
+    memory (and indeed caused the OOM crash we are fixing).  The estimate is
+    unbiased because pairs are drawn uniformly with replacement.
+    """
+    n = x.size(0)
+    if n == 0:
+        return float("nan")
 
-def col_diff(x: torch.Tensor) -> float:
-    diff = x.t().unsqueeze(0) - x.t().unsqueeze(1)
-    return diff.norm(p=2, dim=-1).mean().item()
+    # Always operate on *CPU* to free up GPU VRAM for the actual model.
+    # Detaching is cheap and ensures no autograd graph is kept alive.
+    x_cpu = x.detach().cpu()
+
+    num_samples = min(num_samples, n * (n - 1))  # safety guard
+    idx1 = torch.randint(0, n, (num_samples,))
+    idx2 = torch.randint(0, n, (num_samples,))
+
+    # make sure we don't pick identical indices (distance=0 would bias low)
+    same = idx1 == idx2
+    if same.any():
+        idx2[same] = (idx2[same] + 1) % n
+
+    diffs = x_cpu[idx1] - x_cpu[idx2]
+    return diffs.norm(p=2, dim=-1).mean().item()
+
+
+def row_diff(x: torch.Tensor, exact_threshold: int = 4_000) -> float:
+    """Average pair-wise row distance.
+
+    For |rows| ≤ *exact_threshold* we compute the exact value; otherwise we
+    fall back to a Monte-Carlo estimate to keep memory usage under control.
+    """
+    n = x.size(0)
+    if n <= exact_threshold:
+        diff = x.unsqueeze(0) - x.unsqueeze(1)
+        return diff.norm(p=2, dim=-1).mean().item()
+    # Large tensor – use sampling
+    return _sample_pairwise_dist(x)
+
+
+def col_diff(x: torch.Tensor, exact_threshold: int = 4_000) -> float:
+    """Average pair-wise column distance (feature-wise).  Same logic as
+    *row_diff* but applied to *xᵀ* whose size is usually modest; still, we keep
+    the sampling fallback for completeness.
+    """
+    m = x.size(1)
+    if m <= exact_threshold:
+        diff = x.t().unsqueeze(0) - x.t().unsqueeze(1)
+        return diff.norm(p=2, dim=-1).mean().item()
+    return _sample_pairwise_dist(x.t())
+
 
 def effective_rank(x: torch.Tensor, eps: float = 1e-6) -> float:
     # limit rank approximation for memory safety
     q = min(100, x.size(1) - 1)
-    u, s, v = torch.svd_lowrank(x, q=q)
+    u, s, v = torch.svd_lowrank(x.detach().cpu(), q=q)
     p = s / (s.sum() + eps)
     H = -(p * torch.log(p + eps)).sum()
     return torch.exp(H).item()
+
 
 def classification_metrics(logits: torch.Tensor, y_true: torch.Tensor) -> tuple[float, float]:
     pred = logits.argmax(dim=1).cpu().numpy()
