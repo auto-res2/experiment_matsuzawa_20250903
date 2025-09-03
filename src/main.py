@@ -25,10 +25,10 @@ from .evaluate import eval_model
 from .preprocess import load_cora
 
 # ---------------------------------------------------------------------------
-#  Device & figure path set-up
+#  Device & figure path set-up (NOTE: path updated for iteration 2)
 # ---------------------------------------------------------------------------
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-FIG_DIR = Path(".research/iteration1/images")
+FIG_DIR = Path(".research/iteration2/images")
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------------------
@@ -53,14 +53,15 @@ def run_depth_scalability():
             optim = torch.optim.AdamW(model.parameters(), lr=0.005, weight_decay=5e-4)
             best_val, best_state = 0.0, None
             patience = 100
+            best_epoch = 0
             for epoch in range(400):
                 train_epoch(model, data, optim)
                 _, acc_val, *_ = eval_model(model, data)
                 if acc_val > best_val:
                     best_val = acc_val
                     best_state = {k: v.cpu() for k, v in model.state_dict().items()}
-                    best_epoch = epoch  # noqa: F841
-                if epoch - (best_epoch if "best_epoch" in locals() else 0) > patience:
+                    best_epoch = epoch
+                if epoch - best_epoch > patience:
                     break
             if best_state is None:
                 continue
@@ -88,7 +89,7 @@ def run_depth_scalability():
     plt.errorbar(xs, ys, yerr=err, fmt="-o", label="DDAF-GNN")
     for x, y in zip(xs, ys):
         plt.text(x, y + 0.3, f"{y:.1f}")
-    plt.xscale("log", basex=2)
+    plt.xscale("log", base=2)
     plt.xlabel("#Layers (log2 scale)")
     plt.ylabel("Accuracy (%)")
     plt.title("Cora – Depth vs Accuracy")

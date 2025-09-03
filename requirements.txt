@@ -1,12 +1,21 @@
-torch
-torch_geometric
-torch_scatter
-torch_sparse
+--extra-index-url https://pypi.org/simple
+# Pre-built PyG wheels for PyTorch 2.2 (CPU); avoids source compilation
+--find-links https://data.pyg.org/whl/torch-2.2.0+cpu.html
+
+# Core deep-learning stack
+torch==2.2.0
+torch_geometric==2.5.3
+torch_scatter==2.1.2
+torch_sparse==0.6.18
+
+# Scientific & visualisation stack
 numpy
 scipy
 networkx
 matplotlib
 seaborn
+
+# Benchmark / utility libraries
 ogb
 optuna
 tqdm
