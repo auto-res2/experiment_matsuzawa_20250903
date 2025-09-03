@@ -39,29 +39,43 @@ def _synthetic_chain_core(num_chains: int = 50,
                           core_nodes: int = 5000,
                           p_core: float = 0.024,
                           noise_nodes: int = 25000) -> Data:
-    # 1) Core – Erdős-Rényi
+    """Generate the synthetic graph composed of a dense core and sparse chains.
+
+    The function returns a ``torch_geometric.data.Data`` object whose structure
+    mirrors the benchmark described in the paper.  Implementation is kept
+    simple – it does *not* attempt to be GPU-efficient since the graph is small
+    enough for CPU construction.
+    """
+
+    # 1) Core – Erdős-Rényi graph
     core_edge_index = erdos_renyi_graph(core_nodes, p_core)
 
-    # 2) Chains
+    # Convert tensor edge list → Python list so it can be concatenated
+    core_edges: list[list[int]] = core_edge_index.t().cpu().tolist()
+
+    # 2) Chains attached to the core
     chain_edges: list[list[int]] = []
     for c in range(num_chains):
         start = core_nodes + c * chain_len
-        # linear chain
+        # linear chain edges
         for i in range(chain_len - 1):
             chain_edges.append([start + i, start + i + 1])
         # attach head to random core node
         head_target = torch.randint(0, core_nodes, (1,))
         chain_edges.append([head_target.item(), start])
 
-    # 3) Noise nodes → no edges
+    # 3) Noise nodes – remain isolated (no edges)
     total_nodes = core_nodes + num_chains * chain_len + noise_nodes
 
-    edge_index = torch.tensor(np.array(core_edge_index + chain_edges).T, dtype=torch.long)
+    # Combine all edges and convert back to tensor
+    all_edges = core_edges + chain_edges
+    edge_index = torch.tensor(np.array(all_edges).T, dtype=torch.long)
     edge_index = to_undirected(edge_index)
     edge_index, _ = add_self_loops(edge_index)
 
+    # Dummy features & labels (real experiment computes labels on-the-fly)
     x = torch.randn(total_nodes, 2)
-    y = torch.randint(0, 10, (total_nodes,))  # dummy labels
+    y = torch.randint(0, 10, (total_nodes,))
 
     data = Data(x=x, edge_index=edge_index, y=y)
     data.num_nodes = total_nodes

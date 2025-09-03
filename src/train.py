@@ -115,12 +115,12 @@ def full_train(model: torch.nn.Module,
     save_lineplot(xs, {"loss": loss_hist},
                   "Epoch", "Loss",
                   f"Training loss – {run_tag}",
-                  f".research/iteration3/images/training_loss_{run_tag}.pdf")
+                  f".research/iteration4/images/training_loss_{run_tag}.pdf")
 
     save_lineplot(xs, {"accuracy": acc_hist},
                   "Epoch", "Accuracy",
                   f"Accuracy – {run_tag}",
-                  f".research/iteration3/images/accuracy_{run_tag}.pdf")
+                  f".research/iteration4/images/accuracy_{run_tag}.pdf")
 
     elapsed = (time.time() - start_time) / 60
     print(f"Run {run_tag} finished in {elapsed:.1f} min – best acc {best_val:.3f}")
