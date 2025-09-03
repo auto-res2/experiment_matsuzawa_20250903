@@ -4,10 +4,10 @@ from typing import Dict
 import matplotlib.pyplot as plt
 
 # Where camera-ready figures must go -----------------------------------------
-# Repository policy (iteration17): all images are stored under the following
+# Repository policy (iteration18): all images are stored under the following
 # directory.  This path complies with the automated test that asserts every
-# figure is saved inside ``.research/iteration17/images``.
-FIG_DIR = Path(".research/iteration17/images")
+# figure is saved inside ``.research/iteration18/images``.
+FIG_DIR = Path(".research/iteration18/images")
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 ###############################################################################
