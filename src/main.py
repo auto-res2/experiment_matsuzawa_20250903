@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 main.py – reproducible entry-point that orchestrates the experiment.
 It loads the YAML config, runs unit-tests, trains all methods and finally
@@ -5,8 +7,6 @@ creates the accuracy figure.  Execute with
 
     python -m src.main
 """
-from __future__ import annotations
-
 import sys, subprocess, importlib, os, time, json
 from pathlib import Path
 
@@ -14,9 +14,11 @@ import yaml
 
 # -----------------------------------------------------------------------------
 # 0.  ENVIRONMENT GUARD --------------------------------------------------------
-REQ_MAJOR, REQ_MINOR = 3, 10
-if sys.version_info[:2] != (REQ_MAJOR, REQ_MINOR):
-    raise RuntimeError(f"Python {REQ_MAJOR}.{REQ_MINOR}.x required – found {sys.version}")
+# Allow any Python 3 version >= 3.10 (e.g. 3.11 which is used by the CI runner)
+if sys.version_info.major != 3 or sys.version_info.minor < 10:
+    raise RuntimeError(
+        f"Python >=3.10 required – found {sys.version.split()[0]}"  # fail-fast, clear message
+    )
 
 # optional: auto-install pinned CUDA wheels for CI -----------------------------
 WHEELS = {
@@ -34,7 +36,15 @@ for mod, wheel in WHEELS.items():
     try:
         importlib.import_module(mod)
     except ImportError:
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', wheel, '--extra-index-url', 'https://download.pytorch.org/whl/cu122'])
+        subprocess.check_call([
+            sys.executable,
+            '-m',
+            'pip',
+            'install',
+            wheel,
+            '--extra-index-url',
+            'https://download.pytorch.org/whl/cu122'
+        ])
 
 # -----------------------------------------------------------------------------
 # 1.  PATHS --------------------------------------------------------------------
