@@ -1,3 +1,4 @@
+```python
 """src/main.py
 Entry-point for quick training & evaluation of the DDAF-GNN model.  The script
 purposely uses a very small number of layers/epochs so that it can be executed
@@ -24,13 +25,28 @@ try:
     from torch_geometric.data import Data  # type: ignore
 except Exception:  # pragma: no cover – minimal fallback
 
+    import torch  # local import so that it is only required for the stub
+
     class Data:  # pylint: disable=too-few-public-methods
-        """Light-weight stand-in for ``torch_geometric.data.Data``."""
+        """Light-weight stand-in for ``torch_geometric.data.Data`` with proper
+        device handling.
+        """
 
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
 
-        def to(self, *_, **__):
+        def to(self, device: torch.device | str, **kwargs):  # noqa: D401
+            """Move all tensor attributes **in-place** to *device*.
+
+            The previous implementation returned *self* without actually
+            migrating the underlying tensors which led to device-mismatch
+            errors once the model was moved to the GPU.  This corrected
+            version walks through ``__dict__`` and moves every attribute that
+            is a ``torch.Tensor`` to the requested *device*.
+            """
+            for k, v in self.__dict__.items():
+                if torch.is_tensor(v):
+                    self.__dict__[k] = v.to(device, **kwargs)
             return self
 
 from src import evaluate as ev
@@ -43,7 +59,7 @@ from src import train as tr
 ROOT = Path(__file__).resolve().parent.parent
 # All experiment figures must live in this exact directory according to the
 # platform specification.
-FIG_DIR = ROOT / ".research" / "iteration10" / "images"
+FIG_DIR = ROOT / ".research" / "iteration11" / "images"  # UPDATED PATH
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 ################################################################################
 #  FALL-BACK SYNTHETIC DATASET (used when internet is unavailable)
@@ -170,3 +186,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+```

@@ -1,3 +1,4 @@
+```python
 """src/evaluate.py
 Utilities for computing metrics and model evaluation.
 The original implementation required the heavyweight ``torch_geometric``
@@ -29,7 +30,19 @@ except Exception:  # pragma: no cover – lightweight stub
             self.__dict__.update(kwargs)
 
         # Preserve the interface expected by the rest of the code base
-        def to(self, *_, **__):  # noqa: D401
+        def to(self, device: torch.device | str, **kwargs):  # noqa: D401
+            """Move all tensor attributes **in-place** to *device*.
+
+            The original stub was a no-op which resulted in tensors remaining
+            on the CPU even when the model resided on the GPU, ultimately
+            leading to a device-mismatch runtime error.  We now iterate over
+            all attributes and move those that are ``torch.Tensor``s so that
+            the behaviour matches the real ``torch_geometric.data.Data``
+            implementation closely enough for our use-case.
+            """
+            for k, v in self.__dict__.items():
+                if torch.is_tensor(v):
+                    self.__dict__[k] = v.to(device, **kwargs)
             return self
 
 ################################################################################
@@ -74,3 +87,4 @@ def evaluate(model, data: Data) -> Dict[str, float]:
     out["col_diff"] = col_diff(h)
     out["apsd"] = apsd(h)
     return out
+```
