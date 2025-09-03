@@ -1,7 +1,7 @@
+from __future__ import annotations
 """src/main.py – experiment orchestration
 Run via `python -m src.main` from project root.
 """
-from __future__ import annotations
 import json
 import os
 import random
@@ -22,7 +22,10 @@ from .preprocess import cifar_stream, ROOT as _ROOT  # project root as seen in p
 # ---------------------------- paths & config ----------------------------
 ROOT = _ROOT  # use the same ROOT definition
 RUNS = ROOT / "runs"
-FIGDIR = ROOT / ".research" / "iteration4" / "images"
+# ------------------------------------------------------------------
+#   ALL experiment figures must live in .research/iteration5/images
+# ------------------------------------------------------------------
+FIGDIR = ROOT / ".research" / "iteration5" / "images"
 for d in (RUNS, FIGDIR):
     d.mkdir(parents=True, exist_ok=True)
 
