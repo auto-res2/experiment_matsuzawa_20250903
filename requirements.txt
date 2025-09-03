@@ -3,7 +3,6 @@ torchvision
 timm
 diffusers
 peft
-pytorch-grad-cam
 wilds
 requests
 matplotlib
