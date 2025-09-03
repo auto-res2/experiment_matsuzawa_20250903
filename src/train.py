@@ -1,4 +1,5 @@
-"""src/train.py – all training-related logic (models, trainer, unit tests)"""
+"""src/train.py – all training-related logic (models, trainer, unit tests)
+(edited: iteration-18 – fixed head-expansion + LoRA compatibility)"""
 from __future__ import annotations
 import random, time, json
 from pathlib import Path
@@ -53,6 +54,7 @@ class LoRA(nn.Module):
 
     # ----- dynamic grow / prune ---------------------------------------
     def grow(self, k: int):
+        """Increase rank by k (adds k columns to A and k rows to B)."""
         if k <= 0:
             return
         newA = torch.randn(512, k, device=self.A.device) * 0.01
@@ -66,6 +68,13 @@ class LoRA(nn.Module):
         keep = torch.arange(self.A.shape[1] - k, device=self.A.device)
         self.A = nn.Parameter(self.A.data[:, keep])
         self.B = nn.Parameter(self.B.data[keep])
+
+    def expand_out(self, n_new: int):
+        """Add outputs (classes) so that adapter matches the expanded classifier."""
+        if n_new <= 0:
+            return
+        new_cols = torch.zeros(self.B.shape[0], n_new, device=self.B.device)
+        self.B = nn.Parameter(torch.cat([self.B.data, new_cols], dim=1))
 
     def bytes(self):
         # 1 byte per parameter (8-bit quantisation assumed)
@@ -103,11 +112,15 @@ class DynamicHead(nn.Module):
     def expand(self, n_new: int):
         if n_new <= 0:
             return
+        # ---- create new parameters ----------------------------------
         W_new = torch.zeros(n_new, 512, device=self.fc.weight.device)
         b_new = torch.zeros(n_new, device=self.fc.bias.device)
         nn.init.kaiming_uniform_(W_new, a=np.sqrt(5))
+        # ---- concatenate & register ---------------------------------
         self.fc.weight = nn.Parameter(torch.cat([self.fc.weight.data, W_new], 0))
         self.fc.bias = nn.Parameter(torch.cat([self.fc.bias.data, b_new], 0))
+        # ---- update meta attribute so outer callers can introspect ----
+        self.fc.out_features = self.fc.weight.shape[0]
 
     def forward(self, z):
         return self.fc(z)
@@ -131,8 +144,8 @@ class JEMB(nn.Module):
     # ----- lifecycle hooks -------------------------------------------
     def expand_head(self, n_new: int):
         self.head.expand(n_new)
-        # B dimension changes implicitly – ensure A & B stay compatible
-        self.adapter.grow(0)
+        # Also make adapter compatible with the new number of classes
+        self.adapter.expand_out(n_new)
 
     def sync_ledger(self):
         self.ledger.update(self.adapter.bytes(), len(self.buffer) * 128)  # assume 128 B / sample
@@ -273,7 +286,7 @@ class InfLoRA(nn.Module):
     # ------------------------------------------------------------------
     def expand_head(self, n_new: int):
         self.head.expand(n_new)
-        self.adapter.grow(0)
+        self.adapter.expand_out(n_new)
 
     def sync_ledger(self):
         self.ledger.update(self.adapter.bytes(), 0)
