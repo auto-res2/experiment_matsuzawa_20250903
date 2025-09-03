@@ -20,7 +20,7 @@ FIG_DIR = (
     .parent
     .parent
     / ".research"
-    / "iteration5"  # ← updated as per specification
+    / "iteration6"  # ← updated to comply with current iteration spec
     / "images"
 )
 FIG_DIR.mkdir(parents=True, exist_ok=True)

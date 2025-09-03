@@ -21,6 +21,7 @@ import numpy as np
 # -----------------------------------------------------------------------------
 class PhiMLP(nn.Module):
     """Small MLP that outputs one scalar per node (the Φ_ℓ in the paper)."""
+
     def __init__(self, in_feats: int, hidden: int):
         super().__init__()
         self.net = nn.Sequential(
@@ -122,17 +123,18 @@ class GNNModel(nn.Module):
             )
             self.ada_cfg = ada_cfg
         else:
-            conv_cls = GCNConv if backbone == "gcn" else SAGEConv
-            self.layers = nn.ModuleList(
-                [
-                    conv_cls(
-                        in_dim if i == 0 else hidden,
-                        hidden if i != depth - 1 else out_dim,
-                        add_self_loops=(backbone == "gcn"),
-                    )
-                    for i in range(depth)
-                ]
-            )
+            # Build vanilla GNN – take care to pass **kwargs only if supported
+            layers: List[nn.Module] = []
+            for i in range(depth):
+                in_c = in_dim if i == 0 else hidden
+                out_c = hidden if i != depth - 1 else out_dim
+                if backbone == "gcn":
+                    layers.append(GCNConv(in_c, out_c, add_self_loops=True, normalize=True))
+                elif backbone == "sage":
+                    layers.append(SAGEConv(in_c, out_c))
+                else:
+                    raise ValueError(f"Unknown backbone '{backbone}'")
+            self.layers = nn.ModuleList(layers)
 
     # .........................................................................
     #   forward helpers (split to keep the main *forward* tidy)
