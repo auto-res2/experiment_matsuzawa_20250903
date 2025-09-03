@@ -31,7 +31,15 @@ def build_synthetic_cc(
     core_p: float,
     noise_nodes: int,
     seed: int = 0,
+    **_: Literal["name"],  # absorb any extra keys (e.g. "name") without error
 ) -> Data:
+    """Construct the synthetic core-and-chains benchmark graph.
+
+    Additional keyword arguments that are irrelevant for the generator (e.g. the
+    ``name`` field from the YAML config) are silently ignored to keep backwards
+    compatibility with existing configuration files.
+    """
+
     torch.manual_seed(seed)
     np.random.seed(seed)
 
