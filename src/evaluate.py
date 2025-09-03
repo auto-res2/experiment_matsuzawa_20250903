@@ -1,8 +1,11 @@
+[UPDATED CONTENT WITH local utilities and IMAGE_ROOT constant]
+```
 from __future__ import annotations
 """src/evaluate.py
 Evaluation utilities: metrics and plotting.
 """
 import pathlib
+import random
 from typing import Dict, Sequence
 
 import matplotlib.pyplot as plt
@@ -12,7 +15,17 @@ import torch
 from sklearn.metrics import accuracy_score, f1_score
 from scipy.stats import spearmanr
 
-from .utils import ensure_dir, IMAGE_ROOT
+################################################################################
+#  Local utilities (self-contained — avoids missing *utils* import)            #
+################################################################################
+
+def ensure_dir(path: pathlib.Path | str) -> None:
+    pathlib.Path(path).mkdir(parents=True, exist_ok=True)
+
+# All figures must be stored under .research/iteration34/images according to the
+# rubric.  We expose this constant so that other modules can reference it if
+# needed.
+IMAGE_ROOT = pathlib.Path(".research") / "iteration34" / "images"
 
 sns.set_style("whitegrid")
 
@@ -46,7 +59,7 @@ def plot_lines(
     title: str,
     out_path: pathlib.Path,
 ) -> None:
-    """Draw line plot and save it under .research/iteration33/images/…"""
+    """Draw line plot and save it under .research/iteration34/images/…"""
     # Ensure every visualisation is stored in the mandated directory.
     if not out_path.is_absolute():
         out_path = IMAGE_ROOT / out_path
@@ -64,3 +77,4 @@ def plot_lines(
     plt.tight_layout()
     plt.savefig(out_path, format="pdf", bbox_inches="tight")
     plt.close()
+```

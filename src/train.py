@@ -1,30 +1,40 @@
+[UPDATED CONTENT WITH ensure_dir and set_seed implemented inline to remove dependency on missing utils]
+```
 """src/train.py
-Light-weight training helpers so that the public CI can execute the
-example workflow shipped in src/main.py.  The goal is **not** to run the
-full, expensive hyper-parameter search described in the research code –
-only to demonstrate that the pipeline is functional end-to-end.
-
-Two utilities are exposed and imported by main.py:
-    • build_model(...)      → returns a very small toy network.
-    • train_single_run(...) → performs a few SGD steps and stores metrics.
-
-The implementations below deliberately keep GPU / CPU usage tiny and have
-no external dependencies beyond PyTorch + PyG which are already listed in
-requirements.txt.
+Light-weight training helpers ...
 """
 from __future__ import annotations
 
 import json
 import pathlib
+import random
 from typing import Dict
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv
 
 from .evaluate import classification_metrics
-from .utils import ensure_dir, set_seed
+
+################################################################################
+#  Local utilities (avoid external import so that the file is self-contained)  #
+################################################################################
+
+def set_seed(seed: int) -> None:  # deterministic helpers used across modules
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    try:
+        # This API is available for CUDA builds; on CPU-only it is a no-op.
+        torch.use_deterministic_algorithms(True, warn_only=True)
+    except AttributeError:  # pragma: no cover – older PyTorch
+        pass
+
+def ensure_dir(path: pathlib.Path | str) -> None:
+    """Create *path* and parents if they do not exist (idempotent)."""
+    pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
 ################################################################################
 #  Tiny backbone – a 2-layer GCN that works for every requested model tag      #
@@ -43,7 +53,6 @@ class _ToyGCN(nn.Module):
         x = F.relu(self.conv1(x, edge_index))
         x = self.conv2(x, edge_index)
         return x
-
 
 ################################################################################
 #  Public API                                                                  #
@@ -106,3 +115,4 @@ def train_single_run(
     (out_dir / "metrics.json").write_text(json.dumps(metrics, indent=2))
 
     return metrics
+```

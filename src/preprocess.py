@@ -1,3 +1,5 @@
+[UPDATED CONTENT WITH inline set_seed]
+```
 """src/preprocess.py
 Synthetic core-vs-chain graph generation and deterministic utilities.
 """
@@ -11,7 +13,18 @@ import torch
 from torch_geometric.utils import erdos_renyi_graph, add_self_loops, degree
 from torch_geometric.data import Data
 
-from .utils import set_seed
+################################################################################
+#  Local deterministic helper (avoids dependency on missing utils module)     #
+################################################################################
+
+def set_seed(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    try:
+        torch.use_deterministic_algorithms(True, warn_only=True)
+    except AttributeError:
+        pass
 
 __all__ = ["build_synthetic_cc"]
 
@@ -113,3 +126,4 @@ def build_synthetic_cc(
         val_mask=_mask(val),
         test_mask=_mask(test),
     )
+```
