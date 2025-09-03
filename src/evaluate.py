@@ -1,13 +1,18 @@
 from __future__ import annotations
 """
 evaluate.py – evaluation routines and plotting utilities
-(Fixed): all figures are now stored under `.research/iteration7/images` as
-requested by the task description.
+(Fixed – 2025-09-03):
+1.  All figures are now stored under the *exact* path
+       `.research/iteration9/images`
+    as required by the task description.  The previous path pointed to
+    `.research/iteration7/images` which broke the compliance check.
+2.  No functional changes beyond the directory relocation.
 """
 import statistics as st
 from pathlib import Path
 
 import yaml, numpy as np, matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import torch
@@ -24,7 +29,7 @@ with open(CFG_PATH, 'r') as _f:
 # -------------------------------------------------------------------------
 # Plot directory (all experiment images MUST go here) ----------------------
 # -------------------------------------------------------------------------
-PLOT_DIR = Path('.research/iteration7/images')  # <── updated as per task spec
+PLOT_DIR = Path('.research/iteration9/images')  # <── updated to iteration 9
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
 # -------------------------------------------------------------------------
@@ -58,7 +63,8 @@ def experiment1():
             accs, forgets = [], []
             for s in CFG['seeds']:
                 a, f, _ = train_stream(m, bytes_, s, device)
-                accs.append(a); forgets.append(f)
+                accs.append(a)
+                forgets.append(f)
             mu = st.mean(accs)
             sigma = st.stdev(accs) if len(accs) > 1 else 0
             results[m].append((mu, sigma))
