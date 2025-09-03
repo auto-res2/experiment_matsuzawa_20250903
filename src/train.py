@@ -1,8 +1,12 @@
-[UPDATED]
 """
 train.py – models and training utilities (patched)
 """
 from __future__ import annotations
+# NOTE: the `from __future__` import has to come right after the (optional)
+# module doc-string; any stray text (e.g. the previous `[UPDATED]` marker)
+# would break the rule and raise `SyntaxError`.  The marker has therefore
+# been removed.
+
 import json
 import math
 import pathlib
@@ -35,6 +39,7 @@ from .evaluate import (
 #  Re-usable helpers                                                          #
 ###############################################################################
 
+
 def _set_seed(seed: int) -> None:
     """Make all relevant libraries deterministic."""
     import random
@@ -50,6 +55,7 @@ def _set_seed(seed: int) -> None:
 ###############################################################################
 #  Device helper (FIX)                                                       #
 ###############################################################################
+
 
 def _resolve_device(device_cfg: Union[str, torch.device]) -> torch.device:
     """Robustly resolve the `device` field coming from config.yaml.
@@ -75,7 +81,9 @@ def _resolve_device(device_cfg: Union[str, torch.device]) -> torch.device:
     if device_cfg in {"auto", "cuda"}:
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device_cfg in {"cpu", "gpu"}:
-        return torch.device("cuda" if (device_cfg == "gpu" and torch.cuda.is_available()) else "cpu")
+        return torch.device(
+            "cuda" if (device_cfg == "gpu" and torch.cuda.is_available()) else "cpu"
+        )
 
     # 3) Fallback – hope it's a valid torch.device string ------------------
     return torch.device(device_cfg)
@@ -147,7 +155,7 @@ def fit(
         model.load_state_dict(best_state)
 
     # ------------------------------------------------------------------
-    #  Plot training curves → .research/iteration25/images (spec v25)
+    #  Plot training curves → .research/iteration26/images
     # ------------------------------------------------------------------
     xs = list(
         range(0, len(tr_loss_hist) * cfg["common"]["print_every"], cfg["common"]["print_every"])

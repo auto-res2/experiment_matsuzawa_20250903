@@ -1,8 +1,7 @@
-[UPDATED]
 from __future__ import annotations
 """
 evaluate.py – evaluation metrics & visualisation helpers
-All plots are saved into .research/iteration25/images as per the
+All plots are saved into .research/iteration26/images as per the
 updated project specification.
 """
 import pathlib
@@ -18,10 +17,10 @@ from sklearn.metrics import accuracy_score, f1_score
 sns.set(style="whitegrid")
 
 # ---------------------------------------------------------------------------
-#  Global output directory for all figures (UPDATED TO iteration25)           
+#  Global output directory for all figures (UPDATED TO iteration26)           
 # ---------------------------------------------------------------------------
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
-IMAGES_DIR = PROJECT_ROOT / ".research" / "iteration25" / "images"
+IMAGES_DIR = PROJECT_ROOT / ".research" / "iteration26" / "images"
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
 ###############################################################################

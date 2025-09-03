@@ -53,7 +53,6 @@ def build_synthetic_cc(
     random.seed(seed)
 
     # A) Erdős-Rényi core -------------------------------------------------
-    # erdos_renyi_graph already returns an edge_index with shape (2, E)
     edge_index = erdos_renyi_graph(core_nodes, core_p).long().contiguous()
 
     # B) Append chains ----------------------------------------------------
@@ -62,13 +61,10 @@ def build_synthetic_cc(
         head = core_nodes + c * chain_len
         chain_offsets.append(head)
 
-        # linear chain edges (u -> v)
         chain_edges = [[head + i, head + i + 1] for i in range(chain_len - 1)]
-        # attach head to a random core node
         attach = torch.randint(0, core_nodes, (1,)).item()
         chain_edges.append([attach, head])
 
-        # Convert to shape (2, N_edges) to match PyG format
         chain_ei = torch.tensor(chain_edges, dtype=torch.long).t().contiguous()
         edge_index = torch.cat([edge_index, chain_ei], dim=1)
 
@@ -84,21 +80,18 @@ def build_synthetic_cc(
     # E) Labels with **depth** rule --------------------------------------
     labels = np.zeros(total_nodes, dtype=int)
 
-    # core: mean of 1-hop neighbours' z0 bucketed into 10 classes
     for v in range(core_nodes):
         neigh = edge_index[1][edge_index[0] == v].cpu().numpy()
         labels[v] = _bucket(z0[neigh].mean())
 
-    # chains: node t >= 10 uses value of node t-10
     for head in chain_offsets:
         for t in range(chain_len):
             node = head + t
             if t < 10:
-                labels[node] = np.random.randint(0, 10)  # will be discarded
+                labels[node] = np.random.randint(0, 10)
             else:
                 labels[node] = _bucket(z0[node - 10])
 
-    # noise nodes: random labels
     labels[core_nodes + num_chains * chain_len :] = np.random.randint(
         0, 10, noise_nodes
     )
@@ -120,12 +113,9 @@ def build_synthetic_cc(
         mask_va[idx[int(0.6 * n) : int(0.8 * n)]] = True
         mask_te[idx[int(0.8 * n) :]] = True
 
-    # core
     _split(np.arange(core_nodes))
-    # chains (skip first 10 nodes)
     for head in chain_offsets:
         _split(np.arange(head + 10, head + chain_len))
-    # noise
     _split(np.arange(core_nodes + num_chains * chain_len, total_nodes))
 
     return Data(
