@@ -1,0 +1,26 @@
+  Running command git clone --filter=blob:none --quiet https://github.com/facebookresearch/segment-anything.git /tmp/pip-install-muxl24_w/segment-anything_c4a9d2d101cb455a87e218c8851f1606
+Generating train split:   0%|          | 0/4795 [00:00<?, ? examples/s]Generating train split:  46%|████▌     | 2200/4795 [00:00<00:00, 20684.34 examples/s]Generating train split:  96%|█████████▌| 4600/4795 [00:00<00:00, 21952.96 examples/s]Generating train split: 100%|██████████| 4795/4795 [00:00<00:00, 21590.90 examples/s]
+Generating validation split:   0%|          | 0/1199 [00:00<?, ? examples/s]Generating validation split: 100%|██████████| 1199/1199 [00:00<00:00, 20611.13 examples/s]
+Generating test split:   0%|          | 0/5794 [00:00<?, ? examples/s]Generating test split:  41%|████▏     | 2400/5794 [00:00<00:00, 22844.74 examples/s]Generating test split:  88%|████████▊ | 5100/5794 [00:00<00:00, 24650.31 examples/s]Generating test split: 100%|██████████| 5794/5794 [00:00<00:00, 24653.93 examples/s]
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 109, in <module>
+    cli()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 104, in cli
+    run_experiment(cfg)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 62, in run_experiment
+    train_ds, val_ds, test_ds = get_waterbirds_splits()
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/preprocess.py", line 82, in get_waterbirds_splits
+    train = WaterbirdsDataset("train", root=root, transform=t_tr)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/preprocess.py", line 58, in __init__
+    self.groups = list(zip(ds["y"], ds["place"]))
+                           ~~^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/datasets/arrow_dataset.py", line 2858, in __getitem__
+    return Column(self, key)
+           ^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/datasets/arrow_dataset.py", line 656, in __init__
+    raise ValueError(f"Column '{column_name}' doesn't exist.")
+ValueError: Column 'y' doesn't exist.
