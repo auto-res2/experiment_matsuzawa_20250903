@@ -6,5 +6,82 @@
     "invariant risk minimization",
     "distributionally robust optimization",
     "domain generalization spurious correlation"
+  ],
+  "research_study_list": [
+    {
+      "title": "Seeing is not Believing: Robust Reinforcement Learning against Spurious Correlation"
+    },
+    {
+      "title": "A Causal Framework for Decomposing Spurious Variations"
+    },
+    {
+      "title": "Examining and Combating Spurious Features under Distribution Shift"
+    },
+    {
+      "title": "Contextual Reliability: When Different Features Matter in Different Contexts"
+    },
+    {
+      "title": "Causal Effect Regularization: Automated Detection and Removal of Spurious Correlations"
+    },
+    {
+      "title": "YolOOD: Utilizing Object Detection Concepts for Multi-Label Out-of-Distribution Detection"
+    },
+    {
+      "title": "In or Out? Fixing ImageNet Out-of-Distribution Detection Evaluation"
+    },
+    {
+      "title": "Long-Tailed Out-of-Distribution Detection via Normalized Outlier Distribution Adaptation"
+    },
+    {
+      "title": "POODLE: Improving Few-shot Learning via Penalizing Out-of-Distribution Samples"
+    },
+    {
+      "title": "A Noisy Elephant in the Room: Is Your Out-of-Distribution Detector Robust to Label Noise?"
+    },
+    {
+      "title": "Invariant Risk Minimization Is A Total Variation Model"
+    },
+    {
+      "title": "The Missing Invariance Principle found --  the Reciprocal Twin of Invariant Risk Minimization "
+    },
+    {
+      "title": "Sparse Invariant Risk Minimization"
+    },
+    {
+      "title": "Sparse Invariant Risk Minimization"
+    },
+    {
+      "title": "The Risks of Invariant Risk Minimization"
+    },
+    {
+      "title": "Non-convex Distributionally Robust Optimization: Non-asymptotic Analysis"
+    },
+    {
+      "title": "Outlier-Robust Wasserstein DRO"
+    },
+    {
+      "title": "Fast Bellman Updates for Wasserstein Distributionally Robust MDPs"
+    },
+    {
+      "title": "Outlier-Robust Distributionally Robust Optimization via Unbalanced Optimal Transport"
+    },
+    {
+      "title": "Scalable Distributional Robustness in a Class of Non-Convex Optimization with Guarantees"
+    },
+    {
+      "title": "Understanding Domain Generalization: A Noise Robustness Perspective"
+    },
+    {
+      "title": "Selecting Data Augmentation for Simulating Interventions"
+    },
+    {
+      "title": "Rethinking the Evaluation Protocol of Domain Generalization"
+    },
+    {
+      "title": "Domain Generalization using Causal Matching"
+    },
+    {
+      "title": "Domain Generalization using Causal Matching"
+    }
   ]
 }
