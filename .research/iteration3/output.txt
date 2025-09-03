@@ -1,0 +1,12 @@
+=== pip install start Wed Sep  3 09:46:05 UTC 2025 ===
+Collecting torch (from -r requirements.txt (line 1))
+  Using cached torch-2.8.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (30 kB)
+Collecting torchvision (from -r requirements.txt (line 2))
+  Using cached torchvision-0.23.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (6.1 kB)
+Collecting timm (from -r requirements.txt (line 3))
+  Using cached timm-1.0.19-py3-none-any.whl.metadata (60 kB)
+Collecting diffusers (from -r requirements.txt (line 4))
+  Using cached diffusers-0.35.1-py3-none-any.whl.metadata (20 kB)
+Collecting peft (from -r requirements.txt (line 5))
+  Using cached peft-0.17.1-py3-none-any.whl.metadata (14 kB)
+=== experiment start Wed Sep  3 09:46:06 UTC 2025 ===
