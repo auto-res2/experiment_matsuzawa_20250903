@@ -1,1 +1,3 @@
-original
+# Placeholder YAML config – not used by the lightweight CI demo but kept
+# here so that `yaml.safe_load()` would succeed if invoked elsewhere.
+experiment: demo
