@@ -1,0 +1,59 @@
+# ---------------------------------------------------------------
+#   Global configuration  –  will be parsed by yaml.safe_load()
+# ---------------------------------------------------------------
+common:
+  device: "cuda:0"
+  fp16: false
+  seeds: [0,1,2,3,4,5,6,7,8,9]
+  epochs: 400
+  early_stop_patience: 10
+  batch_size: null        # full-batch unless overriden
+  lr_grid: [0.05, 0.01, 0.005, 0.001]
+  optimiser:
+    name: AdamW
+    weight_decay: 5e-4
+    eps: 1e-8
+  scheduler:
+    name: CosineAnnealingWarmRestarts
+    warmup_epochs: 10
+    min_lr: 1e-5
+  metrics: [accuracy, macro_f1, row_diff, col_diff, eff_rank, flops, gpu_mem, wall_clock]
+  logging:
+    tensorboard: true
+    wandb: false
+experiments:
+  # -------------------------------
+  #   Experiment 1 – synthetic
+  # -------------------------------
+  exp1:
+    description: |
+      Degree-Aware synthetic benchmark (core + chains). 7 models × 10 seeds.
+    dataset:
+      name: synthetic_chain_core
+      num_chains: 50
+      chain_len: 800
+      core_nodes: 5000
+      p_core: 0.024
+      noise_nodes: 25000
+    models: [gcn_deep, gat_deep, apd_gcn, apd_gat, gcnii, pairnorm_si, borf]
+    full_batch: true
+  # -------------------------------
+  #   Experiment 2 – real graphs
+  # -------------------------------
+  exp2:
+    description: |
+      Broad benchmark suite – homophilic, heterophilic, large-scale.
+    datasets: [Cora, Citeseer, PubMed, Cornell, Texas, Wisconsin, Chameleon, Squirrel, ogbn-arxiv, ogbn-products]
+    models: [gcn_deep, gat_deep, apd_gcn, apd_gat, gcnii, pairnorm_si, dgn, contranorm, ndls, lipschitz, borf]
+  # -------------------------------
+  #   Experiment 3 – early-exit & robustness
+  # -------------------------------
+  exp3:
+    description: |
+      Early-exit inference on ogbn-products + robustness stress-tests.
+    early_exit_dataset: ogbn-products
+    robustness_datasets: [Cora, Squirrel]
+    perturbations:
+      edge_drop: [0,10,20,30]
+      feature_mask: [0,25,50,75,100]
+      label_noise: [0,20]
