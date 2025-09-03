@@ -12,7 +12,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.stats import ttest_rel
 
-IMG_ROOT = Path(".research/iteration1/images")
+# -----------------------------------------------------------------------------
+# Image output directory – mandated by the evaluation environment
+# -----------------------------------------------------------------------------
+IMG_ROOT = Path(".research/iteration2/images")
 IMG_ROOT.mkdir(parents=True, exist_ok=True)
 
 

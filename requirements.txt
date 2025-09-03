@@ -3,7 +3,6 @@ torchvision
 timm
 diffusers
 transformers
-opendilab-sam
 sentencepiece
 datasets
 huggingface_hub
