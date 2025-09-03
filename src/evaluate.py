@@ -1,11 +1,9 @@
-import "__future__" as _future
-
+from __future__ import annotations
 """
 evaluate.py – all metric computations & plotting utilities.
-The plotting directory is hard-coded to `.research/iteration20/images` as
+The plotting directory is hard-coded to `.research/iteration21/images` as
 requested by the task description.
 """
-from __future__ import annotations
 from pathlib import Path
 import matplotlib.pyplot as plt
 import torch
@@ -18,12 +16,16 @@ from sklearn.metrics import roc_auc_score  # additional metrics if needed
 
 @torch.inference_mode()
 def accuracy(model, loader, device: str) -> float:
-    model.eval(); correct = 0; total = 0
+    model.eval()
+    correct = 0
+    total = 0
     for batch in loader:
         x, y = batch[0].to(device), batch[1].to(device)
         pred = model(x).argmax(1)
-        correct += (pred == y).sum().item(); total += y.size(0)
+        correct += (pred == y).sum().item()
+        total += y.size(0)
     return correct / max(total, 1)
+
 
 @torch.inference_mode()
 def worst_group_acc(model, loader, device: str) -> float:
@@ -45,7 +47,7 @@ def worst_group_acc(model, loader, device: str) -> float:
 # plotting helpers (publication-style bar chart)
 # -----------------------------------------------------------------------------
 
-_IMG_DIR = Path(".research/iteration20/images")
+_IMG_DIR = Path(".research/iteration21/images")
 _IMG_DIR.mkdir(parents=True, exist_ok=True)
 
 def bar_chart(data: dict, title: str, fname: str):
@@ -55,7 +57,10 @@ def bar_chart(data: dict, title: str, fname: str):
     plt.xticks(range(len(keys)), keys, rotation=45, ha="right")
     for i, v in enumerate(vals):
         plt.text(i, v + 0.01, f"{v:.2f}", ha="center")
-    plt.ylabel("Accuracy"); plt.title(title); plt.tight_layout()
+    plt.ylabel("Accuracy")
+    plt.title(title)
+    plt.tight_layout()
     path = _IMG_DIR / f"{fname}.pdf"
-    plt.savefig(path, bbox_inches="tight"); plt.close()
+    plt.savefig(path, bbox_inches="tight")
+    plt.close()
     return path
