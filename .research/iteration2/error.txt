@@ -1,0 +1,23 @@
+Generating train split:   0%|          | 0/4795 [00:00<?, ? examples/s]Generating train split:  44%|████▍     | 2100/4795 [00:00<00:00, 20006.31 examples/s]Generating train split:  94%|█████████▍| 4500/4795 [00:00<00:00, 21671.07 examples/s]Generating train split: 100%|██████████| 4795/4795 [00:00<00:00, 21248.59 examples/s]
+Generating validation split:   0%|          | 0/1199 [00:00<?, ? examples/s]Generating validation split: 100%|██████████| 1199/1199 [00:00<00:00, 20484.19 examples/s]
+Generating test split:   0%|          | 0/5794 [00:00<?, ? examples/s]Generating test split:  41%|████▏     | 2400/5794 [00:00<00:00, 22794.41 examples/s]Generating test split:  86%|████████▋ | 5000/5794 [00:00<00:00, 24435.88 examples/s]Generating test split: 100%|██████████| 5794/5794 [00:00<00:00, 24424.80 examples/s]
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 61, in <module>
+    main()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 56, in main
+    run_exp1_waterbirds()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 27, in run_exp1_waterbirds
+    trainer = PCCMTrainer(
+              ^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 167, in __init__
+    self.model = build_model(arch, num_classes)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 101, in build_model
+    _download_state_dict(weight_url, weight_path)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/train.py", line 76, in _download_state_dict
+    r.raise_for_status()
+  File "/home/runner/work/_tool/Python/3.11.13/x64/lib/python3.11/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 403 Client Error: Forbidden for url: https://dl.fbaipublicfiles.com/moco-v3/r50-300ep/r50-300ep.pth.tar
