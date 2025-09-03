@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 
 # Where camera-ready figures must go -----------------------------------------
 # Updated according to repository policy: all images are now stored under
-# iteration14.  (Older path .research/iteration13/images has been deprecated.)
-FIG_DIR = Path(".research/iteration14/images")
+# iteration15 (supersedes previous iteration14 path).
+FIG_DIR = Path(".research/iteration15/images")
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 ###############################################################################
