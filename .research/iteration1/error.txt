@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 152, in <module>
+    main()
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 149, in main
+    run_single(s)
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/main.py", line 41, in run_single
+    download_url(wb_cfg["url"], tar_path, wb_cfg["compressed_md5"])
+  File "/home/runner/work/experiment_matsuzawa_20250903/experiment_matsuzawa_20250903/src/preprocess.py", line 41, in download_url
+    raise RuntimeError("MD5 checksum mismatch – download corrupted.")
+RuntimeError: MD5 checksum mismatch – download corrupted.
