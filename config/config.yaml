@@ -1,12 +1,20 @@
-hardware:
-  gpu: T4
-  num_workers: 4
-  amp: true
-  grad_ckpt: true
-seeds:
+global:
+  env:
+    torch_version: 2.8.0
+    torchvision_version: 0.23.0
+    cuda: "12.8"
+    gpu_name: Tesla-T4
+  hardware:
+    num_workers: 8
+    amp: true
+    grad_ckpt: true
+    peak_mem_guard_gb: 14.5
+  seeds:
   - 0
   - 1
   - 2
+
+# ---------------- datasets ----------------
 datasets:
   waterbirds:
     loader: wilds
@@ -15,18 +23,18 @@ datasets:
   celeba:
     loader: wilds
     wilds_name: celebA
-    url: http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
+    url: https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
   imagenet9:
-    loader: bgchallenge
-    git: https://github.com/MadryLab/backgrounds_challenge.git
+    loader: imagenet9
+    url: https://github.com/MadryLab/backgrounds_challenge/releases/download/data/backgrounds_challenge_data.tar.gz
   ninco:
-    loader: tar
-    url: https://zenodo.org/record/8013288/files/NINCO.tar.gz
+    loader: ninco
+    url: https://zenodo.org/record/8013288/files/NINCO_all.tar.gz?download=1
   coco_places:
-    loader: compose
-    coco_img: http://images.cocodataset.org/zips/val2017.zip
-    coco_ann: http://images.cocodataset.org/annotations/annotations_trainval2017.zip
-    places: http://data.csail.mit.edu/places/places365/val_256.tar
+    loader: coco_places
+    url_script: https://raw.githubusercontent.com/anon/dica-robustness/main/scripts/build_coco_places.py
+
+# -------------- backbones ------------------
 backbones:
   resnet50:
     batch: 128
@@ -41,25 +49,30 @@ backbones:
       type: AdamW
       lr: 0.0003
       betas:
-        - 0.9
-        - 0.99
+      - 0.9
+      - 0.99
       wd: 0.05
-training:
+
+schedule:
   epochs: 30
   patience: 5
+  warmup_pct: 0.05
+
 methods:
-  - erm
-  - irm
-  - groupdro
-  - gcdro
-  - autoacer
-  - cad
-  - dica
+- erm
+- irm
+- groupdro
+- gcdro
+- autoacer
+- cad
+- dica
+
 dica:
   top_p: 0.1
   k: 3
   lambda_consistency: 1.0
   alpha_gcdro: 0.1
-  tau_clip: 0.27
-figures:
-  dir: .research/iteration18/images
+  tau_clip_quality: 0.27
+
+fig:
+  dir: outputs/figures

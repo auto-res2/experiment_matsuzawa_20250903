@@ -2,8 +2,11 @@ torch
 torchvision
 timm
 wilds
-requests
-PyYAML
+robustness-bench
+diffusers
+peft
+scikit-learn
 matplotlib
+pyyaml
+requests
 numpy
-pillow

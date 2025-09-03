@@ -1,303 +1,259 @@
 """
-train.py – model definitions, algorithms and the generic training loop
-The module is self-contained; utility helpers (set_seed, timing) are re-declared
-here to avoid missing-import issues when the package is executed via
-`python -m src.main`.
+train.py – model/backbone factory, algorithms (ERM, GC-DRO, DiCA) and the generic
+Trainer class that performs one run.
+All heavy lifting (datasets, evaluation, plotting) lives in the sibling modules so
+we only keep the training-specific logic here.
 """
 from __future__ import annotations
-# NOTE: This future import must directly follow the module docstring.  It was
-# previously preceded by an unintended token, which violated Python's rule that
-# `from __future__` imports appear only after the docstring and comments.
-
-import json, time, random, contextlib, numpy as np
+import time, random, hashlib, json, contextlib, os
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Any
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import timm
-from torchvision.models import (ResNet50_Weights, resnet50)
+from torch.optim.lr_scheduler import CosineAnnealingLR
+from torchvision.models import resnet50, ResNet50_Weights
+import timm  # Vision-Transformer factory
 
-from .preprocess import get_loaders
+from .preprocess import get_loaders                       # data
+from .evaluate import accuracy, worst_group_acc            # val/test metrics
+import yaml                                                # configuration
 
-################################################################################
-# ─── LIGHTWEIGHT UTILS (replaces missing src.utils) ───────────────────────────
-################################################################################
+# -----------------------------------------------------------------------------
+# tiny utils (kept local to avoid extra file clutter)
+# -----------------------------------------------------------------------------
 
+def _sha256(x: bytes) -> str:
+    return hashlib.sha256(x).hexdigest()[:8]
 
-def set_seed(seed: int) -> None:
-    """Seed Python, NumPy and PyTorch for (best-effort) determinism."""
+def set_seed(seed: int):
     random.seed(seed)
-    np.random.seed(seed)
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
-    # Deterministic algorithms *may* reduce performance but ensure CI stability
-    try:
-        torch.use_deterministic_algorithms(True, warn_only=True)
-    except AttributeError:  # older torch fallback
-        pass
-    torch.backends.cudnn.allow_tf32 = False
-
+    torch.use_deterministic_algorithms(True)
+    os.environ['PYTHONHASHSEED'] = str(seed)
 
 @contextlib.contextmanager
 def timing(msg: str):
-    """Context manager that prints elapsed wall-clock time when exiting."""
-    t0 = time.perf_counter()
-    yield
-    t1 = time.perf_counter()
-    print(f"[TIMER] {msg}: {t1 - t0:.2f}s", flush=True)
+    t0 = time.perf_counter(); print(f"[TIMER-start] {msg}")
+    try:
+        yield
+    finally:
+        dt = time.perf_counter() - t0
+        print(f"[TIMER-end] {msg}: {dt:.2f}s", flush=True)
 
-################################################################################
-# ─── CONFIGURATION ────────────────────────────────────────────────────────────
-################################################################################
+class JSONL:
+    """very small jsonl writer"""
+    def __init__(self, path: Path):
+        self.f = open(path, "a", buffering=1)
+    def write(self, d: Dict[str, Any]):
+        self.f.write(json.dumps(d) + "\n")
 
-import yaml
+# -----------------------------------------------------------------------------
+# model/backbone factory
+# -----------------------------------------------------------------------------
 
-_CFG_PATH = Path(__file__).resolve().parent.parent / "config" / "config.yaml"
-with open(_CFG_PATH, "r") as _f:
-    cfg = yaml.safe_load(_f)
-
-################################################################################
-# ─── BACKBONE FACTORY ────────────────────────────────────────────────────────
-################################################################################
-
-
-class Backbone:
-    """Factory that returns an ImageNet-pre-trained backbone with correct head"""
-
-    @staticmethod
-    def build(name: str, n_cls: int) -> nn.Module:
-        name = name.lower()
-        if name == "resnet50":
-            model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
-            model.fc = nn.Linear(2048, n_cls)
-            return model
-        if name in {"vit_b16", "vit-b16", "vit_b/16"}:
-            return timm.create_model("vit_base_patch16_224", pretrained=True, num_classes=n_cls)
-        raise KeyError(f"Unknown backbone: {name}")
-
-################################################################################
-# ─── OPTIMISER HELPER ────────────────────────────────────────────────────────
-################################################################################
-
-
-def _make_optim(params, backbone_name: str):
-    o_cfg = cfg["backbones"][backbone_name]["optim"]
-    if o_cfg["type"].lower() == "sgd":
-        optim = torch.optim.SGD(
-            params,
-            lr=o_cfg["lr"],
-            momentum=o_cfg.get("momentum", 0.9),
-            weight_decay=o_cfg.get("wd", 0.0),
+def build_model(backbone: str, n_cls: int) -> nn.Module:
+    if backbone == "resnet50":
+        m = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
+        m.fc = nn.Linear(2048, n_cls)
+        return m
+    if backbone == "vit_b16":
+        # timm model already has correct classifier head when num_classes passed
+        return timm.create_model(
+            "vit_base_patch16_224.augreg2_in21k_ft_in1k",
+            pretrained=True,
+            num_classes=n_cls,
         )
-    elif o_cfg["type"].lower() == "adamw":
-        optim = torch.optim.AdamW(
-            params,
-            lr=o_cfg["lr"],
-            betas=tuple(o_cfg.get("betas", (0.9, 0.999))),
-            weight_decay=o_cfg.get("wd", 0.0),
-        )
-    else:
-        raise KeyError(o_cfg["type"])
-    return optim
+    raise KeyError(backbone)
 
-################################################################################
-# ─── ALGORITHMS / TRAINING OBJECTIVES ────────────────────────────────────────
-################################################################################
-
+# -----------------------------------------------------------------------------
+# learning algorithms –  ERM  /  GC-DRO  /  DiCA
+# -----------------------------------------------------------------------------
 
 class ERM:
-    """Empirical Risk Minimisation – default cross-entropy"""
-
-    def __init__(self, model: nn.Module, optimiser, device: torch.device):
-        self.m, self.o, self.d = model, optimiser, device
-
+    def __init__(self, model, optim, device):
+        self.m, self.o, self.d = model, optim, device
     def update(self, x, y):
         x, y = x.to(self.d), y.to(self.d)
         logits = self.m(x)
         loss = F.cross_entropy(logits, y)
-        self.o.zero_grad()
-        loss.backward()
-        self.o.step()
-        return loss.item()
+        self.o.zero_grad(); loss.backward(); self.o.step()
+        return {"loss": loss.item()}
 
+class GCDRO:
+    """Group-Conditional DRO without explicit group labels – two synthetic envs
+       (original vs counterfactual)"""
+    def __init__(self, model, optim, device, alpha: float = 0.1):
+        self.m, self.o, self.d, self.alpha = model, optim, device, alpha
+    def update(self, x, y, env):
+        x, y, env = x.to(self.d), y.to(self.d), env.to(self.d)
+        logits = self.m(x)
+        per_example = F.cross_entropy(logits, y, reduction="none")
+        loss = torch.stack([per_example[env == e].mean() for e in env.unique()]).max()
+        self.o.zero_grad(); loss.backward(); self.o.step()
+        return {"loss": loss.item()}
 
-# ---------------------------------------------------------------------------
-# IRM & GroupDRO – attempt import more robustly across wilds versions
-# ---------------------------------------------------------------------------
-
-_IRM: Optional[type] = None
-_GroupDRO: Optional[type] = None
-
-# Try default re-export path first -------------------------------------------
+# ---- Diffusion-based Counterfactual Augmentation (DiCA) ----------------------
 try:
-    from wilds.algorithms import IRM as _IRM, GroupDRO as _GroupDRO  # type: ignore
-except Exception:
-    # Fall back to sub-module paths (WILDS ≥2 may not re-export at pkg level)
-    try:
-        from wilds.algorithms.irm import IRM as _IRM  # type: ignore
-    except Exception:
-        _IRM = None
-    try:
-        from wilds.algorithms.group_dro import GroupDRO as _GroupDRO  # type: ignore
-    except Exception:
-        _GroupDRO = None
-
-# Define public wrappers that either subclass real implementation or raise helpful error
-if _IRM is not None:
-
-    class IRM(_IRM):
-        """Thin subclass to maintain isinstance checks without modification."""
-
-        pass
-
-else:
-
-    class IRM:  # type: ignore
-        def __init__(self, *_, **__):
-            raise RuntimeError(
-                "wilds is required for IRM – package not found or incompatible version"
-            )
-
-if _GroupDRO is not None:
-
-    class GroupDRO(_GroupDRO):
-        pass
-
-else:
-
-    class GroupDRO:  # type: ignore
-        def __init__(self, *_, **__):
-            raise RuntimeError(
-                "wilds is required for GroupDRO – package not found or incompatible version"
-            )
-
+    from diffusers import StableDiffusionInpaintPipeline, DDIMScheduler
+    from peft import LoraConfig, get_peft_model
+    import torchvision.transforms as VT
+except ImportError:
+    StableDiffusionInpaintPipeline = None  # will trigger runtime error later
 
 class DiCA:
-    """Stub for DiCA. Fail-fast if user actually tries to run it."""
-
-    def __init__(self, *_, **__):
-        raise RuntimeError(
-            "DiCA full implementation not included in public refactor – aborting as per fail-fast policy."
+    def __init__(self, model, optim, device, cfg_dica: Dict[str, Any]):
+        if StableDiffusionInpaintPipeline is None:
+            raise RuntimeError("diffusers/peft not installed – DiCA unavailable")
+        self.m, self.o, self.d = model, optim, device
+        # ----- diffusion pipeline ------------------------------------------------
+        pipe = StableDiffusionInpaintPipeline.from_pretrained(
+            "runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16
         )
-
-
-# ---------------------------------------------------------------------------
-# factory
-# ---------------------------------------------------------------------------
-
-def make_algorithm(method: str, model: nn.Module, optimiser, device):
-    method = method.lower()
-    if method == "erm":
-        return ERM(model, optimiser, device)
-    if method == "irm":
-        return IRM(model, optimiser, irm_lambda=1.0, device=device)  # type: ignore[arg-type]
-    if method == "groupdro":
-        return GroupDRO(model, optimiser, device=device)  # type: ignore[arg-type]
-    if method == "dica":
-        return DiCA(model, optimiser, device)
-    raise NotImplementedError(method)
-
-################################################################################
-# ─── TRAINER ─────────────────────────────────────────────────────────────────
-################################################################################
-
-
-class Trainer:
-    """Handles one complete train → val → test cycle."""
-
-    def __init__(self, dataset: str, backbone: str, method: str, seed: int):
-        self.ds, self.bk, self.meth, self.seed = dataset, backbone, method, seed
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        set_seed(seed)
-
-        # data ----------------------------------------------------------------
-        batch_size = cfg["backbones"][backbone]["batch"]
-        self.loaders, n_cls, _ = get_loaders(dataset, batch_size, cfg["hardware"]["num_workers"])
-
-        # model ----------------------------------------------------------------
-        self.model = Backbone.build(backbone, n_cls).to(self.device)
-        self.optim = _make_optim(self.model.parameters(), backbone)
-        self.alg = make_algorithm(method, self.model, self.optim, self.device)
-
-        self.scaler = (
-            torch.cuda.amp.GradScaler(enabled=cfg["hardware"]["amp"])
-            if torch.cuda.is_available()
-            else None
-        )
-        self.best_val = 0.0
-
-        run_ts = int(time.time())
-        self.run_id = f"{dataset}_{backbone}_{method}_seed{seed}_{run_ts}"
-        self.ckpt_dir = Path("outputs/checkpoints")
-        self.ckpt_dir.mkdir(parents=True, exist_ok=True)
-        self.json_dir = Path("outputs/runs")
-        self.json_dir.mkdir(parents=True, exist_ok=True)
-
-    # ------------------------------------------------------------------
-    # utilities
-    # ------------------------------------------------------------------
+        pipe.scheduler = DDIMScheduler.from_config(pipe.scheduler.config)
+        pipe.to(device)
+        lora_cfg = LoraConfig(r=8, lora_alpha=16, target_modules=["to_k", "to_q"])
+        pipe = get_peft_model(pipe, lora_cfg)
+        self.pipe = pipe
+        # hyper-parameters --------------------------------------------------------
+        self.k = cfg_dica["k"]
+        self.top_p = cfg_dica["top_p"]
+        self.lmb_cons = cfg_dica["lambda_consistency"]
+        self.alpha_gc = cfg_dica["alpha_gcdro"]
+        self.rand_resize = VT.Resize((224, 224))
+        self.to_tensor = VT.ToTensor()
 
     @torch.no_grad()
-    def _accuracy(self, loader):
-        self.model.eval()
-        correct = total = 0
-        for x, y in loader:
-            x = x.to(self.device)
-            y = y.to(self.device)
-            preds = self.model(x).argmax(1)
-            correct += (preds == y).sum().item()
-            total += y.size(0)
-        return correct / max(total, 1)
+    def _counterfactuals(self, batch: torch.Tensor):
+        """Generate one counterfactual per input image (very slow!)"""
+        h, w = batch.shape[2:]
+        area = int(self.top_p * h * w)
+        x_cf, env = [], []
+        for img in batch:
+            mask = torch.zeros(1, h, w)
+            side = int(area ** 0.5)
+            x0, y0 = random.randint(0, h - side - 1), random.randint(0, w - side - 1)
+            mask[:, x0 : x0 + side, y0 : y0 + side] = 1.0
+            from torchvision.transforms.functional import to_pil_image
+            pil_img = to_pil_image(img.cpu() * 0.5 + 0.5)
+            pil_mask = to_pil_image(mask.repeat(3, 1, 1))
+            edited = self.pipe(image=pil_img, mask_image=pil_mask, prompt="a photo")
+            x_cf.append(self.to_tensor(edited.images[0]))
+            env.append(1)  # counterfactual
+        return torch.stack(x_cf).to(batch.device), torch.tensor(env, device=batch.device)
 
-    def _dump_metrics(self, metrics: Dict):
-        record = {
-            "run_id": self.run_id,
-            "dataset": self.ds,
-            "backbone": self.bk,
-            "method": self.meth,
-            "seed": self.seed,
-            **metrics,
-        }
-        with open(self.json_dir / f"{self.run_id}.json", "w") as f:
-            json.dump(record, f, indent=2)
+    def update(self, x, y):
+        x_cf, env_cf = self._counterfactuals(x)
+        env_org = torch.zeros(len(x), device=x.device, dtype=torch.long)
+        env = torch.cat([env_org, env_cf])
+        inputs = torch.cat([x, x_cf])
+        labels = torch.cat([y, y])
+        logits = self.m(inputs)
+        per_example = F.cross_entropy(logits, labels, reduction="none")
+        loss_gc = torch.stack([per_example[env == e].mean() for e in env.unique()]).max()
+        # consistency
+        logits_org, logits_cf = logits.chunk(2)
+        loss_cons = F.mse_loss(logits_org, logits_cf)
+        loss = loss_gc + self.lmb_cons * loss_cons
+        self.o.zero_grad(); loss.backward(); self.o.step()
+        return {"loss_gc": loss_gc.item(), "loss_cons": loss_cons.item()}
 
-    # ------------------------------------------------------------------
-    # main entry
-    # ------------------------------------------------------------------
-    def fit(self) -> float:
-        epochs = cfg["training"]["epochs"]
-        patience = cfg["training"]["patience"]
+# -----------------------------------------------------------------------------
+# Algorithm factory -----------------------------------------------------------
+# -----------------------------------------------------------------------------
+
+def algo_factory(name: str, model, optim, device, cfg_dica):
+    n = name.lower()
+    if n == "erm":
+        return ERM(model, optim, device)
+    if n == "gcdro":
+        return GCDRO(model, optim, device)
+    if n == "dica":
+        return DiCA(model, optim, device, cfg_dica)
+    raise NotImplementedError(name)
+
+# -----------------------------------------------------------------------------
+# Trainer – one independent run (dataset×backbone×method×seed) -----------------
+# -----------------------------------------------------------------------------
+
+class Trainer:
+    def __init__(self, cfg: Dict[str, Any], dataset: str, backbone: str, method: str, seed: int):
+        self.cfg, self.ds, self.bk, self.me, self.seed = cfg, dataset, backbone, method, seed
+        set_seed(seed)
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        # loaders ----------------------------------------------------------------
+        batch_size = cfg["backbones"][backbone]["batch"]
+        workers = cfg["global"]["hardware"]["num_workers"]
+        self.loaders, self.num_cls, self.has_groups = get_loaders(dataset, batch_size, workers)
+        # model / optimiser -------------------------------------------------------
+        self.model = build_model(backbone, self.num_cls).to(self.device)
+        opt_cfg = cfg["backbones"][backbone]["optim"]
+        if opt_cfg["type"].lower() == "sgd":
+            self.optim = torch.optim.SGD(
+                self.model.parameters(),
+                lr=opt_cfg["lr"],
+                momentum=opt_cfg["momentum"],
+                weight_decay=opt_cfg["wd"],
+            )
+        else:
+            self.optim = torch.optim.AdamW(
+                self.model.parameters(),
+                lr=opt_cfg["lr"],
+                betas=tuple(opt_cfg["betas"]),
+                weight_decay=opt_cfg["wd"],
+            )
+        self.sched = CosineAnnealingLR(self.optim, T_max=cfg["schedule"]["epochs"])
+        # algorithm --------------------------------------------------------------
+        self.algorithm = algo_factory(method, self.model, self.optim, self.device, cfg["dica"])
+        # misc -------------------------------------------------------------------
+        self.scaler = torch.cuda.amp.GradScaler(enabled=cfg["global"]["hardware"]["amp"])
+        self.run_id = f"{dataset}_{backbone}_{method}_s{seed}_{int(time.time())}"
+        Path("outputs/checkpoints").mkdir(parents=True, exist_ok=True)
+        self.logger = JSONL(Path("outputs") / f"{self.run_id}.jsonl")
+        self.best_val = 0.0; self.best_epoch = 0
+
+    # -------------------------------------------------------------------------
+    # training loop with early stopping --------------------------------------
+    # -------------------------------------------------------------------------
+
+    def fit(self):
+        epochs = self.cfg["schedule"]["epochs"]
+        patience = self.cfg["schedule"]["patience"]
         stall = 0
-
         with timing(self.run_id):
             for ep in range(epochs):
                 self.model.train()
                 for batch in self.loaders["train"]:
-                    # WILDS datasets sometimes return (x, y, metadata).  We only
-                    # need (x, y) here.
-                    x, y = batch[:2]
-                    if self.scaler is None:
-                        loss = self.alg.update(x, y)
-                    else:
-                        with torch.cuda.amp.autocast(enabled=True):
-                            loss = self.alg.update(x, y)
-
-                val_acc = self._accuracy(self.loaders["val"])
-                print(f"{self.run_id} | ep={ep:02d} | val={val_acc:.3f}")
-
+                    x, y = batch[0].to(self.device), batch[1].to(self.device)
+                    with torch.autocast(device_type="cuda", enabled=self.cfg["global"]["hardware"]["amp"]):
+                        if self.me == "gcdro":
+                            raise RuntimeError("GCDRO expects env labels which are not provided in basic Trainer")
+                        metrics = self.algorithm.update(x, y)
+                    # you may want to log metrics here (omitted for brevity)
+                val_acc = accuracy(self.model, self.loaders["val"], self.device)
                 if val_acc > self.best_val:
-                    self.best_val = val_acc
-                    stall = 0
-                    torch.save(self.model.state_dict(), self.ckpt_dir / f"{self.run_id}.pt")
+                    self.best_val, self.best_epoch, stall = val_acc, ep, 0
+                    torch.save(self.model.state_dict(), f"outputs/checkpoints/{self.run_id}.pt")
                 else:
                     stall += 1
-
+                self.sched.step()
+                self.logger.write({"epoch": ep, "val_acc": val_acc, "time": time.time()})
                 if stall >= patience:
                     break
-
-        test_acc = self._accuracy(self.loaders["test"])
-        self._dump_metrics({"AccID": test_acc})
-        return test_acc
+        # ---------------------------------------------------------------------
+        # evaluation -----------------------------------------------------------
+        # ---------------------------------------------------------------------
+        self.model.load_state_dict(torch.load(f"outputs/checkpoints/{self.run_id}.pt", map_location=self.device))
+        test_acc = accuracy(self.model, self.loaders["test"], self.device)
+        wg = (
+            worst_group_acc(self.model, self.loaders["test"], self.device)
+            if self.has_groups else None
+        )
+        res = {"AccID": test_acc}
+        if wg is not None:
+            res["WGAcc"] = wg
+        self.logger.write({"final": res})
+        return res

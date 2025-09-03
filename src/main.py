@@ -1,71 +1,53 @@
 """
-main.py – orchestrates the complete experimental workflow
-Run with:  python -m src.main
+main.py – orchestrates the full experimental workflow.
+Run exactly with:  python -m src.main
 """
 from __future__ import annotations
-import itertools, pprint, os, sys
-
-from .train import Trainer
-from .evaluate import bar_chart
-import yaml
+import itertools, os, json
 from pathlib import Path
+import yaml
 
-# --------------------------------------------------------------------------
-# CONFIG
-# --------------------------------------------------------------------------
+from .train import Trainer, timing
+from .evaluate import bar_chart
+
+# -----------------------------------------------------------------------------
+# load configuration -----------------------------------------------------------
+# -----------------------------------------------------------------------------
 _CFG_PATH = Path(__file__).resolve().parent.parent / "config" / "config.yaml"
-with open(_CFG_PATH, "r") as _f:
-    cfg = yaml.safe_load(_f)
+with open(_CFG_PATH) as f:
+    CFG = yaml.safe_load(f)
 
-print("================  EXPERIMENT DESCRIPTION  =================", flush=True)
-print("Demonstration – trains Waterbirds & CelebA with ERM and IRM (3 seeds each).\n"
-      "Full 168-run grid can be activated by setting RUN_FULL_GRID=True."
-      "\n(Training is skipped by default to keep CI runtime < 60 s.\n"
-      "Set environment variable RUN_EXPERIMENTS=1 to execute the full loop.)")
-print("===========================================================", flush=True)
+print("================  EXPERIMENT DESCRIPTION  =================")
+print("Structured refactor – running benchmark grid as specified in config.yaml")
+print("===========================================================")
 
-RUN_FULL_GRID = False   # flip for the full camera-ready sweep
+FAST_DEMO = os.environ.get("FAST_DEMO", "0") == "1"
 
-# ---------------------------------------------------------------------------
-# LIGHTWEIGHT/CI MODE --------------------------------------------------------
-# ---------------------------------------------------------------------------
-if os.environ.get("RUN_EXPERIMENTS", "0") != "1":
-    print("[INFO] RUN_EXPERIMENTS!=1 → skipping heavy training/tasks.", flush=True)
-    sys.exit(0)
-
-###########################################################################
-# ─── EXPERIMENT GRID ──────────────────────────────────────────────────────
-###########################################################################
-
-def _run(dataset: str, backbone: str, method: str):
-    accs = []
-    for seed in cfg["seeds"]:
-        trainer = Trainer(dataset, backbone, method, seed)
-        accs.append(trainer.fit())
-    return sum(accs) / len(accs)
-
-if RUN_FULL_GRID:
-    GRID = itertools.product(
+if FAST_DEMO:
+    grid = [("waterbirds", "resnet50", "erm")]
+else:
+    grid = list(itertools.product(
         ["waterbirds", "celeba", "imagenet9", "ninco"],
         ["resnet50", "vit_b16"],
-        cfg["methods"]
-    )
-else:
-    GRID = [(d, "resnet50", m) for d in ["waterbirds", "celeba"] for m in ["erm", "irm"]]
+        CFG["methods"],
+    ))
 
-results = {}
-for ds, bk, meth in GRID:
-    key = f"{ds}_{meth}"
-    print(f"\n>>> Launching {key} ({bk})", flush=True)
-    results[key] = _run(ds, bk, meth)
+all_results = {}
+for ds, bk, meth in grid:
+    for seed in CFG["global"]["seeds"]:
+        label = f"{ds}_{bk}_{meth}_s{seed}"
+        with timing(label):
+            res = Trainer(CFG, ds, bk, meth, seed).fit()
+            all_results[label] = res
 
-###########################################################################
-# ─── VISUALISATION & OUTPUT ───────────────────────────────────────────────
-###########################################################################
+# -----------------------------------------------------------------------------
+# aggregate + example figure ---------------------------------------------------
+# -----------------------------------------------------------------------------
+keys = [k for k in all_results if "waterbirds_resnet50" in k]
+fig_path = bar_chart({k: all_results[k]["AccID"] for k in keys}, "Waterbirds AccID (ResNet-50)", "accuracy_waterbirds")
 
-fig_path = bar_chart(results, "AccID (demo)", "training_accuracy_demo")
-
-print("\n================  EXPERIMENTAL NUMERICAL DATA  ============")
-print(pprint.pformat(results, compact=True))
-print("================  FIGURE FILENAMES  =======================")
+print("================  NUMERICAL RESULTS  ======================")
+for k, v in all_results.items():
+    print(k, v)
+print("================  FIGURE PATHS  ===========================")
 print(fig_path)
