@@ -14,12 +14,12 @@ from typing import Dict
 import numpy as np
 
 # -----------------------------------------------------------------------------
-#  Directory setup (updated figure path for iteration-3) -----------------------
+#  Directory setup (iteration-4 figure path) -----------------------------------
 # -----------------------------------------------------------------------------
 root_dir = Path(".")
 data_dir = root_dir / "data"
 checkpoints_dir = root_dir / "checkpoints"
-images_dir = root_dir / ".research/iteration3/images"
+images_dir = root_dir / ".research/iteration4/images"
 
 for _d in [data_dir, checkpoints_dir, images_dir]:
     _d.mkdir(parents=True, exist_ok=True)
@@ -60,7 +60,7 @@ def _md5sum(path: Path) -> str:
 
 _DATASETS: Dict[str, Dict[str, str]] = {
     "mnist": {
-        # original `ylecun/mnist` repo changed – torchvision can download on-demand
+        # torchvision can download on-demand
         "url": "https://huggingface.co/datasets/mnist/resolve/main/train-images-idx3-ubyte.gz",
         "sha256": "25ae6c6c5e834b631c7ad8886e5fcd9b21ca01943ceafe68137e77cce14700b5",
     },
@@ -137,8 +137,7 @@ def _map_stream_to_raw(name: str) -> str:
 def acquire_datasets(cfg):  # noqa: D401 – public API
     """Download (if necessary) and extract all datasets referenced in *cfg*."""
 
-    # Determine which raw datasets are required by the set of experiments
-    required = { _map_stream_to_raw(exp["dataset"]) for exp in cfg["experiments"] }
+    required = {_map_stream_to_raw(exp["dataset"]) for exp in cfg["experiments"]}
 
     for name in required:
         meta = _DATASETS[name]

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import numpy as np
 import torch
@@ -22,34 +22,26 @@ from torchvision.models import resnet18
 # -----------------------------------------------------------------------------
 #  Optional import of the original JAX VQ-GAN implementation -------------------
 # -----------------------------------------------------------------------------
-# The reference implementation lives in the `vqgan_jax` package which, at the
-# time of writing, does not provide wheels for Python ≥3.11 and therefore
-# cannot be installed in the execution environment of this repository.  To keep
-# the code import-able we fall back to a minimal stub that exposes the *same*
-# public interface (encode / decode_code) but **does not** perform any real
-# computation.  A clear RuntimeError is raised once these methods are *actually*
-# used so that accidental silent degradation is avoided.
+# The reference implementation may be unavailable in some execution
+# environments (e.g. Python ≥3.11).  We therefore create a minimal stub that
+# preserves the public interface but raises a *clear* RuntimeError once any of
+# the heavy methods are called, thus avoiding silent degradation.
 try:
     from vqgan_jax.modeling_flax_vqgan import VQModel  # pragma: no cover
 except ModuleNotFoundError:  # ⇐ expected on Python ≥3.11
 
-    class _StubVQModel:
-        """Fallback that makes the training pipeline import-able.
-
-        encode() / decode_code() deliberately raise – we do *not* silently
-        produce fake data so that experiments fail fast when the real VQ-GAN
-        implementation is unavailable.
-        """
+    class _StubVQModel:  # noqa: D101 – simple stub class
+        """Fallback that keeps the import path intact while failing fast."""
 
         # flag so that other parts of the code can detect the stub safely
-        is_stub = True
+        is_stub: bool = True
 
         @classmethod
         def from_pretrained(cls, ckpt_path: str):  # noqa: D401
             return cls()
 
         # ------------------------------------------------------------------
-        def encode(self, x: torch.Tensor):
+        def encode(self, _x: torch.Tensor):  # noqa: D401 – same signature as real impl.
             raise RuntimeError(
                 "VQModel.encode() was called but the real `vqgan_jax` package "
                 "is not available in this Python environment.  Install "
@@ -58,7 +50,7 @@ except ModuleNotFoundError:  # ⇐ expected on Python ≥3.11
             )
 
         # ------------------------------------------------------------------
-        def decode_code(self, z_grid: torch.Tensor):
+        def decode_code(self, _z_grid: torch.Tensor):  # noqa: D401
             raise RuntimeError(
                 "VQModel.decode_code() was called but the real `vqgan_jax` "
                 "package is missing.  Install it or avoid the VQ-GAN path."
@@ -80,6 +72,7 @@ class Backbone(nn.Module):
         self.feature_extractor.fc = nn.Identity()
         self.classifier = nn.Linear(512, num_classes)
 
+    # ------------------------------------------------------------------
     def forward(self, x: torch.Tensor) -> torch.Tensor:  # (B,C,H,W) → (B,num_cls)
         feats = self.feature_extractor(x)
         return self.classifier(feats)
@@ -97,11 +90,13 @@ class VQGANWrapper(nn.Module):
         # will be inexpensive and merely instantiate the placeholder.
         self.vq = VQModel.from_pretrained(ckpt_path)
 
+    # ------------------------------------------------------------------
     @torch.no_grad()
     def encode(self, x: torch.Tensor) -> torch.LongTensor:  # (B,3,H,W) → (B,256)
         _z, idx = self.vq.encode(x)
         return idx.view(x.size(0), -1)
 
+    # ------------------------------------------------------------------
     def decode(self, tokens: torch.LongTensor) -> torch.Tensor:  # (B,256) → (B,3,H,W)
         z_grid = tokens.view(tokens.size(0), 16, 16)
         return self.vq.decode_code(z_grid)
@@ -115,7 +110,7 @@ class SinusoidalPosEmb(nn.Module):
         super().__init__()
         self.dim = dim
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:  # (N,) → (N,dim)
         half = self.dim // 2
         emb_scale = math.log(10000.0) / (half - 1)
         device = x.device
@@ -138,6 +133,7 @@ class TinyLatentDiffusion(nn.Module):
         self.transformer = nn.TransformerEncoder(enc_layer, num_layers=depth)
         self.to_logits = nn.Linear(code_dim, 512)
 
+    # ------------------------------------------------------------------
     def forward(self, tokens: torch.LongTensor) -> torch.Tensor:  # (B,256) → (B,256,512)
         seq_len = tokens.size(1)
         pos = torch.arange(seq_len, device=tokens.device)
@@ -158,15 +154,15 @@ class TokenBuffer:
         self.storage: Dict[int, List[np.ndarray]] = {}
         self.n_bytes = 0
 
-    # ---------------------------------------------------------------------
-    def _evict_one(self):
+    # -----------------------------------------------------------------
+    def _evict_one(self):  # noqa: D401 – internal helper
         cls = np.random.choice(list(self.storage.keys()))
         self.storage[cls].pop(0)
         if not self.storage[cls]:
             del self.storage[cls]
         self.n_bytes -= self.grid_bytes
 
-    # ---------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def add(self, cls: int, grids: np.ndarray):
         """Add token grids for class *cls* (grids shape = (K,256))."""
 
@@ -177,8 +173,8 @@ class TokenBuffer:
             self.storage.setdefault(cls, []).append(g)
             self.n_bytes += self.grid_bytes
 
-    # ---------------------------------------------------------------------
-    def sample(self, n: int):
+    # -----------------------------------------------------------------
+    def sample(self, n: int):  # noqa: D401 – simple API
         if self.n_bytes == 0:
             return None, None
         choices, labels = [], []
@@ -192,7 +188,7 @@ class TokenBuffer:
             torch.LongTensor(labels),
         )
 
-    # ---------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def evolve(self):
         """Placeholder for Wasserstein-Gradient-Flow evolution (omitted)."""
         pass
@@ -203,7 +199,7 @@ class TokenBuffer:
 # -----------------------------------------------------------------------------
 
 
-class ContinualLearner:
+class ContinualLearner:  # noqa: D101 – high-level orchestrator
     def __init__(self, cfg_exp, cfg_shared):
         self.cfg = cfg_exp
         self.shared = cfg_shared
@@ -212,8 +208,10 @@ class ContinualLearner:
         # ---------------- models -------------------------------------
         self.backbone = Backbone(cfg_exp["num_classes"]).to(self.device)
         self.vqgan = VQGANWrapper(cfg_shared["vq_ckpt"]).to(self.device)
-        self.diffuser = (
-            TinyLatentDiffusion().to(self.device) if cfg_exp["use_diffusion"] else None
+        self.diffuser: Optional[TinyLatentDiffusion] = (
+            TinyLatentDiffusion().to(self.device)
+            if cfg_exp.get("use_diffusion", False)
+            else None
         )
 
         # detect stub – when the real VQ-GAN is missing we disable replay
@@ -236,7 +234,7 @@ class ContinualLearner:
         )
 
     # -----------------------------------------------------------------
-    def train_task(self, task_id: int, loader_real: DataLoader, loader_val: DataLoader):
+    def train_task(self, task_id: int, loader_real: DataLoader, loader_val: DataLoader):  # noqa: D401
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             self.opt, T_max=self.shared["epochs"]
         )
@@ -279,12 +277,12 @@ class ContinualLearner:
             for c in np.unique(labels):
                 idx = np.where(labels == c)[0][: self.shared["K"]]
                 self.buffer.add(int(c), toks[idx])
-                if self.cfg["use_wgf"]:
+                if self.cfg.get("use_wgf", False):
                     self.buffer.evolve()
 
     # -----------------------------------------------------------------
     @torch.no_grad()
-    def evaluate(self, loader: DataLoader) -> float:
+    def evaluate(self, loader: DataLoader) -> float:  # noqa: D401
         self.backbone.eval()
         correct, total = 0, 0
         for x, y in loader:

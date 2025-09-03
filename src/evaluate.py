@@ -1,7 +1,7 @@
 """src/evaluate.py
 Experiment orchestration, statistical analysis and plotting utilities.
 It builds dataset streams, invokes *ContinualLearner* from train.py and
-creates accuracy plots that are stored under `.research/iteration3/images`.
+creates accuracy plots that are stored under `.research/iteration4/images`.
 """
 from __future__ import annotations
 
@@ -22,9 +22,9 @@ from .train import ContinualLearner
 from .preprocess import data_dir, set_global_seed
 
 # -----------------------------------------------------------------------------
-#  Figure output directory (updated for iteration-3) ---------------------------
+#  Figure output directory (iteration-4 requirement) ---------------------------
 # -----------------------------------------------------------------------------
-images_dir = Path(".research/iteration3/images")
+images_dir = Path(".research/iteration4/images")
 images_dir.mkdir(parents=True, exist_ok=True)
 
 # -----------------------------------------------------------------------------
@@ -107,13 +107,13 @@ def build_stream(exp_cfg, shared_cfg):
 # -----------------------------------------------------------------------------
 
 
-class ExperimentEngine:
+class ExperimentEngine:  # noqa: D101
     def __init__(self, exp_cfg, shared_cfg):
         self.exp = exp_cfg
         self.shared = shared_cfg
         set_global_seed(shared_cfg["seed"])
 
-    # ---------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def run(self):
         print("=" * 80)
         print(f"Experiment description: {self.exp['name']}")
