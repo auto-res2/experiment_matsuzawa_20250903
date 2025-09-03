@@ -1,83 +1,48 @@
-"""src/main.py – experiment orchestrator
-Usage:   python -m src.main
-Updated: • only run lightweight ERM by default to avoid heavy diffusion
-          downloads; set env ENABLE_DICA=1 to enable DiCA.
-        • Adapt figure save-dir to .research/iteration3/images via evaluate.py
+"""
+main.py – orchestrates the experiment.  Run with `python -m src.main`.
 """
 from __future__ import annotations
-
-import itertools, os, random, time, yaml
+import yaml
 from pathlib import Path
-from typing import Dict, Any
-
-import torch
+from typing import Dict, List
 
 from .train import Trainer
-from .evaluate import report_results, plot_bar
+from .evaluate import bar_plot
 
-# --------------------------------------------------
-# helper: seed
-# --------------------------------------------------
+# -----------------------------------------------------------------------------
+#                          load configuration YAML
+# -----------------------------------------------------------------------------
+CFG_PATH = Path("config/config.yaml")
+if not CFG_PATH.exists():
+    raise FileNotFoundError("config/config.yaml not found.  Please ensure the repository layout is correct.")
 
-def set_seed(seed: int):
-    random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
+with open(CFG_PATH, "r") as f:
+    CFG = yaml.safe_load(f)
 
-# --------------------------------------------------
-# load YAML config
-# --------------------------------------------------
+# -----------------------------------------------------------------------------
+#                        minimal demo  – matches original
+# -----------------------------------------------------------------------------
+print("================  EXPERIMENT DESCRIPTION  =================", flush=True)
+print("Experiment 1 – FULL ROBUSTNESS GRID (subset demo: Waterbirds, ResNet-50, 2 methods)")
+print("===========================================================", flush=True)
 
-CONFIG_PATH = Path("config/config.yaml")
-if not CONFIG_PATH.exists():
-    raise FileNotFoundError("config/config.yaml not found – please ensure it exists.")
-with open(CONFIG_PATH, "r") as fp:
-    cfg: Dict[str, Any] = yaml.safe_load(fp)
+results: Dict[str, List[float]] = {}
 
-# --------------------------------------------------
-# run a minimal sweep (Waterbirds / ResNet-50 / ERM only by default)
-# --------------------------------------------------
+for dataset, backbone, method in [
+    ("waterbirds", "resnet50", "erm"),
+    ("waterbirds", "resnet50", "irm"),
+]:
+    for seed in CFG["random_seeds"]:
+        trainer = Trainer(CFG, dataset, method, backbone, seed)
+        metrics = trainer.fit()
+        key = f"{dataset}_{backbone}_{method}"
+        results.setdefault(key, []).append(metrics["AccID"])
 
-def now():
-    return time.strftime("%Y-%m-%d@%H:%M:%S")
+mean_acc = {k: sum(v) / len(v) for k, v in results.items()}
+fig_path = bar_plot(mean_acc, "AccID – Waterbirds (demo)", "accuracy_waterbirds_demo")
 
-
-def main():
-    exp_metrics: Dict[str, float] = {}
-
-    print(f"\n>>> Starting Experiment – {now()}")
-
-    # By default we skip the extremely heavy DiCA runs which require downloading
-    # multi-GB Stable-Diffusion weights.  Set the environment variable
-    #   ENABLE_DICA=1
-    # to include DiCA in the sweep.
-    methods_to_run = ["erm"]
-    if os.getenv("ENABLE_DICA", "0") == "1":
-        methods_to_run.append("dica")
-
-    for dataset_name in ["waterbirds"]:
-        for backbone, method in itertools.product(["resnet50"], methods_to_run):
-            key = f"{dataset_name}_{backbone}_{method}"
-            test_acc_runs = []
-            for seed in cfg["training"]["seeds"]:
-                set_seed(seed)
-                trainer = Trainer(cfg, dataset_name, method, backbone)
-                trainer.train()
-                test_loader = torch.utils.data.DataLoader(
-                    trainer.test_ds, batch_size=64, shuffle=False
-                )
-                acc = trainer.evaluate(test_loader)
-                test_acc_runs.append(acc)
-            exp_metrics[key] = sum(test_acc_runs) / len(test_acc_runs)
-
-    # ---------- plotting ----------
-    labels = list(exp_metrics.keys())
-    values = list(exp_metrics.values())
-    plot_bar(labels, values, fname="waterbirds_accuracy", title="Accuracy")
-
-    report_results("Waterbirds demo", {"overall_acc": exp_metrics})
-
-
-if __name__ == "__main__":
-    main()
+print("================  EXPERIMENTAL DATA  =====================", flush=True)
+for k, v in mean_acc.items():
+    print(f"{k}: {v:.4f}")
+print("================  FIGURE FILENAMES  =====================", flush=True)
+print(fig_path, flush=True)

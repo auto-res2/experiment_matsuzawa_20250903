@@ -1,303 +1,220 @@
-"""src/train.py – model definitions and training logic for DiCA/ERM experiments
-Fixed:  • correct Grad-CAM import path  • avoid heavy `diffusers` import at
-module load-time  • graceful degradation when optional packages are absent
+"""
+train.py – model definitions, algorithms and training loop
+Structured refactor of the original single-file experiment script.
+All heavy logic that is required for model construction and optimisation
+is collected here so that other modules can simply import it.
 """
 from __future__ import annotations
-
-import itertools, math, random, time
-from contextlib import contextmanager
+import time, random, hashlib, json, os
 from pathlib import Path
-from typing import Tuple, Dict, Any
+from typing import Dict, List, Tuple
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.cuda.amp import GradScaler, autocast
-from torch.utils.data import DataLoader
-from torchvision.models import resnet50, ResNet50_Weights
+import numpy as np
+
+# -----------------------------------------------------------------------------
+#                         ─── Helper utilities ───
+# -----------------------------------------------------------------------------
+
+def set_seed(seed: int) -> None:
+    """Make every stochastic source deterministic on the current process."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
+def sha1(x: str) -> str:
+    return hashlib.sha1(x.encode()).hexdigest()[:8]
+
+
+class timing:
+    """Context-manager for wall-clock measurement."""
+
+    def __init__(self, msg: str):
+        self.msg = msg
+
+    def __enter__(self):
+        self.t0 = time.perf_counter()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        dt = time.perf_counter() - self.t0
+        print(f"[TIMER] {self.msg}: {dt:.2f}s", flush=True)
+
+
+# -----------------------------------------------------------------------------
+#                         ───  Back-bone factory  ───
+# -----------------------------------------------------------------------------
+
 import timm
+from torchvision.models import resnet50, ResNet50_Weights
 
-# -----------------------------------------------------------------------------
-# Optional external libraries --------------------------------------------------
-# -----------------------------------------------------------------------------
 
-try:
-    # correct library name on PyPI: "pytorch-grad-cam"
-    from pytorch_grad_cam import GradCAM  # type: ignore
-except ImportError:  # pragma: no cover – optional dependency
-    GradCAM = None  # type: ignore
-
-# -----------------------------------------------------------------------------
-# Local imports ----------------------------------------------------------------
-# -----------------------------------------------------------------------------
-from .preprocess import get_dataset
-
-# --------------------------------------------------
-# Small utility helpers (kept local to avoid extra file)
-# --------------------------------------------------
-
-@contextmanager
-def timing(msg: str):
-    tic = time.perf_counter()
-    yield
-    toc = time.perf_counter()
-    print(f"[TIMER] {msg}: {toc - tic:.2f}s")
-
-# --------------------------------------------------
-# Model factory
-# --------------------------------------------------
-
-class BackboneFactory:
-    """Return backbone with final layer adapted to num_classes."""
+class Backbone:
+    """Plug-and-play image backbone factory."""
 
     @staticmethod
-    def get(name: str, num_classes: int):
-        if name == "resnet50":
+    def build(name: str, num_classes: int) -> nn.Module:
+        if name.lower() == "resnet50":
             model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
             model.fc = nn.Linear(model.fc.in_features, num_classes)
             return model
-        if name == "vit_b16":
-            return timm.create_model(
-                "vit_base_patch16_224", pretrained=True, num_classes=num_classes
-            )
-        raise KeyError(f"Unknown backbone: {name}")
+        if name.lower() == "vit_b16":
+            return timm.create_model("vit_base_patch16_224", pretrained=True, num_classes=num_classes)
+        raise KeyError(f"Backbone {name} not supported")
 
-# --------------------------------------------------
-# Diffusion-based counterfactual image editor (optional)
-# --------------------------------------------------
 
-class DiffusionEditor:
-    """Wrapper around Stable-Diffusion + LoRA fine-tuning for counterfactuals.
-    Heavy dependencies (diffusers, peft) and multi-GB weights are imported and
-    loaded lazily so that running plain ERM experiments does **not** force the
-    download.  If the required packages or checkpoint are unavailable, we raise
-    a clear error prompting the user to switch to `method="erm"`.
-    """
+# -----------------------------------------------------------------------------
+#                         ───  Learning algorithms  ───
+# -----------------------------------------------------------------------------
 
-    def __init__(self, cfg: Dict[str, Any], device: str = "cuda"):
-        try:
-            from diffusers import StableDiffusionPipeline, DDIMScheduler  # type: ignore
-            from peft import LoraConfig, get_peft_model  # type: ignore
-            import torchvision.transforms as T  # local import to avoid T dependency if unused
-        except ImportError as e:  # pragma: no cover
-            raise ImportError(
-                "DiffusionEditor requires the optional packages `diffusers` and "
-                "`peft`. Install them or run with method='erm'."
-            ) from e
+class AlgorithmBase:
+    """Abstract interface every training algorithm must follow."""
 
-        self.T = T  # store for reuse in `sample_cf`
-        self.device = device if torch.cuda.is_available() else "cpu"
+    def __init__(self, model: nn.Module, optim: torch.optim.Optimizer, cfg: dict, device: str):
+        self.model = model
+        self.optim = optim
         self.cfg = cfg
+        self.device = device
 
-        ckpt = cfg["models"]["stable_diffusion"]["checkpoint"]
-        with timing("Load Stable Diffusion v1.5 (this can take a while)"):
-            self.pipe = StableDiffusionPipeline.from_pretrained(
-                ckpt, torch_dtype=torch.float16
-            )
-            self.pipe.scheduler = DDIMScheduler.from_config(self.pipe.scheduler.config)
-            self.pipe = self.pipe.to(self.device)
+    def update(self, batch):  # pragma: no cover
+        raise NotImplementedError
 
-        # LoRA adapter ---------------------------------------------------------
-        lora_cfg = LoraConfig(r=cfg["models"]["stable_diffusion"]["lora"]["rank"])
-        self.pipe.unet = get_peft_model(self.pipe.unet, lora_cfg)
-        self.pipe.text_encoder = get_peft_model(self.pipe.text_encoder, lora_cfg)
-        if hasattr(self.pipe, "enable_xformers_memory_efficient_attention"):
-            self.pipe.enable_xformers_memory_efficient_attention()
 
-    # ---------------------------------------------------------------------
-    # Counterfactual sampling
-    # ---------------------------------------------------------------------
-    @torch.no_grad()
-    def sample_cf(self, images: torch.Tensor, masks: torch.Tensor, k: int = 3) -> torch.Tensor:  # noqa: D401,E501
-        """Generate *k* counterfactuals for each image in *images*.
-        Args:
-            images: (B,C,H,W) float tensor in range [0,1]
-            masks : (B,1,H,W) float binary mask indicating region to edit
-        Returns:
-            Tensor of shape (B,k,C,H,W)
-        """
+class ERM(AlgorithmBase):
+    """Empirical-risk minimisation baseline."""
 
-        images = images.to(self.device)
-        masks = masks.to(self.device)
-        cfs = []
-        for _ in range(k):
-            out_imgs = self.pipe.image_editor(
-                images, masks.float(), guidance_scale=7.5, strength=0.8
-            ).images
-            cf_batch = torch.stack(
-                [self.T.ToTensor()(im.resize((224, 224))) for im in out_imgs]
-            )
-            cfs.append(cf_batch.to(images.dtype).to(self.device))
-        return torch.stack(cfs, dim=1)  # (B,k,C,H,W)
+    def update(self, batch):
+        x, y = batch
+        x, y = x.to(self.device), y.to(self.device)
+        logits = self.model(x)
+        loss = F.cross_entropy(logits, y)
+        self.optim.zero_grad()
+        loss.backward()
+        self.optim.step()
+        return {"loss": loss.item()}
 
-# --------------------------------------------------
-# Training loop encapsulation
-# --------------------------------------------------
+
+# Optional additional methods (IRM / GroupDRO) rely on WILDS.  We expose a
+# graceful fallback so that the refactored project can be executed even if the
+# user does not have the full WILDS stack compiled.
+
+def get_algorithm(name: str, model: nn.Module, optim: torch.optim.Optimizer, cfg: dict, device: str):
+    name = name.lower()
+    if name == "erm":
+        return ERM(model, optim, cfg, device)
+    try:
+        from wilds.algorithms import IRM, GroupDRO  # heavy import guarded
+
+        if name == "irm":
+            return IRM(model, optim, irm_lambda=1.0)
+        if name == "groupdro":
+            return GroupDRO(model, optim)
+    except Exception as e:
+        raise RuntimeError(f"Algorithm '{name}' requires wilds>=2.0 – {e}")
+    raise KeyError(name)
+
+
+# -----------------------------------------------------------------------------
+#                         ───           Trainer           ───
+# -----------------------------------------------------------------------------
+
+from .evaluate import evaluate_accuracy  # local import – avoids circularity
+from .preprocess import get_dataloaders
+
 
 class Trainer:
-    def __init__(
-        self,
-        cfg: Dict[str, Any],
-        dataset_name: str,
-        method: str,
-        backbone: str,
-        device: str = "cuda",
-    ) -> None:
+    """Generic training loop.  One Trainer == one random seed run."""
+
+    def __init__(self, cfg: dict, dataset: str, method: str, backbone: str, seed: int):
         self.cfg = cfg
-        self.dataset_name = dataset_name
-        self.method = method.lower()
+        self.dataset = dataset
+        self.method = method
         self.backbone_name = backbone
-        self.device = device if torch.cuda.is_available() else "cpu"
+        self.seed = seed
 
-        # ---------- Dataset ----------
-        self.train_ds, self.val_ds, self.test_ds = get_dataset(dataset_name, cfg)
-        num_classes = (
-            len(self.train_ds.dataset.classes)
-            if hasattr(self.train_ds, "dataset")
-            else len(self.train_ds.classes)
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        set_seed(seed)
+
+        # 1) data ----------------------------------------------------------------
+        loaders, num_classes = get_dataloaders(
+            dataset,
+            batch_size=cfg["backbones"][backbone]["batch"],
+            num_workers=cfg["hardware"]["num_workers"],
         )
+        self.loaders = loaders
 
-        # ---------- Model & helper modules ----------
-        self.model = BackboneFactory.get(backbone, num_classes).to(self.device)
+        # 2) model ----------------------------------------------------------------
+        self.model: nn.Module = Backbone.build(backbone, num_classes).to(self.device)
 
-        # DiCA components are optional and initialised only when the method is
-        # requested **and** the required libraries are available.
-        self.editor = None
-        self.cam = None
-        if self.method == "dica":
-            if GradCAM is None:
-                raise ImportError(
-                    "Method 'dica' requires `pytorch-grad-cam`. Install the package "
-                    "or run with `method='erm'`."
-                )
-            # Attempt to build DiffusionEditor – may fail if diffusers weights
-            # are not reachable. We surface a user-friendly error.
-            try:
-                self.editor = DiffusionEditor(cfg, self.device)
-            except Exception as e:  # pragma: no cover – fail-fast
-                raise RuntimeError(
-                    "Failed to initialise DiffusionEditor. See the original error "
-                    "below and consider switching to `method='erm'` if diffusion "
-                    "resources are unavailable."
-                ) from e
-            self.cam = GradCAM(model=self.model, target_layers=[self.model.layer4[-1]])
-
-        # ---------- Optimisation ----------
-        self._build_optim()
-        self.scaler = GradScaler() if cfg["hardware"]["amp"] else None
-
-    # --------------------------------------------------
-    # private helpers
-    # --------------------------------------------------
-
-    def _build_optim(self) -> None:
-        opt_cfg = self.cfg["training"]["optim"][self.backbone_name]
-        if opt_cfg["type"].upper() == "SGD":
-            self.opt = torch.optim.SGD(
-                self.model.parameters(),
-                lr=opt_cfg["lr"],
-                momentum=opt_cfg["momentum"],
-                weight_decay=opt_cfg["weight_decay"],
+        # 3) optimiser ------------------------------------------------------------
+        opt_cfg = cfg["backbones"][backbone]["optim"]
+        if opt_cfg["type"].lower() == "sgd":
+            self.optim = torch.optim.SGD(
+                self.model.parameters(), lr=opt_cfg["lr"], momentum=opt_cfg["momentum"], weight_decay=opt_cfg["weight_decay"]
             )
-        else:
-            self.opt = torch.optim.AdamW(
-                self.model.parameters(),
-                lr=opt_cfg["lr"],
-                betas=opt_cfg["betas"],
-                weight_decay=opt_cfg["weight_decay"],
+        else:  # AdamW default
+            self.optim = torch.optim.AdamW(
+                self.model.parameters(), lr=opt_cfg["lr"], betas=opt_cfg["betas"], weight_decay=opt_cfg["weight_decay"]
             )
-        self.sched = torch.optim.lr_scheduler.CosineAnnealingLR(
-            self.opt, T_max=self.cfg["training"]["epochs"]
-        )
 
-    # --------------------------------------------------
-    # counterfactual helper (DiCA only)
-    # --------------------------------------------------
+        # 4) algorithm wrapper ----------------------------------------------------
+        self.alg = get_algorithm(method, self.model, self.optim, cfg, self.device)
 
-    def _counterfactual_batch(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        if self.cam is None or self.editor is None:  # pragma: no cover
-            raise RuntimeError("Counterfactual batch requested but DiCA components are missing.")
-        # grad-cam saliency mask
-        mask = self.cam(x, eigen_smooth=True)[0]  # (B,1,H,W)
-        topk = torch.quantile(mask.flatten(1), 1 - self.cfg["dica"]["top_p"], dim=1).view(
-            -1, 1, 1, 1
-        )
-        mask_bin = (mask >= topk).float()
-        x_cf = self.editor.sample_cf(x, mask_bin, k=self.cfg["dica"]["k"])
-        return x_cf, mask_bin
+        # 5) AMP scaler -----------------------------------------------------------
+        self.scaler = torch.cuda.amp.GradScaler(enabled=cfg["hardware"].get("amp", True))
 
-    # --------------------------------------------------
-    # public API
-    # --------------------------------------------------
+        # misc --------------------------------------------------------------------
+        self.best_val = 0.0
+        self.run_id = f"{dataset}_{backbone}_{method}_seed{seed}_{int(time.time())}"
+        Path("models").mkdir(exist_ok=True)
 
-    def train(self) -> None:
-        bs = self.cfg["training"]["batch_size"][self.backbone_name]
-        tr_loader = DataLoader(
-            self.train_ds,
-            batch_size=bs,
-            shuffle=True,
-            num_workers=self.cfg["hardware"]["num_workers"],
-            pin_memory=True,
-        )
-        val_loader = DataLoader(self.val_ds, batch_size=64, shuffle=False)
+    # -------------------------------------------------------------------------
+    #                               public API
+    # -------------------------------------------------------------------------
 
-        best_val = 0.0
-        patience = 0
+    def fit(self) -> Dict[str, float]:
+        """Train until early-stopping; return metrics collected on test set."""
+        start = time.perf_counter()
+        max_epochs = self.cfg["training"]["epochs"]
+        patience = self.cfg["training"].get("patience", 5)
+        no_improve = 0
 
-        for epoch in range(self.cfg["training"]["epochs"]):
+        for epoch in range(max_epochs):
             self.model.train()
-            for x, y in tr_loader:
-                x, y = x.to(self.device), y.to(self.device)
-                with autocast(enabled=self.cfg["hardware"]["amp"]):
-                    logits = self.model(x)
-                    loss_cls = F.cross_entropy(logits, y)
+            for batch in self.loaders["train"]:
+                with torch.cuda.amp.autocast(enabled=self.cfg["hardware"].get("amp", True)):
+                    stats = self.alg.update(batch)
 
-                    if self.method == "dica":
-                        x_cf, _ = self._counterfactual_batch(x)
-                        logits_cf = self.model(x_cf.view(-1, *x.shape[1:]))
-                        logits_rep = (
-                            logits.unsqueeze(1)
-                            .expand(-1, self.cfg["dica"]["k"], -1)
-                            .contiguous()
-                            .view_as(logits_cf)
-                        )
-                        loss_cons = F.mse_loss(logits_cf, logits_rep)
-                        loss = loss_cls + self.cfg["dica"]["lambda_consistency"] * loss_cons
-                    else:
-                        loss = loss_cls
-
-                self.opt.zero_grad()
-                if self.scaler is not None:
-                    self.scaler.scale(loss).backward()
-                    self.scaler.step(self.opt)
-                    self.scaler.update()
-                else:
-                    loss.backward()
-                    self.opt.step()
-
-            self.sched.step()
-            # ------------- validation -------------
-            acc = self.evaluate(val_loader)
-            print(f"Epoch {epoch}: val-acc = {acc:.3f}")
-            if acc > best_val:
-                best_val = acc
-                patience = 0
-                Path("models").mkdir(parents=True, exist_ok=True)
-                ckpt_name = f"models/{self.dataset_name}_{self.method}_{self.backbone_name}.pt"
-                torch.save(self.model.state_dict(), ckpt_name)
+            # ---------------- evaluation ----------------
+            val_acc = evaluate_accuracy(self.model, self.loaders["val"], self.device)
+            print(f"{self.run_id}  epoch={epoch}  val-acc={val_acc:.4f}")
+            if val_acc > self.best_val:
+                self.best_val = val_acc
+                no_improve = 0
+                torch.save(self.model.state_dict(), Path("models") / f"{self.run_id}.pt")
             else:
-                patience += 1
-                if patience >= self.cfg["training"]["early_stop_patience"]:
-                    print("Early stopping triggered.")
-                    break
+                no_improve += 1
+                if no_improve >= patience:
+                    break  # early stop
 
-    @torch.no_grad()
-    def evaluate(self, loader: DataLoader) -> float:
-        self.model.eval()
-        correct, total = 0, 0
-        for x, y in loader:
-            x, y = x.to(self.device), y.to(self.device)
-            logits = self.model(x)
-            correct += (logits.argmax(1) == y).sum().item()
-            total += y.size(0)
-        return correct / (total + 1e-8)
+        elapsed_h = (time.perf_counter() - start) / 3600.0
+        test_acc = evaluate_accuracy(self.model, self.loaders["test"], self.device)
+
+        metrics = {"AccID": test_acc, "TrainHrs": elapsed_h, "Seed": self.seed}
+        self._dump_metrics(metrics)
+        return metrics
+
+    # ---------------------------------------------------------------------
+    #                         internal helpers
+    # ---------------------------------------------------------------------
+
+    def _dump_metrics(self, metrics: Dict[str, float]):
+        Path("outputs/runs").mkdir(parents=True, exist_ok=True)
+        out = {"run_id": self.run_id, "dataset": self.dataset, "method": self.method, **metrics}
+        with open(Path("outputs/runs") / f"{self.run_id}.json", "w") as f:
+            json.dump(out, f, indent=2)

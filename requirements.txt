@@ -1,11 +1,12 @@
 torch
 torchvision
 timm
+wilds
 diffusers
 peft
-wilds
-requests
-matplotlib
 pyyaml
+matplotlib
+requests
+ptflops
 numpy
-pillow
+Pillow

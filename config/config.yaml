@@ -1,61 +1,66 @@
 hardware:
   gpu: NVIDIA_TESLA_T4
+  num_workers: 4
   amp: true
-  grad_checkpoint: true
-  num_workers: 8
+  grad_ckpt: true
+random_seeds:
+  - 0
+  - 1
+  - 2
 datasets:
   waterbirds:
+    wilds_name: waterbirds
     url: https://huggingface.co/datasets/grodino/waterbirds
-    split: official
   celeba:
+    wilds_name: celebA
     url: https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
-    attr: Blond_Hair
   imagenet9:
-    url: https://github.com/MadryLab/backgrounds_challenge
+    url: https://github.com/MadryLab/backgrounds_challenge/releases/download/data/backgrounds_challenge_data.tar.gz
   ninco:
-    url: https://zenodo.org/record/8013288/files/NINCO_all.tar.gz?download=1
+    url: https://zenodo.org/record/8013288/files/NINCO.tar.gz
   coco_places:
-    coco_url: http://images.cocodataset.org/zips/val2017.zip
-    places_url: http://places2.csail.mit.edu/download.html
-models:
+    coco_img: http://images.cocodataset.org/zips/val2017.zip
+    coco_ann: http://images.cocodataset.org/annotations/annotations_trainval2017.zip
+    places: http://data.csail.mit.edu/places/places365/val_256.tar
+backbones:
   resnet50:
     source: torchvision
     weights: IMAGENET1K_V2
-  vit_b16:
-    source: timm
-    weights: vit_base_patch16_224.augreg2_in21k_ft_in1k
-  stable_diffusion:
-    checkpoint: https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5
-    lora:
-      rank: 8
-      lr: 0.0001
-      epochs: 10
-training:
-  epochs: 30
-  batch_size:
-    resnet50: 128
-    vit_b16: 96
-  optim:
-    resnet50:
+    batch: 128
+    optim:
       type: SGD
       lr: 0.03
       momentum: 0.9
       weight_decay: 0.0005
-    vit_b16:
+  vit_b16:
+    source: timm
+    weights: vit_base_patch16_224.augreg2_in21k_ft_in1k
+    batch: 96
+    optim:
       type: AdamW
       lr: 0.0003
       betas:
-      - 0.9
-      - 0.99
+        - 0.9
+        - 0.99
       weight_decay: 0.05
-  early_stop_patience: 5
-  seeds:
-  - 0
-  - 1
-  - 2
+training:
+  epochs: 30
+  patience: 5
 dica:
   top_p: 0.1
   k: 3
   lambda_consistency: 1.0
-  alpha_dro: 0.1
+  alpha_gcdro: 0.1
   tau_clip: 0.27
+metrics:
+  - AccID
+  - WGAcc
+  - AccOOD
+  - AUROC
+  - FPR95
+  - CorrErr
+  - FGSMErr
+  - FLOPs
+  - TrainHrs
+  - InferMS
+  - PeakMem

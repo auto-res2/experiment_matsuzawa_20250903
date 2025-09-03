@@ -1,53 +1,51 @@
+"""
+evaluate.py – validation/test utilities & plotting helpers.
+"""
+from __future__ import annotations
 from pathlib import Path
 from typing import Dict
 
+import torch
 import matplotlib.pyplot as plt
 
 # -----------------------------------------------------------------------------
-# All figures must be stored under .research/iteration5/images according to the
-# latest project guidelines.  We therefore create (or reuse) that exact directory
-# and update the path accordingly.
-# -----------------------------------------------------------------------------
-IMG_DIR = Path(".research/iteration5/images")
-IMG_DIR.mkdir(parents=True, exist_ok=True)
-
-# -----------------------------------------------------------------------------
-# Simple plotting helpers
+#                           scalar accuracy helper
 # -----------------------------------------------------------------------------
 
-def plot_curve(xs, ys, title: str, xlab: str, ylab: str, fname: str) -> None:
-    plt.figure()
-    plt.plot(xs, ys, marker="o", label=title)
-    for x, y in zip(xs, ys):
-        plt.annotate(f"{y:.2f}", (x, y))
-    plt.xlabel(xlab)
-    plt.ylabel(ylab)
+def evaluate_accuracy(model: torch.nn.Module, loader, device: str) -> float:
+    """Top-1 accuracy on a dataloader (no grad, no AMP)."""
+    model.eval()
+    num, correct = 0, 0
+    with torch.no_grad():
+        for x, y in loader:
+            x, y = x.to(device), y.to(device)
+            pred = model(x).argmax(1)
+            correct += (pred == y).sum().item()
+            num += y.size(0)
+    return correct / num if num > 0 else 0.0
+
+
+# -----------------------------------------------------------------------------
+#                                 plotting
+# -----------------------------------------------------------------------------
+
+IMAGES_DIR = Path(".research/iteration6/images")
+IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def bar_plot(values: Dict[str, float], title: str, fname: str) -> str:
+    """Simple bar plot saved to the mandatory images folder."""
+    labels = list(values.keys())
+    y = list(values.values())
+    plt.figure(figsize=(max(4, 0.45 * len(labels)), 4))
+    plt.bar(range(len(y)), y, color="tab:blue")
+    plt.xticks(range(len(y)), labels, rotation=45, ha="right")
+    for i, v in enumerate(y):
+        plt.text(i, v + 0.005, f"{v:.2f}", ha="center", fontsize=8)
+    plt.ylabel("Accuracy")
     plt.title(title)
-    plt.legend()
     plt.tight_layout()
-    outfile = IMG_DIR / f"{fname}.pdf"
-    plt.savefig(outfile, bbox_inches="tight")
+    path = IMAGES_DIR / f"{fname}.pdf"
+    plt.savefig(path, bbox_inches="tight")
     plt.close()
-    print(f"[FIG SAVED] {outfile}")
-
-
-def plot_bar(labels, values, fname: str, title: str = "Accuracy") -> None:
-    plt.figure(figsize=(max(6, len(labels) * 1.2), 3))
-    plt.bar(range(len(values)), values, color="steelblue")
-    plt.xticks(range(len(values)), labels, rotation=45, ha="right")
-    for idx, v in enumerate(values):
-        plt.text(idx, v + 0.01, f"{v:.2f}", ha="center")
-    plt.ylabel(title)
-    plt.tight_layout()
-    outfile = IMG_DIR / f"{fname}.pdf"
-    plt.savefig(outfile, bbox_inches="tight")
-    plt.close()
-    print(f"[FIG SAVED] {outfile}")
-
-
-def report_results(exp_name: str, metrics: Dict[str, float | Dict | list]):
-    print("================  EXPERIMENT  ================")
-    print(exp_name)
-    print("================  RESULTS      ================")
-    for k, v in metrics.items():
-        print(f"{k}: {v}")
+    return str(path)
