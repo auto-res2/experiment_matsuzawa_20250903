@@ -1,39 +1,50 @@
+from __future__ import annotations
 """
 evaluate.py – evaluation utilities & plotting
 """
-from __future__ import annotations
-import os, json
+import os
 from typing import List
 
 import torch
 import torch.nn.functional as F
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 # ----------------------------------------------------------------------------
-#   All experiment artefacts must live under .research/iteration2/images
+#   All experiment artefacts must live under .research/iteration3/images
 # ----------------------------------------------------------------------------
-IMG_DIR = os.path.join(".research", "iteration2", "images")
+IMG_DIR = os.path.join(".research", "iteration3", "images")
 os.makedirs(IMG_DIR, exist_ok=True)
 
 
 def accuracy(net: torch.nn.Module, dataset, device: str) -> float:
     """Simple top–1 accuracy."""
-    net.eval(); correct = 0; total = 0
+    net.eval()
+    correct = 0
+    total = 0
     with torch.no_grad():
         for x, y in DataLoader(dataset, batch_size=256):
             x, y = x.to(device), y.to(device)
             pred = net(x).argmax(1)
-            correct += (pred == y).sum().item(); total += y.size(0)
+            correct += (pred == y).sum().item()
+            total += y.size(0)
     return 100.0 * correct / total
 
 
-def delta_prob(net, sample_ds, dirs, spurious_idx: List[int], cdg, device: str) -> float:
+def delta_prob(
+    net,
+    sample_ds,
+    dirs,
+    spurious_idx: List[int],
+    cdg,
+    device: str,
+) -> float:
     """Reliance measure ∆Prob for the first detected spurious direction."""
-    dp = []
+    dp: List[float] = []
     dir_vec = dirs[spurious_idx[0]].to(device)
     latent_delta = dir_vec.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
     loader = DataLoader(sample_ds, batch_size=64)
@@ -44,7 +55,7 @@ def delta_prob(net, sample_ds, dirs, spurious_idx: List[int], cdg, device: str) 
             x_cf = cdg.generate(x, latent_delta).to(device)
             p1 = F.softmax(net(x_cf), 1)
             dp.extend((p0 - p1).abs().max(1)[0].cpu().tolist())
-    return sum(dp) / len(dp)
+    return sum(dp) / len(dp) if dp else 0.0
 
 
 def save_bar_figure(val: float, title: str, fname: str):
