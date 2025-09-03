@@ -46,13 +46,13 @@ def build_synthetic_cc(
     # -----------------------------------------------------------------------
     # 1) Core – Erdős–Rényi graph
     # -----------------------------------------------------------------------
-    core_edge_index = erdos_renyi_graph(core_nodes, core_p)
+    core_edge_index = erdos_renyi_graph(core_nodes, core_p)  # shape [2, E]
 
     # -----------------------------------------------------------------------
     # 2) Chains attached to random core nodes
     # -----------------------------------------------------------------------
-    chains = []
-    chain_heads = []
+    chains: list[list[int]] = []
+    chain_heads: list[int] = []
     offset = core_nodes
     for c in range(num_chains):
         start = offset + c * chain_len
@@ -64,7 +64,13 @@ def build_synthetic_cc(
         chains.append([head_target, start])
         chain_heads.append(start)
 
-    edge_index = torch.tensor(core_edge_index + chains, dtype=torch.long).t()
+    # Convert chain edges to tensor and concatenate with core edges -------------
+    if chains:
+        chain_edge_index = torch.tensor(chains, dtype=torch.long).t()  # [2, E_chain]
+        edge_index = torch.cat([core_edge_index, chain_edge_index], dim=1)
+    else:
+        edge_index = core_edge_index.clone()
+
     edge_index = to_undirected(edge_index)
     edge_index, _ = add_self_loops(edge_index)
 
