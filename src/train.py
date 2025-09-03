@@ -36,6 +36,17 @@ def _set_seed(seed: int) -> None:
 
 
 # --------------------------------------------------------------------------------------
+#  Helper – robust device parsing
+# --------------------------------------------------------------------------------------
+
+def _get_device(device_cfg: str) -> torch.device:
+    """Convert the *device* entry from config to a valid `torch.device`."""
+    if "cuda" in device_cfg and torch.cuda.is_available():
+        return torch.device("cuda")
+    return torch.device("cpu")
+
+
+# --------------------------------------------------------------------------------------
 #  Single-run training routine
 # --------------------------------------------------------------------------------------
 
@@ -49,7 +60,7 @@ def fit(
     """Train *model* on *data* according to *cfg* and return a dictionary of metrics."""
 
     _set_seed(seed)
-    device = torch.device(cfg["common"]["device"])
+    device = _get_device(cfg["common"]["device"])
 
     data = data.to(device)
     model = model.to(device)
@@ -75,7 +86,10 @@ def fit(
                 # APD-GNN branch ---------------------------------------------------------
                 logits, h, k_exp = model(data.x, data.edge_index, epoch)
                 loss_cls = F.cross_entropy(logits[data.train_mask], data.y[data.train_mask])
-                loss_reg = model.lambda_depth * (k_exp.mean() - model.k_target).pow(2)
+                # safeguard: some stub models might not define lambda_depth
+                lambda_depth = getattr(model, "lambda_depth", 0.0)
+                k_target = getattr(model, "k_target", 1.0)
+                loss_reg = lambda_depth * (k_exp.mean() - k_target).pow(2)
                 loss = loss_cls + loss_reg
             else:
                 # vanilla GNN -----------------------------------------------------------
@@ -122,7 +136,7 @@ def fit(
         xlabel="epoch",
         ylabel="loss",
         title=f"Training loss – seed {seed}",
-        fname="training_loss.pdf",
+        fname=run_dir / "training_loss.pdf",
     )
     lineplot(
         epochs_axis,
@@ -130,7 +144,7 @@ def fit(
         xlabel="epoch",
         ylabel="accuracy",
         title=f"Validation accuracy – seed {seed}",
-        fname="accuracy.pdf",
+        fname=run_dir / "accuracy.pdf",
     )
 
     # -----------------------------------------------------------------------------------
@@ -142,6 +156,7 @@ def fit(
             logits, h_final, k_final = model(data.x, data.edge_index, epoch=999)
         else:
             logits, h_final = model(data.x, data.edge_index)
+            k_final = torch.zeros(h_final.size(0), device=h_final.device)
 
     metrics: Dict[str, float] = classification_metrics(
         logits[data.test_mask], data.y[data.test_mask]
